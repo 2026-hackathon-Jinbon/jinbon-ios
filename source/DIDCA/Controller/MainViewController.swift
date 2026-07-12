@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 OmniOne.
+ * Copyright 2025 JinBon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -212,7 +212,7 @@ extension MainViewController: UICollectionViewDataSource {
         cell.validUntilLabel.text = "ValidUntil: "+SDKUtils.convertDateFormat(dateString: vc.validUntil)!
         cell.issuanceLabel.text   = "IssuanceDate: "+SDKUtils.convertDateFormat(dateString: vc.issuanceDate)!
         cell.badgeVCStatusLabel.text = vcStatus[vc.id]?.rawValue ?? VCStatusEnum.ACTIVE.rawValue
-        cell.badgeZKPLabel.isHidden = !isZkpIncluded
+        cell.badgeZKPLabel.isHidden = true
         
         return cell
     }

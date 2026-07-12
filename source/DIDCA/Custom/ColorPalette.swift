@@ -1,6 +1,6 @@
 //
 /*
- * Copyright 2025 OmniOne.
+ * Copyright 2025 JinBon.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,5 +20,5 @@ import UIKit
 
 struct ColorPalette
 {
-    static let primary : UIColor = UIColor(named: "AccentColor") ?? UIColor(hexCode: "FF8400")
+    static let primary : UIColor = UIColor(named: "AccentColor") ?? UIColor(hexCode: "1E3A5F")
 }

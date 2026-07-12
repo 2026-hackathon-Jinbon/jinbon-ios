@@ -645,7 +645,7 @@
                                                 <subviews>
                                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="user-icon" translatesAutoresizingMaskIntoConstraints="NO" id="0T4-kd-i9k">
                                                         <rect key="frame" x="10" y="6" width="70" height="70"/>
-                                                        <color key="backgroundColor" red="0.93725490570000003" green="0.5411764979" blue="0.20392158630000001" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                                        <color key="backgroundColor" red="0.11764705882352941" green="0.22745098039215686" blue="0.37254901960784315" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                         <constraints>
                                                             <constraint firstAttribute="width" constant="70" id="7QS-Mj-zDU"/>
                                                             <constraint firstAttribute="height" constant="70" id="UiD-5Y-qgb"/>
@@ -2317,7 +2317,7 @@ Verification method</string>
         <image name="userId-icon" width="60" height="60"/>
         <image name="vector" width="50" height="40"/>
         <namedColor name="PrimaryColor">
-            <color red="1" green="0.51800000667572021" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.11764705882352941" green="0.22745098039215686" blue="0.37254901960784315" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <systemColor name="labelColor">
             <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
