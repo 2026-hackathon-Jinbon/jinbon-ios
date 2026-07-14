@@ -32,14 +32,28 @@ class TwoButtonDialogViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        
+
+        mainView.backgroundColor = .white
+        mainView.layer.cornerRadius = 22
+        mainView.layer.cornerCurve = .continuous
+
+        contentsLbl.attributedText = nil
+        contentsLbl.text = contentsMessage
+        contentsLbl.textColor = ColorPalette.ink
+        contentsLbl.font = .systemFont(ofSize: 17, weight: .semibold)
+        contentsLbl.textAlignment = .center
+        contentsLbl.numberOfLines = 0
+
+        cancelButton.setTitle("아니요", for: .normal)
+        cancelButton.setTitleColor(ColorPalette.primary, for: .normal)
+        cancelButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
         cancelButton.layer.borderWidth = 1
-        cancelButton.layer.borderColor = UIColor(hexCode: "FF8400").cgColor
-        
-        if self.contentsLbl != nil {
-            self.contentsLbl.text = contentsMessage
-        }
+        cancelButton.layer.borderColor = ColorPalette.primary.cgColor
+
+        confirmButton.setTitle("설정하기", for: .normal)
+        confirmButton.setTitleColor(.white, for: .normal)
+        confirmButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        confirmButton.backgroundColor = ColorPalette.primary
     }
     
     public func setContentsMessage(message: String) {

@@ -61,6 +61,12 @@ class UserRegWebViewController: UIViewController {
         let header = makeHeader()
         self.subView.addSubview(header)
         self.subView.addSubview(webView)
+
+        NSLayoutConstraint.activate([
+            header.topAnchor.constraint(equalTo: self.subView.topAnchor),
+            header.leadingAnchor.constraint(equalTo: self.subView.leadingAnchor, constant: 20),
+            header.trailingAnchor.constraint(equalTo: self.subView.trailingAnchor, constant: -20)
+        ])
         
         webView.translatesAutoresizingMaskIntoConstraints = false
         webView.leadingAnchor.constraint(equalTo: self.subView.leadingAnchor).isActive = true
@@ -112,9 +118,6 @@ class UserRegWebViewController: UIViewController {
         header.addSubview(title)
         header.addSubview(detail)
         NSLayoutConstraint.activate([
-            header.topAnchor.constraint(equalTo: subView.topAnchor),
-            header.leadingAnchor.constraint(equalTo: subView.leadingAnchor, constant: 20),
-            header.trailingAnchor.constraint(equalTo: subView.trailingAnchor, constant: -20),
             close.leadingAnchor.constraint(equalTo: header.leadingAnchor),
             close.topAnchor.constraint(equalTo: header.topAnchor, constant: 8),
             close.widthAnchor.constraint(equalToConstant: 36), close.heightAnchor.constraint(equalToConstant: 36),
@@ -158,7 +161,7 @@ class UserRegWebViewController: UIViewController {
     private func userRegAction() {
         let popupVC = UIStoryboard.init(name: "Popup", bundle: nil).instantiateViewController(withIdentifier: "TwoButtonDialogViewController") as! TwoButtonDialogViewController
         popupVC.modalPresentationStyle = .overCurrentContext
-        popupVC.setContentsMessage(message: "Would you like to set the Wallet for lock type?")
+        popupVC.setContentsMessage(message: "Wallet 잠금을 설정할까요?\nPIN으로 디지털 신원을 안전하게 보호할 수 있어요.")
         popupVC.confirmButtonCompleteClosure = { [self] in
             Task {
                 do {
@@ -300,21 +303,11 @@ extension UserRegWebViewController : WKNavigationDelegate, WKUIDelegate, WKScrip
                  decidePolicyFor navigationAction: WKNavigationAction,
                  decisionHandler: @escaping (WKNavigationActionPolicy) -> Void){
         
-        print("webview callback")
-        
-        // http, http, html or no navigation
-        if let url = navigationAction.request.url, url.scheme != "http" && url.scheme != "https", !url.absoluteString.hasSuffix("html") {
-            
-            print("url: \(String(describing: navigationAction.request.url))")
-            print("url.scheme: \(String(describing: url.scheme))")
-            
+        guard let url = navigationAction.request.url else {
             decisionHandler(.cancel)
+            return
         }
-        // Allow URL navigation only when the protocol is http or https
-        else {
-            print("allow request")
-            decisionHandler(.allow)
-        }
+        decisionHandler(WebOriginValidator.isTrusted(url, baseURL: URLs.DEMO_URL) ? .allow : .cancel)
     }
     
     func webViewDidClose(_ webView: WKWebView) {
@@ -324,6 +317,8 @@ extension UserRegWebViewController : WKNavigationDelegate, WKUIDelegate, WKScrip
     
     // web -> native callback listener
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+
+        guard WebOriginValidator.isTrusted(message, baseURL: URLs.DEMO_URL) else { return }
 
         print("userContentController callback func: \(message.name)")
         print("userContentController callback param: \(message.body)")

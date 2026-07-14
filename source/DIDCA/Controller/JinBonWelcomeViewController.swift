@@ -30,16 +30,16 @@ final class JinBonWelcomeViewController: UIViewController {
         mark.clipsToBounds = true
 
         let title = UILabel()
-        title.text = "진짜를 증명하는\n가장 간단한 방법"
         title.numberOfLines = 0
         title.font = .systemFont(ofSize: 34, weight: .bold)
         title.textColor = ColorPalette.ink
+        title.setJinBonText("진짜를 증명하는\n가장 간단한 방법", lineSpacing: 7)
 
         let subtitle = UILabel()
-        subtitle.text = "블록체인과 디지털 신원으로 영상의 원본 여부를 안전하게 확인하세요."
         subtitle.numberOfLines = 0
         subtitle.font = .systemFont(ofSize: 16, weight: .regular)
         subtitle.textColor = ColorPalette.secondaryText
+        subtitle.setJinBonText("영상의 원본 여부를 안전하게 증명하세요.", lineSpacing: 5)
 
         let signup = actionCard(icon: "person.badge.plus", title: "처음 이용하시나요?",
                                 detail: "디지털 신원을 만들고 진본을 시작해요",
@@ -159,46 +159,62 @@ final class JinBonWelcomeViewController: UIViewController {
 
 extension JinBonWelcomeViewController: AuthWebViewDelegate {
     func authDidComplete(tokenData: AuthTokenData) {
-        if let didDoc = try? WalletAPI.shared.getDidDocument(type: DidDocumentType.HolderDidDocumnet),
-           !didDoc.id.isEmpty {
+        switch WalletAccountValidator.validate(accountDid: tokenData.did) {
+        case .matches:
             switchToMain()
-            return
+        case .noWallet:
+            guard let rebindToken = tokenData.didRebindToken else {
+                JinBonAPIClient.shared.clearLocalSession()
+                showRecoveryError("DID 재연결 토큰을 발급받지 못했습니다. 모바일 신분증으로 다시 로그인해주세요.")
+                return
+            }
+            Properties.setDidRebindToken(rebindToken)
+            showDidRecovery()
+        case .mismatch:
+            JinBonAPIClient.shared.clearLocalSession()
+            showRecoveryError("이 기기의 Wallet DID가 로그인한 진본 계정의 DID와 다릅니다. 다른 계정의 Wallet을 연결할 수 없습니다.")
+        case .accountDidMissing:
+            JinBonAPIClient.shared.clearLocalSession()
+            showRecoveryError("진본 계정에 연결된 DID가 없습니다. 디지털 신원 재연결이 필요합니다.")
         }
-
-        guard let rebindToken = tokenData.didRebindToken else {
-            showRecoveryError("DID 재연결 토큰을 발급받지 못했습니다. 모바일 신분증으로 다시 로그인해주세요.")
-            return
-        }
-        Properties.setDidRebindToken(rebindToken)
-        showDidRecovery()
     }
     func authDidCancel() {}
 
     func signupIdentityDidComplete(data: SignupIdentityData) {
-        Task { @MainActor in
-            if await connectExistingDidIfPossible() { return }
+        if WalletAPI.shared.isExistWallet() {
+            confirmExistingDidConnection()
+        } else {
             showDidRegistration()
         }
     }
 
-    private func connectExistingDidIfPossible() async -> Bool {
-        guard WalletAPI.shared.isExistWallet() else { return false }
-        guard let didDoc = try? WalletAPI.shared.getDidDocument(type: DidDocumentType.HolderDidDocumnet),
-              let signupToken = Properties.getSignupToken() else { return false }
-        do {
-            _ = try await JinBonAPIClient.shared.completeSignup(signupToken: signupToken, did: didDoc.id)
-            Properties.setRegDidDocCompleted(status: true)
-            Properties.clearSignupToken()
-            switchToMain()
-            return true
-        } catch {
-            let alert = UIAlertController(title: "기존 DID 연결 실패",
-                                          message: error.localizedDescription,
-                                          preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "확인", style: .default))
-            present(alert, animated: true)
-            // 연결 실패 시 DID 등록 플로우로 fallback
-            return false
+    private func confirmExistingDidConnection() {
+        let alert = UIAlertController(
+            title: "기존 Wallet을 연결할까요?",
+            message: "이 기기에 이미 디지털 신원이 있습니다. 본인의 Wallet이 맞을 때만 새 진본 계정에 연결해주세요.",
+            preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        alert.addAction(UIAlertAction(title: "내 Wallet 연결", style: .default) { [weak self] _ in
+            self?.connectExistingDid()
+        })
+        present(alert, animated: true)
+    }
+
+    private func connectExistingDid() {
+        Task { @MainActor in
+            guard let didDoc = try? WalletAPI.shared.getDidDocument(type: .HolderDidDocumnet),
+                  let signupToken = Properties.getSignupToken() else {
+                showRecoveryError("기존 Wallet 정보를 확인할 수 없습니다.")
+                return
+            }
+            do {
+                _ = try await JinBonAPIClient.shared.completeSignup(signupToken: signupToken, did: didDoc.id)
+                Properties.setRegDidDocCompleted(status: true)
+                Properties.clearSignupToken()
+                switchToMain()
+            } catch {
+                showRecoveryError(error.localizedDescription)
+            }
         }
     }
 

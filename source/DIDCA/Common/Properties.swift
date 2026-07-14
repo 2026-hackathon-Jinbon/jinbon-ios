@@ -15,6 +15,51 @@
  */
 
 import Foundation
+import WebKit
+import DIDWalletSDK
+
+enum WalletAccountValidation {
+    case noWallet
+    case matches
+    case mismatch(walletDid: String, accountDid: String)
+    case accountDidMissing
+}
+
+enum WalletAccountValidator {
+    static func validate(accountDid: String?) -> WalletAccountValidation {
+        guard WalletAPI.shared.isExistWallet() else { return .noWallet }
+        guard let accountDid, !accountDid.isEmpty else { return .accountDidMissing }
+        guard let document = try? WalletAPI.shared.getDidDocument(type: .HolderDidDocumnet),
+              !document.id.isEmpty else { return .noWallet }
+        return document.id == accountDid
+            ? .matches
+            : .mismatch(walletDid: document.id, accountDid: accountDid)
+    }
+}
+
+enum WebOriginValidator {
+    static func isTrusted(_ message: WKScriptMessage, baseURL: String) -> Bool {
+        guard let actualURL = message.frameInfo.request.url else { return false }
+        return isTrusted(actualURL, baseURL: baseURL)
+    }
+
+    static func isTrusted(_ actualURL: URL, baseURL: String) -> Bool {
+        guard let expected = URLComponents(string: baseURL),
+              let actual = URLComponents(url: actualURL, resolvingAgainstBaseURL: false) else { return false }
+        return actual.scheme?.lowercased() == expected.scheme?.lowercased()
+            && actual.host?.lowercased() == expected.host?.lowercased()
+            && effectivePort(actual) == effectivePort(expected)
+    }
+
+    private static func effectivePort(_ components: URLComponents) -> Int? {
+        if let port = components.port { return port }
+        switch components.scheme?.lowercased() {
+        case "https": return 443
+        case "http": return 80
+        default: return nil
+        }
+    }
+}
 
 #if swift(>=5.8)
 @_documentation(visibility: private)
@@ -190,26 +235,55 @@ public class Properties {
     }
 
     public static func setSignupToken(_ token: String) {
-        UserDefaults.standard.set(token, forKey: "jinbon_signup_token")
+        KeychainHelper.save(key: "jinbon_signup_token", value: token)
+        UserDefaults.standard.removeObject(forKey: "jinbon_signup_token")
     }
 
     public static func getSignupToken() -> String? {
-        UserDefaults.standard.string(forKey: "jinbon_signup_token")
+        if let token = KeychainHelper.load(key: "jinbon_signup_token") { return token }
+        guard let legacy = UserDefaults.standard.string(forKey: "jinbon_signup_token") else { return nil }
+        setSignupToken(legacy)
+        return legacy
     }
 
     public static func clearSignupToken() {
+        KeychainHelper.delete(key: "jinbon_signup_token")
         UserDefaults.standard.removeObject(forKey: "jinbon_signup_token")
     }
 
     public static func setDidRebindToken(_ token: String) {
-        UserDefaults.standard.set(token, forKey: "jinbon_did_rebind_token")
+        KeychainHelper.save(key: "jinbon_did_rebind_token", value: token)
+        UserDefaults.standard.removeObject(forKey: "jinbon_did_rebind_token")
     }
 
     public static func getDidRebindToken() -> String? {
-        UserDefaults.standard.string(forKey: "jinbon_did_rebind_token")
+        if let token = KeychainHelper.load(key: "jinbon_did_rebind_token") { return token }
+        guard let legacy = UserDefaults.standard.string(forKey: "jinbon_did_rebind_token") else { return nil }
+        setDidRebindToken(legacy)
+        return legacy
     }
 
     public static func clearDidRebindToken() {
+        KeychainHelper.delete(key: "jinbon_did_rebind_token")
         UserDefaults.standard.removeObject(forKey: "jinbon_did_rebind_token")
+    }
+
+    public static func setPendingVideoVc(_ vcId: String, videoId: Int) {
+        guard let memberId = getMemberId() else { return }
+        KeychainHelper.save(key: pendingVideoVcKey(memberId: memberId, videoId: videoId), value: vcId)
+    }
+
+    public static func getPendingVideoVc(videoId: Int) -> String? {
+        guard let memberId = getMemberId() else { return nil }
+        return KeychainHelper.load(key: pendingVideoVcKey(memberId: memberId, videoId: videoId))
+    }
+
+    public static func clearPendingVideoVc(videoId: Int) {
+        guard let memberId = getMemberId() else { return }
+        KeychainHelper.delete(key: pendingVideoVcKey(memberId: memberId, videoId: videoId))
+    }
+
+    private static func pendingVideoVcKey(memberId: Int, videoId: Int) -> String {
+        "jinbon_pending_vc_\(memberId)_\(videoId)"
     }
 }

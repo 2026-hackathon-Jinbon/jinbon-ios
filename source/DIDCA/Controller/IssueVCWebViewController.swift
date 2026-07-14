@@ -163,21 +163,11 @@ extension IssueVCWebViewController : WKNavigationDelegate, WKUIDelegate, WKScrip
                  decidePolicyFor navigationAction: WKNavigationAction,
                  decisionHandler: @escaping (WKNavigationActionPolicy) -> Void){
         
-        print("webview callback")
-        
-        // http, http, html or no navigation
-        if let url = navigationAction.request.url, url.scheme != "http" && url.scheme != "https", !url.absoluteString.hasSuffix("html") {
-            
-            print("url: \(String(describing: navigationAction.request.url))")
-            print("url.scheme: \(String(describing: url.scheme))")
-            
+        guard let url = navigationAction.request.url else {
             decisionHandler(.cancel)
+            return
         }
-        // Allow URL navigation only when the protocol is http or https
-        else {
-            print("allow request")
-            decisionHandler(.allow)
-        }
+        decisionHandler(WebOriginValidator.isTrusted(url, baseURL: URLs.DEMO_URL) ? .allow : .cancel)
     }
     
     func webViewDidClose(_ webView: WKWebView) {
@@ -187,6 +177,8 @@ extension IssueVCWebViewController : WKNavigationDelegate, WKUIDelegate, WKScrip
     
     // web -> native callback listener
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+
+        guard WebOriginValidator.isTrusted(message, baseURL: URLs.DEMO_URL) else { return }
 
         print("userContentController callback \(message.name)")
         

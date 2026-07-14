@@ -1,7 +1,7 @@
 // swift-interface-format-version: 1.0
-// swift-compiler-version: Apple Swift version 6.2 effective-5.10 (swiftlang-6.2.0.19.9 clang-1700.3.19.1)
-// swift-module-flags: -target arm64-apple-ios15.0-simulator -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name DIDWalletSDK
-// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.2
+// swift-compiler-version: Apple Swift version 6.3.3 effective-5.10 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)
+// swift-module-flags: -target arm64-apple-ios15.0-simulator -enable-objc-interop -enable-library-evolution -swift-version 5 -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name DIDWalletSDK
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.3.3
 import CommonCrypto
 import CoreData
 import CryptoKit
@@ -15,43 +15,31 @@ import _StringProcessing
 import _SwiftConcurrencyShims
 public struct KeyChainWrapper {
   public static func saveKeyChain(cek: Foundation.Data, passcode: Swift.String) throws -> Foundation.Data
-  #if compiler(>=5.3) && $NonescapableTypes
   public static func matching(passcode: Swift.String, finalEncCek: Foundation.Data) throws -> Foundation.Data?
-  #endif
 }
 public protocol WalletLockManagerImpl {
   func registerLock(hWalletToken: Swift.String, passcode: Swift.String, isLock: Swift.Bool) throws -> Swift.Bool
   func isRegLock() throws -> Swift.Bool
-  #if compiler(>=5.3) && $NonescapableTypes
   func authenticateLock(passcode: Swift.String) throws -> Foundation.Data?
-  #endif
   func changeLock(oldPasscode: Swift.String, newPasscode: Swift.String) throws
 }
 public protocol WalletTokenImpl {
   func verifyWalletToken(hWalletToken: Swift.String, purposes: [DIDWalletSDK.WalletTokenPurposeEnum]) throws
-  #if compiler(>=5.3) && $NonescapableTypes
   func createWalletTokenSeed(purpose: DIDWalletSDK.WalletTokenPurposeEnum, pkgName: Swift.String, userId: Swift.String?) throws -> DIDWalletSDK.WalletTokenSeed
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   func createNonceForWalletToken(walletTokenData: DIDWalletSDK.WalletTokenData?, APIGatewayURL: Swift.String) async throws -> Swift.String
-  #endif
 }
 public protocol WalletCoreImpl {
   func deleteWallet(deleteAll: Swift.Bool) throws
   func isExistWallet() -> Swift.Bool
   func isSavedKey(keyId: Swift.String) throws -> Swift.Bool
-  #if compiler(>=5.3) && $NonescapableTypes
   func generateKey(passcode: Swift.String?, keyId: Swift.String, algType: DIDWalletSDK.AlgorithmType, promptMsg: Swift.String?) throws
-  #endif
   func deleteKey(keyId: Swift.String) throws
   func getKeyInfos(keyType: DIDWalletSDK.VerifyAuthType) throws -> [DIDWalletSDK.KeyInfo]
   func getKeyInfos(ids: [Swift.String]) throws -> [DIDWalletSDK.KeyInfo]
   func isAnyKeysSaved() throws -> Swift.Bool
   func changePin(id: Swift.String, oldPIN: Swift.String, newPIN: Swift.String) throws
   func authenticatePin(id: Swift.String, pin: Swift.String) throws
-  #if compiler(>=5.3) && $NonescapableTypes
   func sign(keyId: Swift.String, pin: Foundation.Data?, data: Foundation.Data, type: DIDWalletSDK.DidDocumentType) throws -> Foundation.Data
-  #endif
   func verify(publicKey: Foundation.Data, data: Foundation.Data, signature: Foundation.Data) throws -> Swift.Bool
   func createDeviceDidDocument() throws -> DIDWalletSDK.DIDDocument
   func createHolderDidDocument() throws -> DIDWalletSDK.DIDDocument
@@ -79,42 +67,20 @@ public protocol WalletCoreImpl {
 public protocol WalletServiceImpl {
   func deleteWallet(deleteAll: Swift.Bool) throws
   func createWallet(tasURL: Swift.String, walletURL: Swift.String) async throws -> Swift.Bool
-  #if compiler(>=5.3) && $NonescapableTypes
   func requestVp(hWalletToken: Swift.String, claimInfos: [DIDWalletSDK.ClaimInfo]?, verifierProfile: DIDWalletSDK._RequestProfile?, APIGatewayURL: Swift.String, passcode: Swift.String?) async throws -> (DIDWalletSDK.AccE2e, Foundation.Data)
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   func requestZKProof(hWalletToken: Swift.String, selectedReferents: [DIDWalletSDK.UserReferent], proofParam: DIDWalletSDK.ZKProofParam, proofRequestProfile: DIDWalletSDK._RequestProofRequestProfile?, APIGatewayURL: Swift.String) async throws -> (DIDWalletSDK.AccE2e, Foundation.Data)
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   func createSignedDIDDoc(passcode: Swift.String?) throws -> DIDWalletSDK.SignedDIDDoc
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   func createProofs(ownerDidDoc: DIDWalletSDK.DIDDocument?, proofPurpose: Swift.String) throws -> Foundation.Data
-  #endif
   func createDeviceDocument() throws -> DIDWalletSDK.DIDDocument
-  #if compiler(>=5.3) && $NonescapableTypes
   func requestRegisterWallet(tasURL: Swift.String, walletURL: Swift.String, ownerDidDoc: DIDWalletSDK.DIDDocument?) async throws -> Swift.Bool
-  #endif
   func bindUser() throws -> Swift.Bool
   func unbindUser() throws -> Swift.Bool
-  #if compiler(>=5.3) && $NonescapableTypes
   func requestRegisterUser(tasURL: Swift.String, txId: Swift.String, serverToken: Swift.String, signedDIDDoc: DIDWalletSDK.SignedDIDDoc?) async throws -> DIDWalletSDK._RequestRegisterUser
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   func requestRestoreUser(tasURL: Swift.String, txId: Swift.String, serverToken: Swift.String, didAuth: DIDWalletSDK.DIDAuth?) async throws -> DIDWalletSDK._RequestRestoreDidDoc
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   func requestUpdateUser(tasURL: Swift.String, txId: Swift.String, serverToken: Swift.String, didAuth: DIDWalletSDK.DIDAuth?, signedDIDDoc: DIDWalletSDK.SignedDIDDoc?) async throws -> DIDWalletSDK._RequestUpdateDidDoc
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   func getSignedDidAuth(authNonce: Swift.String, passcode: Swift.String?) throws -> DIDWalletSDK.DIDAuth
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   func requestIssueVc(tasURL: Swift.String, didAuth: DIDWalletSDK.DIDAuth?, issuerProfile: DIDWalletSDK._RequestIssueProfile?, refId: Swift.String, serverToken: Swift.String, APIGatewayURL: Swift.String) async throws -> (Swift.String, DIDWalletSDK._RequestIssueVc?)
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   func requestRevokeVc(tasURL: Swift.String, authType: DIDWalletSDK.VerifyAuthType, vcId: Swift.String, issuerNonce: Swift.String, txId: Swift.String, serverToken: Swift.String, passcode: Swift.String?) async throws -> DIDWalletSDK._RequestRevokeVc
-  #endif
   func getSignedWalletInfo() throws -> DIDWalletSDK.SignedWalletInfo
 }
 @_hasMissingDesignatedInitializers public class MultibaseUtils {
@@ -141,9 +107,7 @@ public enum WalletLogLevel : Swift.String {
   case info
   case warning
   case error
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -161,9 +125,7 @@ public enum WalletLogLevel : Swift.String {
   @objc deinit
 }
 @_hasMissingDesignatedInitializers public class Properties {
-  #if compiler(>=5.3) && $NonescapableTypes
   public static func getWalletId() -> Swift.String?
-  #endif
   public static func setWalletId(id: Swift.String)
   @objc deinit
 }
@@ -190,9 +152,7 @@ public struct CommunicationClient : DIDWalletSDK.CommunicationProtocol {
     case GET
     case POST
     case DELETE
-    #if compiler(>=5.3) && $NonescapableTypes
     public init?(rawValue: Swift.String)
-    #endif
     public typealias RawValue = Swift.String
     public var rawValue: Swift.String {
       get
@@ -208,12 +168,8 @@ extension DIDWalletSDK.CommunicationClient : DIDWalletSDK.ZKPCommunicationProtoc
   public static func getZKPCredentialDefinition(hostUrlString: Swift.String, id: Swift.String) async throws -> DIDWalletSDK.ZKPCredentialDefinition
 }
 extension DIDWalletSDK.CommunicationClient {
-  #if compiler(>=5.3) && $NonescapableTypes
   public static func sendRequest<T>(urlString: Swift.String, httpMethod: DIDWalletSDK.CommunicationClient.HTTPMethod = .POST, headerFields: DIDWalletSDK.StringDictionary = defaultHttpHeaderFields, requestJsonable: (any DIDWalletSDK.Jsonable)? = nil) async throws -> T where T : DIDWalletSDK.Jsonable
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   public static func sendRequest(urlString: Swift.String, httpMethod: DIDWalletSDK.CommunicationClient.HTTPMethod = .POST, headerFields: DIDWalletSDK.StringDictionary = defaultHttpHeaderFields, requestJsonData: Foundation.Data? = nil) async throws -> (Foundation.Data, Swift.Int)
-  #endif
 }
 extension DIDWalletSDK.BigUInt {
   public subscript(bitAt index: Swift.Int) -> Swift.Bool {
@@ -503,23 +459,19 @@ extension Swift.Array where Element == (key: Swift.String, value: DIDWalletSDK.J
   public var keys: [Swift.String] {
     get
   }
-  #if compiler(>=5.3) && $NonescapableTypes
   public subscript(key: Swift.String) -> DIDWalletSDK.JSON? {
     get
     set
   }
-  #endif
 }
 extension DIDWalletSDK.JSON {
   public func keyValues() throws -> DIDWalletSDK.JSONKeyValues
   public func dictionaryValue() throws -> [Swift.String : DIDWalletSDK.JSON]
   public func getValue(for key: Swift.String) throws -> DIDWalletSDK.JSON
   public func getAllValues(for key: Swift.String) throws -> [DIDWalletSDK.JSON]
-  #if compiler(>=5.3) && $NonescapableTypes
   public subscript(key: Swift.String) -> DIDWalletSDK.JSON? {
     get
   }
-  #endif
   public subscript(dynamicMember key: Swift.String) -> DIDWalletSDK.JSON {
     get
   }
@@ -664,15 +616,11 @@ public struct CredInfo : DIDWalletSDK.Jsonable {
 }
 extension DIDWalletSDK.BigUInt {
   public func greatestCommonDivisor(with b: DIDWalletSDK.BigUInt) -> DIDWalletSDK.BigUInt
-  #if compiler(>=5.3) && $NonescapableTypes
   public func inverse(_ modulus: DIDWalletSDK.BigUInt) -> DIDWalletSDK.BigUInt?
-  #endif
 }
 extension DIDWalletSDK.BigInt {
   public func greatestCommonDivisor(with b: DIDWalletSDK.BigInt) -> DIDWalletSDK.BigInt
-  #if compiler(>=5.3) && $NonescapableTypes
   public func inverse(_ modulus: DIDWalletSDK.BigInt) -> DIDWalletSDK.BigInt?
-  #endif
 }
 extension DIDWalletSDK.BigUInt {
   prefix public static func ~ (a: DIDWalletSDK.BigUInt) -> DIDWalletSDK.BigUInt
@@ -799,20 +747,16 @@ public struct JSONTokenLiteralNull : DIDWalletSDK.JSONToken {
 }
 public struct JSONTokenString : DIDWalletSDK.JSONToken {
   public var data: Foundation.Data
-  #if compiler(>=5.3) && $NonescapableTypes
   public var contents: Swift.String? {
     get
   }
-  #endif
 }
 public struct JSONTokenNumber : DIDWalletSDK.JSONToken {
   public var data: Foundation.Data
   public var possiblyTruncated: Swift.Bool
-  #if compiler(>=5.3) && $NonescapableTypes
   public var contents: Swift.String? {
     get
   }
-  #endif
 }
 public struct JSONTokenWhitespace : DIDWalletSDK.JSONToken {
   public var data: Foundation.Data
@@ -828,9 +772,7 @@ public class JSONTokenizer {
   @objc deinit
 }
 extension DIDWalletSDK.BigUInt {
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?<T>(exactly source: T) where T : Swift.BinaryInteger
-  #endif
   public init<T>(_ source: T) where T : Swift.BinaryInteger
   public init<T>(truncatingIfNeeded source: T) where T : Swift.BinaryInteger
   public init<T>(clamping source: T) where T : Swift.BinaryInteger
@@ -839,9 +781,7 @@ extension DIDWalletSDK.BigInt {
   public init()
   public init(_ integer: DIDWalletSDK.BigUInt)
   public init<T>(_ source: T) where T : Swift.BinaryInteger
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?<T>(exactly source: T) where T : Swift.BinaryInteger
-  #endif
   public init<T>(clamping source: T) where T : Swift.BinaryInteger
   public init<T>(truncatingIfNeeded source: T) where T : Swift.BinaryInteger
 }
@@ -876,28 +816,16 @@ public struct CredSchemaVO : DIDWalletSDK.Jsonable {
   public init(from decoder: any Swift.Decoder) throws
 }
 extension DIDWalletSDK.BigUInt {
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?<T>(exactly source: T) where T : Swift.BinaryFloatingPoint
-  #endif
   public init<T>(_ source: T) where T : Swift.BinaryFloatingPoint
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(exactly source: Foundation.Decimal)
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(truncating source: Foundation.Decimal)
-  #endif
 }
 extension DIDWalletSDK.BigInt {
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?<T>(exactly source: T) where T : Swift.BinaryFloatingPoint
-  #endif
   public init<T>(_ source: T) where T : Swift.BinaryFloatingPoint
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(exactly source: Foundation.Decimal)
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(truncating source: Foundation.Decimal)
-  #endif
 }
 extension Swift.BinaryFloatingPoint where Self.RawExponent : Swift.FixedWidthInteger, Self.RawSignificand : Swift.FixedWidthInteger {
   public init(_ value: DIDWalletSDK.BigInt)
@@ -944,14 +872,10 @@ public class JSONWriter {
   @objc deinit
 }
 extension DIDWalletSDK.BigUInt {
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?<S>(_ text: S, radix: Swift.Int = 10) where S : Swift.StringProtocol
-  #endif
 }
 extension DIDWalletSDK.BigInt {
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?<S>(_ text: S, radix: Swift.Int = 10) where S : Swift.StringProtocol
-  #endif
 }
 extension Swift.String {
   public init(_ v: DIDWalletSDK.BigUInt)
@@ -1057,9 +981,7 @@ public enum SecureEnclaveAccessMethod : Swift.Int, Swift.Codable {
   case none
   case currentSet
   case any
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.Int)
-  #endif
   public typealias RawValue = Swift.Int
   public var rawValue: Swift.Int {
     get
@@ -1068,9 +990,7 @@ public enum SecureEnclaveAccessMethod : Swift.Int, Swift.Codable {
 public enum StorageOption : Swift.Int, Swift.Codable {
   case wallet
   case secureEnclave
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.Int)
-  #endif
   public typealias RawValue = Swift.Int
   public var rawValue: Swift.Int {
     get
@@ -1082,9 +1002,7 @@ public enum KeyAccessMethod : Swift.Int, Swift.Codable {
   case secureEnclaveNone
   case secureEnclaveCurrentSet
   case secureEnclaveAny
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.Int)
-  #endif
   public typealias RawValue = Swift.Int
   public var rawValue: Swift.Int {
     get
@@ -1122,9 +1040,7 @@ public struct MasterSecretBlindingData {
 }
 public enum CredentialType : Swift.String, Swift.Codable {
   case cl
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -1182,9 +1098,7 @@ public struct ZKPCredentialSchema : DIDWalletSDK.Jsonable {
     public enum AttributeValueType : Swift.String, Swift.Codable {
       case String
       case Number
-      #if compiler(>=5.3) && $NonescapableTypes
       public init?(rawValue: Swift.String)
-      #endif
       public typealias RawValue = Swift.String
       public var rawValue: Swift.String {
         get
@@ -1203,9 +1117,7 @@ public struct ZKPCredentialSchema : DIDWalletSDK.Jsonable {
   case LE
   case GT
   case LT
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -1400,9 +1312,7 @@ public struct DIDKeyInfo {
   public var keyInfo: DIDWalletSDK.KeyInfo
   public var methodType: DIDWalletSDK.DIDMethodType
   public var controller: Swift.String?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(keyInfo: DIDWalletSDK.KeyInfo, methodType: DIDWalletSDK.DIDMethodType, controller: Swift.String? = nil)
-  #endif
 }
 public struct DIDMethodType : Swift.OptionSet {
   public let rawValue: Swift.Int
@@ -1457,7 +1367,7 @@ public struct VerifiablePresentation : DIDWalletSDK.Jsonable, DIDWalletSDK.Proof
   public typealias ID = Swift.String
 }
 extension DIDWalletSDK.VerifiablePresentation {
-  public init(holder: Swift.String, @DIDWalletSDK.UTCDatetime validFrom: Swift.String, @DIDWalletSDK.UTCDatetime validUntil: Swift.String, verifierNonce: Swift.String, verifiableCredential: [DIDWalletSDK.VerifiableCredential])
+  public init(holder: Swift.String, validFrom: Swift.String, validUntil: Swift.String, verifierNonce: Swift.String, verifiableCredential: [DIDWalletSDK.VerifiableCredential])
 }
 extension DIDWalletSDK.VerifiablePresentation : Swift.Codable {
   public func encode(to encoder: any Swift.Encoder) throws
@@ -1534,9 +1444,7 @@ public enum OfferTypeEnum : Swift.String, Swift.Codable {
   case RestoreDidOffer
   case ZkpIssueOffer
   case VerifyProofOffer
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -1546,9 +1454,7 @@ public enum ProfileType : Swift.String, Swift.Codable {
   case IssueProfile
   case VerifyProfile
   case ProofRequestProfile
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -1558,9 +1464,7 @@ public struct LogoImage : DIDWalletSDK.Jsonable {
   public enum LogoImageType : Swift.String, Swift.Codable {
     case jpg
     case png
-    #if compiler(>=5.3) && $NonescapableTypes
     public init?(rawValue: Swift.String)
-    #endif
     public typealias RawValue = Swift.String
     public var rawValue: Swift.String {
       get
@@ -1695,9 +1599,7 @@ public struct SignedWalletInfo : DIDWalletSDK.Jsonable, DIDWalletSDK.ProofContai
   public var wallet: DIDWalletSDK.Wallet
   public var nonce: Swift.String
   public var proof: DIDWalletSDK.Proof?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(wallet: DIDWalletSDK.Wallet, nonce: Swift.String, proof: DIDWalletSDK.Proof?)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -1718,9 +1620,7 @@ public enum RoleTypeEnum : Swift.String, DIDWalletSDK.Jsonable {
   case StorageProvider
   case BackupProvider
   case Etc
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -1780,9 +1680,7 @@ public struct DIDDocument : DIDWalletSDK.Jsonable, DIDWalletSDK.ProofsContainer 
     case rsaVerificationKey2018
     case secp256k1VerificationKey2018
     case secp256r1VerificationKey2018
-    #if compiler(>=5.3) && $NonescapableTypes
     public init?(rawValue: Swift.String)
-    #endif
     public typealias RawValue = Swift.String
     public var rawValue: Swift.String {
       get
@@ -1791,9 +1689,7 @@ public struct DIDDocument : DIDWalletSDK.Jsonable, DIDWalletSDK.ProofsContainer 
   public enum DIDServiceType : Swift.String, Swift.Codable {
     case linkedDomains
     case credentialRegistry
-    #if compiler(>=5.3) && $NonescapableTypes
     public init?(rawValue: Swift.String)
-    #endif
     public typealias RawValue = Swift.String
     public var rawValue: Swift.String {
       get
@@ -1801,9 +1697,7 @@ public struct DIDDocument : DIDWalletSDK.Jsonable, DIDWalletSDK.ProofsContainer 
   }
 }
 extension DIDWalletSDK.DIDDocument {
-  #if compiler(>=5.3) && $NonescapableTypes
-  public init(id: Swift.String, controller: Swift.String? = nil, @DIDWalletSDK.UTCDatetime created: Swift.String)
-  #endif
+  public init(id: Swift.String, controller: Swift.String? = nil, created: Swift.String)
 }
 extension DIDWalletSDK.DIDDocument : Swift.Codable {
   public func encode(to encoder: any Swift.Encoder) throws
@@ -1815,18 +1709,14 @@ public struct IssueOfferPayload : DIDWalletSDK.Jsonable {
   public var vcPlanId: Swift.String
   public var issuer: Swift.String
   public var validUntil: Swift.String?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(offerId: Swift.String? = nil, type: DIDWalletSDK.OfferTypeEnum, vcPlanId: Swift.String, issuer: Swift.String, validUntil: Swift.String? = nil)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
 public enum PresentModeEnum : Swift.String, DIDWalletSDK.Jsonable {
   case Direct
   case Indirect
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -1847,17 +1737,13 @@ public class ReqEcdhBuilder {
   public func setPublicKey(_ publicKey: Swift.String) -> DIDWalletSDK.ReqEcdhBuilder
   public func setCurve(_ curve: DIDWalletSDK.ECType) -> DIDWalletSDK.ReqEcdhBuilder
   public func setCandidate(_ candidate: [DIDWalletSDK.SymmetricCipherType]) -> DIDWalletSDK.ReqEcdhBuilder
-  #if compiler(>=5.3) && $NonescapableTypes
   public func setProof(_ proof: DIDWalletSDK.Proof?) -> DIDWalletSDK.ReqEcdhBuilder
-  #endif
   public func build() -> DIDWalletSDK.ReqEcdh
   @objc deinit
 }
 public struct ReqEcdh : DIDWalletSDK.Jsonable, DIDWalletSDK.ProofContainer {
   public var proof: DIDWalletSDK.Proof?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(client: Swift.String, clientNonce: Swift.String, publicKey: Swift.String, curve: DIDWalletSDK.ECType, candidate: [DIDWalletSDK.SymmetricCipherType]? = nil, proof: DIDWalletSDK.Proof? = nil)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -1865,9 +1751,7 @@ public struct RequestProfile : DIDWalletSDK.Jsonable {
   public var id: Swift.String
   public var txId: Swift.String?
   public var offerId: Swift.String
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(id: Swift.String, txId: Swift.String? = nil, offerId: Swift.String)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -1918,9 +1802,7 @@ public struct AttestedAppInfo : DIDWalletSDK.Jsonable, DIDWalletSDK.ProofContain
   public var provider: DIDWalletSDK.Provider
   public var nonce: Swift.String
   public var proof: DIDWalletSDK.Proof?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(appId: Swift.String, provider: DIDWalletSDK.Provider, nonce: Swift.String, proof: DIDWalletSDK.Proof?)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -1945,9 +1827,7 @@ public struct RetrieveKyc : DIDWalletSDK.Jsonable {
   public var serverToken: Swift.String
   public var kycTxId: Swift.String?
   public var kycToken: Swift.String?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(id: Swift.String, txId: Swift.String, serverToken: Swift.String, kycTxId: Swift.String?, kycToken: Swift.String?)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -1976,9 +1856,7 @@ public struct AccE2e : DIDWalletSDK.Jsonable, DIDWalletSDK.ProofContainer {
   public var publicKey: Swift.String
   public var iv: Swift.String
   public var proof: DIDWalletSDK.Proof?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(publicKey: Swift.String, iv: Swift.String, proof: DIDWalletSDK.Proof? = nil)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -2032,9 +1910,7 @@ public enum ServerTokenPurposeEnum : Swift.Int, DIDWalletSDK.Jsonable {
   case DETAIL_VC
   case CREATE_DID_AND_ISSUE_VC
   case LIST_VC_AND_PRESENT_VP
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.Int)
-  #endif
   public typealias RawValue = Swift.Int
   public var rawValue: Swift.Int {
     get
@@ -2046,9 +1922,7 @@ public struct AttestedDIDDoc : DIDWalletSDK.Jsonable, DIDWalletSDK.ProofContaine
   public var provider: DIDWalletSDK.Provider
   public var nonce: Swift.String
   public var proof: DIDWalletSDK.Proof?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(walletId: Swift.String, ownerDidDoc: Swift.String, provider: DIDWalletSDK.Provider, nonce: Swift.String, proof: DIDWalletSDK.Proof?)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -2065,9 +1939,7 @@ public struct WalletTokenSeed : DIDWalletSDK.Jsonable {
   public var nonce: Swift.String
   public var validUntil: Swift.String
   public var userId: Swift.String?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(purpose: DIDWalletSDK.WalletTokenPurposeEnum, pkgName: Swift.String, nonce: Swift.String, validUntil: Swift.String, userId: Swift.String? = nil)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -2114,9 +1986,7 @@ public struct ReqRevokeVc : DIDWalletSDK.Jsonable, DIDWalletSDK.ProofContainer {
   public var issuerNonce: Swift.String
   public var proof: DIDWalletSDK.Proof?
   public var proofs: [DIDWalletSDK.Proof]?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(vcId: Swift.String, issuerNonce: Swift.String, proof: DIDWalletSDK.Proof? = nil, proofs: [DIDWalletSDK.Proof]? = nil)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -2148,9 +2018,7 @@ public struct VCPlan : DIDWalletSDK.Jsonable {
   public var allowedIssuers: [Swift.String]?
   public var manager: Swift.String
   public var credentialDefinition: DIDWalletSDK.VCPlan.CredentialDefinition?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(vcPlanId: Swift.String, name: Swift.String, description: Swift.String, url: Swift.String? = nil, logo: DIDWalletSDK.LogoImage? = nil, validFrom: Swift.String? = nil, validUntil: Swift.String? = nil, tags: [Swift.String]? = nil, credentialSchema: DIDWalletSDK.IssueProfile.Profile.CredentialSchema, option: DIDWalletSDK.Option, delegate: Swift.String? = nil, allowedIssuers: [Swift.String]? = nil, manager: Swift.String, credentialDefinition: DIDWalletSDK.VCPlan.CredentialDefinition?)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -2214,9 +2082,7 @@ public struct AccEcdh : DIDWalletSDK.Jsonable, DIDWalletSDK.ProofContainer {
   public var cipher: Swift.String
   public var padding: Swift.String
   public var proof: DIDWalletSDK.Proof?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(server: Swift.String, serverNonce: Swift.String, publicKey: Swift.String, cipher: Swift.String, padding: Swift.String, proof: DIDWalletSDK.Proof? = nil)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -2241,9 +2107,7 @@ public struct ProposeIssueVc : DIDWalletSDK.Jsonable {
   public var vcPlanId: Swift.String
   public var issuer: Swift.String
   public var offerId: Swift.String?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(id: Swift.String, vcPlanId: Swift.String, issuer: Swift.String, offerId: Swift.String? = nil)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -2267,9 +2131,7 @@ public struct WalletTokenData : DIDWalletSDK.Jsonable, DIDWalletSDK.ProofContain
   public var provider: DIDWalletSDK.Provider
   public var nonce: Swift.String
   public var proof: DIDWalletSDK.Proof?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(seed: DIDWalletSDK.WalletTokenSeed, sha256_pii: Swift.String, provider: DIDWalletSDK.Provider, nonce: Swift.String, proof: DIDWalletSDK.Proof?)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -2307,9 +2169,7 @@ public struct _RequestCreateToken : DIDWalletSDK.Jsonable {
 public enum DidDocumentType : Swift.Int, DIDWalletSDK.Jsonable {
   case DeviceDidDocument
   case HolderDidDocumnet
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.Int)
-  #endif
   public typealias RawValue = Swift.Int
   public var rawValue: Swift.Int {
     get
@@ -2336,22 +2196,14 @@ public protocol ProofProtocol : DIDWalletSDK.Jsonable {
   var verificationMethod: Swift.String { get set }
   var proofPurpose: DIDWalletSDK.ProofPurpose { get set }
   var type: DIDWalletSDK.ProofType { get set }
-  #if compiler(>=5.3) && $NonescapableTypes
   var proofValue: Swift.String? { get set }
-  #endif
 }
 public protocol ProofContainer : DIDWalletSDK.Jsonable {
-  #if compiler(>=5.3) && $NonescapableTypes
   var proof: DIDWalletSDK.Proof? { get set }
-  #endif
 }
 public protocol ProofsContainer : DIDWalletSDK.Jsonable {
-  #if compiler(>=5.3) && $NonescapableTypes
   var proof: DIDWalletSDK.Proof? { get set }
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   var proofs: [DIDWalletSDK.Proof]? { get set }
-  #endif
 }
 public protocol ConvertibleToAlgorithmType : Swift.RawRepresentable where Self.RawValue == Swift.String {
   static var commonString: Swift.String { get }
@@ -2396,9 +2248,7 @@ public struct ServerTokenData : DIDWalletSDK.Jsonable, DIDWalletSDK.ProofContain
   public var provider: DIDWalletSDK.Provider
   public var nonce: Swift.String
   public var proof: DIDWalletSDK.Proof?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(purpose: DIDWalletSDK.ServerTokenPurposeEnum, walletId: Swift.String, appId: Swift.String, validUntil: Swift.String, provider: DIDWalletSDK.Provider, nonce: Swift.String, proof: DIDWalletSDK.Proof?)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -2419,9 +2269,7 @@ public struct ReqVC : DIDWalletSDK.Jsonable {
   public var refId: Swift.String
   public var profile: DIDWalletSDK.ReqVcProfile
   public var credentialRequest: DIDWalletSDK.ZKPCredentialRequest?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(refId: Swift.String, profile: DIDWalletSDK.ReqVcProfile, credentialRequest: DIDWalletSDK.ZKPCredentialRequest? = nil)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -2444,9 +2292,7 @@ public struct InvokedDidDoc : DIDWalletSDK.Jsonable, DIDWalletSDK.ProofContainer
   public var controller: DIDWalletSDK.Provider
   public var nonce: Swift.String
   public var proof: DIDWalletSDK.Proof?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(didDoc: Swift.String, controller: DIDWalletSDK.Provider, nonce: Swift.String, proof: DIDWalletSDK.Proof?)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -2485,9 +2331,7 @@ public struct VerifiableCredential : DIDWalletSDK.Jsonable, Swift.Identifiable {
   public enum Presence : Swift.String, Swift.Codable {
     case physical
     case digital
-    #if compiler(>=5.3) && $NonescapableTypes
     public init?(rawValue: Swift.String)
-    #endif
     public typealias RawValue = Swift.String
     public var rawValue: Swift.String {
       get
@@ -2495,9 +2339,7 @@ public struct VerifiableCredential : DIDWalletSDK.Jsonable, Swift.Identifiable {
   }
   public enum EvidenceType : Swift.String, Swift.Codable {
     case documentVerification
-    #if compiler(>=5.3) && $NonescapableTypes
     public init?(rawValue: Swift.String)
-    #endif
     public typealias RawValue = Swift.String
     public var rawValue: Swift.String {
       get
@@ -2561,9 +2403,7 @@ public struct SignedDIDDoc : DIDWalletSDK.Jsonable, DIDWalletSDK.ProofContainer 
   public var wallet: DIDWalletSDK.Wallet
   public var nonce: Swift.String
   public var proof: DIDWalletSDK.Proof?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(ownerDidDoc: Swift.String, wallet: DIDWalletSDK.Wallet, nonce: Swift.String, proof: DIDWalletSDK.Proof?)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -2571,9 +2411,7 @@ public struct DataPayload : DIDWalletSDK.Jsonable {
   public var txId: Swift.String?
   public var payloadType: Swift.String
   public var payload: Swift.String
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(txId: Swift.String? = nil, payloadType: Swift.String, payload: Swift.String)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -2595,9 +2433,7 @@ public enum WalletTokenPurposeEnum : Swift.Int, DIDWalletSDK.Jsonable {
   public var value: Swift.String {
     get
   }
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.Int)
-  #endif
   public typealias RawValue = Swift.Int
   public var rawValue: Swift.Int {
     get
@@ -2607,9 +2443,7 @@ public class WalletTokenPurpose {
   public var purposeCode: DIDWalletSDK.WalletTokenPurposeEnum
   public var description: Swift.String?
   public init(purpose: DIDWalletSDK.WalletTokenPurposeEnum)
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(purpose: DIDWalletSDK.WalletTokenPurposeEnum, description: Swift.String? = nil)
-  #endif
   @objc deinit
 }
 public struct VCPlanList : DIDWalletSDK.Jsonable {
@@ -2640,9 +2474,7 @@ public struct DIDAuth : DIDWalletSDK.Jsonable, DIDWalletSDK.ProofContainer {
   public var did: Swift.String
   public var authNonce: Swift.String
   public var proof: DIDWalletSDK.Proof?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(did: Swift.String, authNonce: Swift.String, proof: DIDWalletSDK.Proof?)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -2678,9 +2510,7 @@ public struct _ProposeRevokeVc : DIDWalletSDK.Jsonable {
 public struct VpOfferWrapper : DIDWalletSDK.Jsonable {
   public var txId: Swift.String?
   public var payload: DIDWalletSDK.VerifyOfferPayload
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(txId: Swift.String? = nil, payload: DIDWalletSDK.VerifyOfferPayload)
-  #endif
   public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
@@ -2707,9 +2537,7 @@ public struct Proof : DIDWalletSDK.ProofProtocol {
   public var verificationMethod: Swift.String
   public var type: DIDWalletSDK.ProofType
   public var proofValue: Swift.String?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(created: Swift.String, proofPurpose: DIDWalletSDK.ProofPurpose, verificationMethod: Swift.String, type: DIDWalletSDK.ProofType, proofValue: Swift.String? = nil)
-  #endif
 }
 public struct VCProof : DIDWalletSDK.ProofProtocol, DIDWalletSDK.Jsonable {
   @DIDWalletSDK.UTCDatetime public var created: Swift.String {
@@ -2722,9 +2550,7 @@ public struct VCProof : DIDWalletSDK.ProofProtocol, DIDWalletSDK.Jsonable {
   public var type: DIDWalletSDK.ProofType
   public var proofValue: Swift.String?
   public var proofValueList: [Swift.String]?
-  #if compiler(>=5.3) && $NonescapableTypes
   public init(created: Swift.String, proofPurpose: DIDWalletSDK.ProofPurpose, verificationMethod: Swift.String, type: DIDWalletSDK.ProofType, proofValue: Swift.String? = nil, proofValueList: [Swift.String]? = nil)
-  #endif
 }
 extension DIDWalletSDK.Proof : Swift.Codable {
   public func encode(to encoder: any Swift.Encoder) throws
@@ -2743,9 +2569,7 @@ public enum ClaimType : Swift.String, Swift.Codable {
   case text
   case image
   case document
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -2762,9 +2586,7 @@ public enum ClaimFormat : Swift.String, Swift.Codable {
   case txt
   case pdf
   case word
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -2774,9 +2596,7 @@ public enum Location : Swift.String, Swift.Codable {
   case inline
   case remote
   case attach
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -2788,9 +2608,7 @@ public enum ProofPurpose : Swift.String, Swift.Codable {
   case keyAgreement
   case capabilityInvocation
   case capabilityDelegation
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -2803,9 +2621,7 @@ public enum ProofType : Swift.String, Swift.Codable, DIDWalletSDK.AlgorithmTypeC
   case rsaSignature2018
   case secp256k1Signature2018
   case secp256r1Signature2018
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -2815,9 +2631,7 @@ public enum AlgorithmType : Swift.String, Swift.Codable {
   case rsa
   case secp256k1
   case secp256r1
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -2825,9 +2639,7 @@ public enum AlgorithmType : Swift.String, Swift.Codable {
 }
 public enum CredentialSchemaType : Swift.String, Swift.Codable {
   case osdSchemaCredential
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -2839,9 +2651,7 @@ public enum ECType : Swift.String, Swift.Codable, DIDWalletSDK.ConvertibleToAlgo
   }
   case secp256k1
   case secp256r1
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -2852,9 +2662,7 @@ public enum SymmetricCipherType : Swift.String, Swift.Codable {
   case aes128ECB
   case aes256CBC
   case aes256ECB
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -2863,9 +2671,7 @@ public enum SymmetricCipherType : Swift.String, Swift.Codable {
 public enum SymmetricPaddingType : Swift.String, Swift.Codable {
   case noPad
   case pkcs5
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -2875,9 +2681,7 @@ public enum AuthType : Swift.Int, Swift.Codable {
   case free
   case pin
   case bio
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.Int)
-  #endif
   public typealias RawValue = Swift.Int
   public var rawValue: Swift.Int {
     get
@@ -2897,17 +2701,13 @@ public struct VerifyAuthType : Swift.OptionSet, Swift.Sequence, Swift.Codable {
 }
 public struct OptionSetIterator<Element> : Swift.IteratorProtocol where Element : Swift.OptionSet, Element.RawValue == Swift.Int {
   public init(element: Element)
-  #if compiler(>=5.3) && $NonescapableTypes
   public mutating func next() -> Element?
-  #endif
 }
 public enum VCStatusEnum : Swift.String, Swift.Codable {
   case ACTIVE
   case INACTIVE
   case REVOKED
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -2915,9 +2715,7 @@ public enum VCStatusEnum : Swift.String, Swift.Codable {
 }
 public enum EncryptionType : Swift.String {
   case aes
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -2926,9 +2724,7 @@ public enum EncryptionType : Swift.String {
 public enum EncryptionMode : Swift.String {
   case cbc
   case ecb
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -2937,9 +2733,7 @@ public enum EncryptionMode : Swift.String {
 public enum SymmetricKeySize : Swift.UInt {
   case size128
   case size256
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.UInt)
-  #endif
   public typealias RawValue = Swift.UInt
   public var rawValue: Swift.UInt {
     get
@@ -2951,9 +2745,7 @@ public enum MultibaseType : Swift.String {
   case base58BTC
   case base64
   case base64URL
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -2963,9 +2755,7 @@ public enum DigestEnum : Swift.String {
   case sha256
   case sha384
   case sha512
-  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.String)
-  #endif
   public typealias RawValue = Swift.String
   public var rawValue: Swift.String {
     get
@@ -3003,49 +2793,29 @@ extension DIDWalletSDK.WalletAPI {
 extension DIDWalletSDK.WalletAPI {
   @discardableResult
   public func createHolderDIDDocument(hWalletToken: Swift.String) throws -> DIDWalletSDK.DIDDocument
-  #if compiler(>=5.3) && $NonescapableTypes
   public func createSignedDIDDoc(passcode: Swift.String? = nil) throws -> DIDWalletSDK.SignedDIDDoc
-  #endif
   public func getDidDocument(type: DIDWalletSDK.DidDocumentType) throws -> DIDWalletSDK.DIDDocument
   public func isAnyKeysSaved() throws -> Swift.Bool
   public func isSavedKey(keyId: Swift.String) throws -> Swift.Bool
-  #if compiler(>=5.3) && $NonescapableTypes
   @discardableResult
   public func generateKeyPair(hWalletToken: Swift.String, passcode: Swift.String? = nil, keyId: Swift.String, algType: DIDWalletSDK.AlgorithmType, promptMsg: Swift.String? = nil) throws -> Swift.Bool
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   @discardableResult
   public func sign(keyId: Swift.String, pin: Foundation.Data? = nil, data: Foundation.Data, type: DIDWalletSDK.DidDocumentType) throws -> Foundation.Data
-  #endif
   public func verify(publicKey: Foundation.Data, data: Foundation.Data, signature: Foundation.Data) throws -> Swift.Bool
-  #if compiler(>=5.3) && $NonescapableTypes
   public func getSignedDidAuth(authNonce: Swift.String, passcode: Swift.String? = nil) throws -> DIDWalletSDK.DIDAuth
-  #endif
   public func updateHolderDIDDocument(hWalletToken: Swift.String) throws -> DIDWalletSDK.DIDDocument
   public func saveHolderDIDDocument() throws
   public func deleteKeyPair(hWalletToken: Swift.String, keyId: Swift.String) throws
-  #if compiler(>=5.3) && $NonescapableTypes
   public func requestUpdateUser(tasURL: Swift.String, txId: Swift.String, hWalletToken: Swift.String, serverToken: Swift.String, didAuth: DIDWalletSDK.DIDAuth?, signedDIDDoc: DIDWalletSDK.SignedDIDDoc?) async throws -> DIDWalletSDK._RequestUpdateDidDoc
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   public func requestRestoreUser(tasURL: Swift.String, txId: Swift.String, hWalletToken: Swift.String, serverToken: Swift.String, didAuth: DIDWalletSDK.DIDAuth?) async throws -> DIDWalletSDK._RequestRestoreDidDoc
-  #endif
 }
 extension DIDWalletSDK.WalletAPI {
-  #if compiler(>=5.3) && $NonescapableTypes
   public func requestIssueVc(tasURL: Swift.String, hWalletToken: Swift.String, didAuth: DIDWalletSDK.DIDAuth, issuerProfile: DIDWalletSDK._RequestIssueProfile, refId: Swift.String, serverToken: Swift.String, APIGatewayURL: Swift.String) async throws -> (Swift.String, DIDWalletSDK._RequestIssueVc?)
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   public func requestRevokeVc(hWalletToken: Swift.String, tasURL: Swift.String, authType: DIDWalletSDK.VerifyAuthType, vcId: Swift.String, issuerNonce: Swift.String, txId: Swift.String, serverToken: Swift.String, passcode: Swift.String? = nil) async throws -> DIDWalletSDK._RequestRevokeVc
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   public func getAllCredentials(hWalletToken: Swift.String) throws -> [DIDWalletSDK.VerifiableCredential]?
-  #endif
   public func getCredentials(hWalletToken: Swift.String, ids: [Swift.String]) throws -> [DIDWalletSDK.VerifiableCredential]
   public func deleteCredentials(hWalletToken: Swift.String, ids: [Swift.String]) throws -> Swift.Bool
-  #if compiler(>=5.3) && $NonescapableTypes
   public func createEncVp(hWalletToken: Swift.String, claimInfos: [DIDWalletSDK.ClaimInfo]? = nil, verifierProfile: DIDWalletSDK._RequestProfile, APIGatewayURL: Swift.String, passcode: Swift.String? = nil) async throws -> (DIDWalletSDK.AccE2e, Foundation.Data)
-  #endif
   public var isAnyCredentialsSaved: Swift.Bool {
     get
   }
@@ -3053,9 +2823,7 @@ extension DIDWalletSDK.WalletAPI {
 extension DIDWalletSDK.WalletAPI {
   public func createEncZKProof(hWalletToken: Swift.String, selectedReferents: [DIDWalletSDK.UserReferent], proofParam: DIDWalletSDK.ZKProofParam, proofRequestProfile: DIDWalletSDK._RequestProofRequestProfile, APIGatewayURL: Swift.String) async throws -> (DIDWalletSDK.AccE2e, Foundation.Data)
   public func searchZKPCredentials(hWalletToken: Swift.String, proofRequest: DIDWalletSDK.ProofRequest) throws -> DIDWalletSDK.AvailableReferent
-  #if compiler(>=5.3) && $NonescapableTypes
   public func getAllZKPCredentials(hWalletToken: Swift.String) throws -> [DIDWalletSDK.ZKPCredential]?
-  #endif
   public var isAnyZKPCredentialsSaved: Swift.Bool {
     get
   }
@@ -3064,9 +2832,7 @@ extension DIDWalletSDK.WalletAPI {
 }
 extension DIDWalletSDK.WalletAPI {
   public func registerLock(hWalletToken: Swift.String, passcode: Swift.String, isLock: Swift.Bool) throws -> Swift.Bool
-  #if compiler(>=5.3) && $NonescapableTypes
   public func authenticateLock(passcode: Swift.String) throws -> Foundation.Data?
-  #endif
   public func isLock() throws -> Swift.Bool
   public func changePin(id: Swift.String, oldPIN: Swift.String, newPIN: Swift.String) throws
   public func changeLock(oldPasscode: Swift.String, newPasscode: Swift.String) throws
@@ -3081,155 +2847,111 @@ public let defaultHttpHeaderFields: DIDWalletSDK.StringDictionary
 public class WalletUtil {
   public init()
   public static func generateMessageID() -> Swift.String
-  #if compiler(>=5.3) && $NonescapableTypes
   public static func mergeNonce(clientNonce: Foundation.Data?, serverNonce: Foundation.Data?) throws -> Foundation.Data
-  #endif
   public static func mergeSharedSecretAndNonce(sharedSecret: Foundation.Data, nonce: Foundation.Data, symmetricCipherType: DIDWalletSDK.SymmetricCipherType) -> Foundation.Data
-  #if compiler(>=5.3) && $NonescapableTypes
   public static func splitData(data: Foundation.Data) -> (Foundation.Data, Foundation.Data)?
-  #endif
   @objc deinit
 }
 public typealias CaEntityCoreDataClassSet = Foundation.NSSet
 @_inheritsConvenienceInitializers @objc(CaEntity) nonisolated public class CaEntity : CoreData.NSManagedObject {
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc override nonisolated dynamic public init(entity: CoreData.NSEntityDescription, insertInto context: CoreData.NSManagedObjectContext?)
-  #endif
   @objc deinit
 }
 public typealias CaEntityCoreDataPropertiesSet = Foundation.NSSet
 extension DIDWalletSDK.CaEntity {
   @nonobjc public class func fetchRequest() -> CoreData.NSFetchRequest<DIDWalletSDK.CaEntity>
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var createDate: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var idx: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var pkgName: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
 }
 extension DIDWalletSDK.CaEntity : Swift.Identifiable {
   public typealias ID = Swift.ObjectIdentifier
 }
 public typealias TokenEntityCoreDataClassSet = Foundation.NSSet
 @_inheritsConvenienceInitializers @objc(TokenEntity) nonisolated public class TokenEntity : CoreData.NSManagedObject {
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc override nonisolated dynamic public init(entity: CoreData.NSEntityDescription, insertInto context: CoreData.NSManagedObjectContext?)
-  #endif
   @objc deinit
 }
 public typealias TokenEntityCoreDataPropertiesSet = Foundation.NSSet
 extension DIDWalletSDK.TokenEntity {
   @nonobjc public class func fetchRequest() -> CoreData.NSFetchRequest<DIDWalletSDK.TokenEntity>
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var createDate: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var hWalletToken: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var idx: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var nonce: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var pii: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var pkgName: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var purpose: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var validUntil: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var walletId: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
 }
 extension DIDWalletSDK.TokenEntity : Swift.Identifiable {
   public typealias ID = Swift.ObjectIdentifier
 }
 public typealias UserEntityCoreDataClassSet = Foundation.NSSet
 @_inheritsConvenienceInitializers @objc(UserEntity) nonisolated public class UserEntity : CoreData.NSManagedObject {
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc override nonisolated dynamic public init(entity: CoreData.NSEntityDescription, insertInto context: CoreData.NSManagedObjectContext?)
-  #endif
   @objc deinit
 }
 public typealias UserEntityCoreDataPropertiesSet = Foundation.NSSet
 extension DIDWalletSDK.UserEntity {
   @nonobjc public class func fetchRequest() -> CoreData.NSFetchRequest<DIDWalletSDK.UserEntity>
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var createDate: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var finalEncKey: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var idx: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var pii: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
-  #if compiler(>=5.3) && $NonescapableTypes
   @objc @NSManaged nonisolated dynamic public var updateDate: Swift.String? {
     @objc get
     @objc set
   }
-  #endif
 }
 extension DIDWalletSDK.UserEntity : Swift.Identifiable {
   public typealias ID = Swift.ObjectIdentifier

@@ -312,6 +312,7 @@ class VideoVerifyViewController: UIViewController {
         let valueView = UILabel()
         valueView.text = value
         valueView.font = .systemFont(ofSize: 14, weight: .medium)
+        valueView.textColor = ColorPalette.ink
         valueView.textAlignment = .right
         valueView.numberOfLines = 0
 

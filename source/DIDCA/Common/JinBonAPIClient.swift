@@ -49,6 +49,16 @@ class JinBonAPIClient {
         )
     }
 
+    func completeVideoVc(videoId: Int, vcId: String) async throws {
+        _ = try await request(
+            path: "/api/videos/\(videoId)/vc/complete",
+            method: "POST",
+            body: ["vcId": vcId],
+            authenticated: true,
+            responseType: String.self
+        )
+    }
+
     func completeSignup(signupToken: String, did: String) async throws -> AuthTokenData {
         let body = ["signupToken": signupToken, "did": did]
         guard let data = try await request(path: "/api/signup/did/complete", method: "POST",
@@ -91,40 +101,8 @@ class JinBonAPIClient {
     // MARK: - 영상 등록 (multipart)
 
     func uploadVideo(fileURL: URL, title: String) async throws -> VideoRegisterData {
-        let boundary = UUID().uuidString
-        var request = URLRequest(url: URL(string: "\(baseURL)/api/videos")!)
-        request.httpMethod = "POST"
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-
-        if let token = Properties.getAccessToken() {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-
-        let fileData = try Data(contentsOf: fileURL)
-        let filename = fileURL.lastPathComponent
-        let mimeType = mimeTypeFor(filename)
-
-        var body = Data()
-
-        // title 파트
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"title\"\r\n\r\n".data(using: .utf8)!)
-        body.append("\(title)\r\n".data(using: .utf8)!)
-
-        // file 파트
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
-        body.append(fileData)
-        body.append("\r\n".data(using: .utf8)!)
-
-        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
-        request.httpBody = body
-
-        request.timeoutInterval = 120
-
-        let (responseData, response) = try await session.data(for: request)
-        try checkHTTPResponse(response)
+        let responseData = try await uploadMultipart(
+            path: "/api/videos", fileURL: fileURL, title: title, authenticated: true)
 
         let result = try decoder.decode(JinBonResponse<VideoRegisterData>.self, from: responseData)
         guard result.status == 200, let data = result.data else {
@@ -136,28 +114,8 @@ class JinBonAPIClient {
     // MARK: - 영상 검증 (파일)
 
     func verifyVideo(fileURL: URL) async throws -> VideoVerifyData {
-        let boundary = UUID().uuidString
-        var request = URLRequest(url: URL(string: "\(baseURL)/api/verify")!)
-        request.httpMethod = "POST"
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-
-        let fileData = try Data(contentsOf: fileURL)
-        let filename = fileURL.lastPathComponent
-        let mimeType = mimeTypeFor(filename)
-
-        var body = Data()
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
-        body.append(fileData)
-        body.append("\r\n".data(using: .utf8)!)
-        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
-        request.httpBody = body
-
-        request.timeoutInterval = 120
-
-        let (responseData, response) = try await session.data(for: request)
-        try checkHTTPResponse(response)
+        let responseData = try await uploadMultipart(
+            path: "/api/verify", fileURL: fileURL, title: nil, authenticated: false)
 
         let result = try decoder.decode(JinBonResponse<VideoVerifyData>.self, from: responseData)
         guard result.status == 200, let data = result.data else {
@@ -207,6 +165,11 @@ class JinBonAPIClient {
         Properties.clearAuth()
     }
 
+    func clearLocalSession() {
+        Properties.clearAuth()
+        Properties.clearDidRebindToken()
+    }
+
     // MARK: - Private
 
     private func request<T: Codable>(
@@ -230,19 +193,23 @@ class JinBonAPIClient {
         }
 
         let (data, response) = try await session.data(for: request)
+        if let http = response as? HTTPURLResponse,
+           http.statusCode == 401, authenticated, !isRetry {
+            do {
+                _ = try await refreshToken()
+                return try await self.request(
+                    path: path, method: method, body: body,
+                    authenticated: true, responseType: responseType,
+                    isRetry: true
+                )
+            } catch {
+                Properties.clearAuth()
+                throw JinBonError.notAuthenticated
+            }
+        }
         try checkHTTPResponse(response)
 
         let result = try decoder.decode(JinBonResponse<T>.self, from: data)
-
-        // 토큰 만료 — 1회만 갱신 재시도
-        if result.status == 401 && authenticated && !isRetry {
-            let _ = try await refreshToken()
-            return try await self.request(
-                path: path, method: method, body: body,
-                authenticated: true, responseType: responseType,
-                isRetry: true
-            )
-        }
 
         if result.status == 401 {
             Properties.clearAuth()
@@ -253,6 +220,77 @@ class JinBonAPIClient {
             throw JinBonError.serverError(result.message ?? "Request failed")
         }
         return result.data
+    }
+
+    private func uploadMultipart(
+        path: String,
+        fileURL: URL,
+        title: String?,
+        authenticated: Bool,
+        isRetry: Bool = false
+    ) async throws -> Data {
+        let boundary = UUID().uuidString
+        let multipartURL = try makeMultipartFile(
+            sourceURL: fileURL, title: title, boundary: boundary)
+        defer { try? FileManager.default.removeItem(at: multipartURL) }
+
+        var request = URLRequest(url: URL(string: "\(baseURL)\(path)")!)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 120
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        if authenticated, let token = Properties.getAccessToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        let (data, response) = try await session.upload(for: request, fromFile: multipartURL)
+        if let http = response as? HTTPURLResponse,
+           http.statusCode == 401, authenticated, !isRetry {
+            do {
+                _ = try await refreshToken()
+                return try await uploadMultipart(
+                    path: path, fileURL: fileURL, title: title,
+                    authenticated: true, isRetry: true)
+            } catch {
+                Properties.clearAuth()
+                throw JinBonError.notAuthenticated
+            }
+        }
+        try checkHTTPResponse(response)
+        return data
+    }
+
+    private func makeMultipartFile(sourceURL: URL, title: String?, boundary: String) throws -> URL {
+        let destination = FileManager.default.temporaryDirectory
+            .appendingPathComponent("jinbon-multipart-\(UUID().uuidString)")
+        FileManager.default.createFile(atPath: destination.path, contents: nil)
+
+        let output = try FileHandle(forWritingTo: destination)
+        do {
+            if let title {
+                try output.write(contentsOf: Data(
+                    "--\(boundary)\r\nContent-Disposition: form-data; name=\"title\"\r\n\r\n\(title)\r\n".utf8))
+            }
+
+            let safeFilename = sourceURL.lastPathComponent
+                .replacingOccurrences(of: "\"", with: "_")
+                .replacingOccurrences(of: "\r", with: "_")
+                .replacingOccurrences(of: "\n", with: "_")
+            try output.write(contentsOf: Data(
+                "--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"\(safeFilename)\"\r\nContent-Type: \(mimeTypeFor(safeFilename))\r\n\r\n".utf8))
+
+            let input = try FileHandle(forReadingFrom: sourceURL)
+            defer { try? input.close() }
+            while let chunk = try input.read(upToCount: 1_048_576), !chunk.isEmpty {
+                try output.write(contentsOf: chunk)
+            }
+            try output.write(contentsOf: Data("\r\n--\(boundary)--\r\n".utf8))
+            try output.close()
+            return destination
+        } catch {
+            try? output.close()
+            try? FileManager.default.removeItem(at: destination)
+            throw error
+        }
     }
 
     private func checkHTTPResponse(_ response: URLResponse) throws {

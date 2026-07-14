@@ -253,6 +253,10 @@ class VideoListViewController: UIViewController {
             } catch {
                 print("Failed to load videos: \(error)")
                 DispatchQueue.main.async { [weak self] in
+                    if case JinBonError.notAuthenticated = error {
+                        self?.updateUI()
+                        return
+                    }
                     self?.emptyLabel.text = "영상 목록을 불러올 수 없습니다"
                     self?.emptyLabel.isHidden = false
                 }
@@ -371,34 +375,57 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
 
 extension VideoListViewController: AuthWebViewDelegate {
     func authDidComplete(tokenData: AuthTokenData) {
-        updateUI()
+        switch WalletAccountValidator.validate(accountDid: tokenData.did) {
+        case .matches:
+            updateUI()
+        case .noWallet, .accountDidMissing, .mismatch:
+            JinBonAPIClient.shared.clearLocalSession()
+            showSignupError("로그인 계정과 이 기기의 Wallet DID를 확인할 수 없거나 서로 다릅니다. 시작 화면에서 디지털 신원을 다시 연결해주세요.")
+        }
     }
 
     func authDidCancel() {}
 
     func signupIdentityDidComplete(data: SignupIdentityData) {
-        Task { @MainActor in
-            if WalletAPI.shared.isExistWallet(),
-               let signupToken = Properties.getSignupToken(),
-               let didDoc = try? WalletAPI.shared.getDidDocument(type: DidDocumentType.HolderDidDocumnet) {
-                do {
-                    _ = try await JinBonAPIClient.shared.completeSignup(signupToken: signupToken, did: didDoc.id)
-                    Properties.setRegDidDocCompleted(status: true)
-                    Properties.clearSignupToken()
-                    updateUI()
-                    return
-                } catch {
-                    showSignupError(error.localizedDescription)
-                    return
-                }
-            }
-
-            let step = UIStoryboard(name: "Main", bundle: nil)
-                .instantiateViewController(withIdentifier: "StepViewController") as! StepViewController
-            step.setStepType(stepType: Properties.getUserId() == nil ? .STEP_TYPE_1 : .STEP_TYPE_2)
-            step.modalPresentationStyle = .fullScreen
-            present(step, animated: true)
+        if WalletAPI.shared.isExistWallet() {
+            let alert = UIAlertController(
+                title: "기존 Wallet을 연결할까요?",
+                message: "본인의 Wallet이 맞을 때만 새 진본 계정에 연결해주세요.",
+                preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+            alert.addAction(UIAlertAction(title: "내 Wallet 연결", style: .default) { [weak self] _ in
+                self?.completeSignupWithExistingWallet()
+            })
+            present(alert, animated: true)
+        } else {
+            showDidRegistration()
         }
+    }
+
+    private func completeSignupWithExistingWallet() {
+        Task { @MainActor in
+            guard let signupToken = Properties.getSignupToken(),
+                  let didDoc = try? WalletAPI.shared.getDidDocument(type: .HolderDidDocumnet) else {
+                showSignupError("기존 Wallet 정보를 확인할 수 없습니다.")
+                return
+            }
+            do {
+                _ = try await JinBonAPIClient.shared.completeSignup(signupToken: signupToken, did: didDoc.id)
+                Properties.setRegDidDocCompleted(status: true)
+                Properties.clearSignupToken()
+                updateUI()
+            } catch {
+                showSignupError(error.localizedDescription)
+            }
+        }
+    }
+
+    private func showDidRegistration() {
+        let step = UIStoryboard(name: "Main", bundle: nil)
+            .instantiateViewController(withIdentifier: "StepViewController") as! StepViewController
+        step.setStepType(stepType: Properties.getUserId() == nil ? .STEP_TYPE_1 : .STEP_TYPE_2)
+        step.modalPresentationStyle = .fullScreen
+        present(step, animated: true)
     }
 
     private func showSignupError(_ message: String) {

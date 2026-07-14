@@ -22,6 +22,8 @@ import DIDWalletSDK
 
 
 class IssueVcProtocol : CommonProtocol {
+    private let stateLock = NSLock()
+    private var issuanceInProgress = false
     
     public static let shared: IssueVcProtocol = {
         let instance = IssueVcProtocol()
@@ -58,7 +60,6 @@ class IssueVcProtocol : CommonProtocol {
         
         self.issueProfile = try await CommunicationClient.sendRequest(urlString: urlString,
                                                                       requestJsonable: parameter)
-        print("issue profile: \(try issueProfile!.toJson())")
         super.txId = issueProfile!.txId
     }
    
@@ -100,27 +101,49 @@ class IssueVcProtocol : CommonProtocol {
         return response
     }
     
-    public func process(passcode: String? = nil) async throws -> _ConfirmIssueVc {
-        
+    public func process(passcode: String? = nil) async throws -> String {
+        defer { finishIssuance() }
         let vcId = try await requestIssueVc(passcode: passcode)
-        
-        return try await confirmIssueVc(vcId: vcId)
+        _ = try await confirmIssueVc(vcId: vcId)
+        return vcId
     }
     
     public func preProcess(vcPlanId: String, issuer: String, offerId: String? = nil) async throws /*-> (String, String, String, _M210_RequestIssueProfile)*/ {
-        
-        self.reset()
-        
-        try await proposeIssueVc(vcPlanId: vcPlanId, issuer: issuer, offerId: offerId)
-                
-        let ecdh = try await super.requestEcdh(type: .HolderDidDocumnet)
-                
-        let attestedAppInfo: AttestedAppInfo = try await super.requestAttestedAppInfo()
-                    
-        try await requestWalletTokenData(purpose: WalletTokenPurposeEnum.ISSUE_VC)
-                    
-        try await requestCreateToken(attestedAppInfo: attestedAppInfo, ecdh: ecdh, purpose: WalletTokenPurposeEnum.ISSUE_VC)
-                        
-        try await requestIssueProfile()
+        try beginIssuance()
+        do {
+            self.reset()
+            try await proposeIssueVc(vcPlanId: vcPlanId, issuer: issuer, offerId: offerId)
+            let ecdh = try await super.requestEcdh(type: .HolderDidDocumnet)
+            let attestedAppInfo: AttestedAppInfo = try await super.requestAttestedAppInfo()
+            try await requestWalletTokenData(purpose: WalletTokenPurposeEnum.ISSUE_VC)
+            try await requestCreateToken(attestedAppInfo: attestedAppInfo, ecdh: ecdh, purpose: WalletTokenPurposeEnum.ISSUE_VC)
+            try await requestIssueProfile()
+        } catch {
+            finishIssuance()
+            throw error
+        }
+    }
+
+    public func cancelIssuance() {
+        finishIssuance()
+        reset()
+    }
+
+    private func beginIssuance() throws {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        guard !issuanceInProgress else {
+            throw NSError(
+                domain: "JinBon.IssueVc",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "다른 인증서 발급이 진행 중입니다."])
+        }
+        issuanceInProgress = true
+    }
+
+    private func finishIssuance() {
+        stateLock.lock()
+        issuanceInProgress = false
+        stateLock.unlock()
     }
 }

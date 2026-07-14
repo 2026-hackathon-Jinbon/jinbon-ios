@@ -25,4 +25,5 @@ struct URLs
     public static let API_URL       : String = "http://192.168.219.103:8093"
     public static let DEMO_URL      : String = "http://192.168.219.103:8099"
     public static let JINBON_URL    : String = "http://192.168.219.103:8080"
+    public static let JINBON_VC_SCHEMA_ID: String = "jinbon-video-schema-01"
 }

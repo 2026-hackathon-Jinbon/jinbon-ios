@@ -66,11 +66,11 @@ final class JinBonCertificateViewController: UIViewController {
         title.textAlignment = .center
 
         let detail = UILabel()
-        detail.text = "원본 영상을 등록하면 진본 인증서가\n이 지갑에 안전하게 저장됩니다."
         detail.numberOfLines = 0
         detail.font = .systemFont(ofSize: 14)
         detail.textColor = ColorPalette.secondaryText
         detail.textAlignment = .center
+        detail.setJinBonText("영상을 등록하면 인증서가\n이 Wallet에 저장돼요.", lineSpacing: 5)
 
         let stack = UIStackView(arrangedSubviews: [iconBox, title, detail])
         stack.axis = .vertical
@@ -100,7 +100,8 @@ final class JinBonCertificateViewController: UIViewController {
         Task {
             do {
                 let token = try await SDKUtils.createWalletToken(purpose: .LIST_VC, userId: userId)
-                let items = try WalletAPI.shared.getAllCredentials(hWalletToken: token) ?? []
+                let items = (try WalletAPI.shared.getAllCredentials(hWalletToken: token) ?? [])
+                    .filter { Self.isJinBonCredential($0) }
                 await MainActor.run {
                     self.credentials = items
                     self.tableView.backgroundView?.isHidden = !items.isEmpty
@@ -114,6 +115,19 @@ final class JinBonCertificateViewController: UIViewController {
                 }
             }
         }
+    }
+
+    private static func isJinBonCredential(_ credential: VerifiableCredential) -> Bool {
+        let schema = credential.credentialSchema.id
+        if schema == URLs.JINBON_VC_SCHEMA_ID || schema.hasSuffix("/\(URLs.JINBON_VC_SCHEMA_ID)") {
+            return true
+        }
+        guard let components = URLComponents(string: schema) else {
+            return schema.contains(URLs.JINBON_VC_SCHEMA_ID)
+        }
+        return components.queryItems?.contains {
+            ($0.name == "name" || $0.name == "id") && $0.value == URLs.JINBON_VC_SCHEMA_ID
+        } == true
     }
 }
 
@@ -131,11 +145,212 @@ extension JinBonCertificateViewController: UITableViewDataSource, UITableViewDel
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let vc = credentials[indexPath.row]
-        let detail = UIStoryboard(name: "Main", bundle: nil)
-            .instantiateViewController(withIdentifier: "VCDetailViewController") as! VCDetailViewController
-        detail.setVcInfo(vc: vc, zkpVC: nil, zkpSchema: nil)
-        detail.modalPresentationStyle = .fullScreen
-        present(detail, animated: true)
+        navigationController?.pushViewController(
+            JinBonCertificateDetailViewController(credential: vc), animated: true)
+    }
+}
+
+private final class JinBonCertificateDetailViewController: UIViewController {
+    private let credential: VerifiableCredential
+    private let statusLabel = UILabel()
+
+    init(credential: VerifiableCredential) {
+        self.credential = credential
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = "인증서 상세"
+        view.backgroundColor = ColorPalette.canvas
+        buildUI()
+        loadStatus()
+    }
+
+    private func buildUI() {
+        let scrollView = UIScrollView()
+        scrollView.alwaysBounceVertical = true
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 18
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
+        scrollView.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            stack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 20),
+            stack.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor, constant: -20),
+            stack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -36)
+        ])
+
+        stack.addArrangedSubview(makeHero())
+
+        let sectionTitle = UILabel()
+        sectionTitle.text = "인증 내용"
+        sectionTitle.font = .systemFont(ofSize: 18, weight: .bold)
+        sectionTitle.textColor = ColorPalette.ink
+        stack.addArrangedSubview(sectionTitle)
+
+        let claimsCard = UIStackView()
+        claimsCard.axis = .vertical
+        claimsCard.spacing = 0
+        claimsCard.backgroundColor = .white
+        claimsCard.layer.cornerRadius = 20
+        claimsCard.layer.cornerCurve = .continuous
+        claimsCard.isLayoutMarginsRelativeArrangement = true
+        claimsCard.layoutMargins = UIEdgeInsets(top: 6, left: 18, bottom: 6, right: 18)
+
+        for (index, claim) in credential.credentialSubject.claims.enumerated() {
+            claimsCard.addArrangedSubview(makeClaimRow(caption: localizedCaption(claim.caption), value: claim.value))
+            if index < credential.credentialSubject.claims.count - 1 {
+                let divider = UIView()
+                divider.backgroundColor = ColorPalette.canvas
+                divider.heightAnchor.constraint(equalToConstant: 1).isActive = true
+                claimsCard.addArrangedSubview(divider)
+            }
+        }
+        stack.addArrangedSubview(claimsCard)
+
+        let metadata = UILabel()
+        metadata.numberOfLines = 0
+        metadata.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        metadata.textColor = ColorPalette.secondaryText
+        metadata.setJinBonText("""
+        VC ID
+        \(credential.id)
+
+        발급일
+        \(SDKUtils.convertDateFormat(dateString: credential.issuanceDate) ?? credential.issuanceDate)
+        """, lineSpacing: 5)
+        let metadataCard = UIView()
+        metadataCard.backgroundColor = ColorPalette.softBlue
+        metadataCard.layer.cornerRadius = 18
+        metadata.translatesAutoresizingMaskIntoConstraints = false
+        metadataCard.addSubview(metadata)
+        NSLayoutConstraint.activate([
+            metadata.topAnchor.constraint(equalTo: metadataCard.topAnchor, constant: 18),
+            metadata.leadingAnchor.constraint(equalTo: metadataCard.leadingAnchor, constant: 18),
+            metadata.trailingAnchor.constraint(equalTo: metadataCard.trailingAnchor, constant: -18),
+            metadata.bottomAnchor.constraint(equalTo: metadataCard.bottomAnchor, constant: -18)
+        ])
+        stack.addArrangedSubview(metadataCard)
+
+        let notice = UILabel()
+        notice.numberOfLines = 0
+        notice.font = .systemFont(ofSize: 13, weight: .regular)
+        notice.textColor = ColorPalette.secondaryText
+        notice.setJinBonText(
+            "이 인증서는 영상의 내용이 사실임을 보증하는 문서가 아니라, 해당 파일을 진본에 등록한 사실과 등록 시점의 무결성을 증명합니다.",
+            lineSpacing: 5
+        )
+        stack.addArrangedSubview(notice)
+    }
+
+    private func makeHero() -> UIView {
+        let card = UIView()
+        card.backgroundColor = ColorPalette.ink
+        card.layer.cornerRadius = 24
+        card.layer.cornerCurve = .continuous
+
+        let icon = UIImageView(image: UIImage(systemName: "checkmark.seal.fill"))
+        icon.tintColor = .white
+        icon.contentMode = .scaleAspectFit
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        let title = UILabel()
+        title.text = "영상 등록 인증서"
+        title.font = .systemFont(ofSize: 22, weight: .bold)
+        title.textColor = .white
+        let description = UILabel()
+        description.text = "JinBon Verifiable Credential"
+        description.font = .systemFont(ofSize: 12, weight: .semibold)
+        description.textColor = UIColor.white.withAlphaComponent(0.68)
+        statusLabel.text = "상태 확인 중"
+        statusLabel.font = .systemFont(ofSize: 12, weight: .bold)
+        statusLabel.textColor = .white
+        statusLabel.textAlignment = .center
+        statusLabel.backgroundColor = UIColor.white.withAlphaComponent(0.16)
+        statusLabel.layer.cornerRadius = 13
+        statusLabel.clipsToBounds = true
+        statusLabel.heightAnchor.constraint(equalToConstant: 28).isActive = true
+        let labels = UIStackView(arrangedSubviews: [title, description, statusLabel])
+        labels.axis = .vertical
+        labels.alignment = .leading
+        labels.spacing = 7
+        let row = UIStackView(arrangedSubviews: [icon, labels])
+        row.axis = .horizontal
+        row.alignment = .top
+        row.spacing = 14
+        row.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(row)
+        NSLayoutConstraint.activate([
+            row.topAnchor.constraint(equalTo: card.topAnchor, constant: 24),
+            row.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 22),
+            row.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -22),
+            row.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -24),
+            icon.widthAnchor.constraint(equalToConstant: 38),
+            icon.heightAnchor.constraint(equalToConstant: 38)
+        ])
+        return card
+    }
+
+    private func makeClaimRow(caption: String, value: String) -> UIView {
+        let captionLabel = UILabel()
+        captionLabel.text = caption
+        captionLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        captionLabel.textColor = ColorPalette.secondaryText
+        let valueLabel = UILabel()
+        valueLabel.text = value.isEmpty ? "정보 없음" : value
+        valueLabel.font = .systemFont(ofSize: 14, weight: .medium)
+        valueLabel.textColor = ColorPalette.ink
+        valueLabel.numberOfLines = 0
+        valueLabel.lineBreakMode = .byCharWrapping
+        let row = UIStackView(arrangedSubviews: [captionLabel, valueLabel])
+        row.axis = .vertical
+        row.spacing = 7
+        row.isLayoutMarginsRelativeArrangement = true
+        row.layoutMargins = UIEdgeInsets(top: 15, left: 0, bottom: 15, right: 0)
+        return row
+    }
+
+    private func localizedCaption(_ caption: String) -> String {
+        let trimmed = caption.trimmingCharacters(in: .whitespacesAndNewlines)
+        let aliases = [
+            "videoHash": "영상 해시", "uploaderDid": "등록자 DID",
+            "uploadTimestamp": "등록 시각", "videoTitle": "영상 제목"
+        ]
+        return aliases[trimmed] ?? trimmed
+    }
+
+    private func loadStatus() {
+        Task { @MainActor in
+            do {
+                let status = try await VCStatusGetter.getStatus(vcId: credential.id)
+                switch status {
+                case .ACTIVE:
+                    statusLabel.text = "  유효한 인증서  "
+                    statusLabel.backgroundColor = ColorPalette.success.withAlphaComponent(0.75)
+                case .INACTIVE:
+                    statusLabel.text = "  비활성 인증서  "
+                    statusLabel.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.8)
+                case .REVOKED:
+                    statusLabel.text = "  폐기됨  "
+                    statusLabel.backgroundColor = UIColor.systemRed.withAlphaComponent(0.7)
+                @unknown default:
+                    statusLabel.text = "  알 수 없는 상태  "
+                    statusLabel.backgroundColor = UIColor.systemGray.withAlphaComponent(0.75)
+                }
+            } catch {
+                statusLabel.text = "  상태 확인 불가  "
+            }
+        }
     }
 }
 

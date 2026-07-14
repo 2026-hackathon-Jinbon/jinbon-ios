@@ -32,3 +32,20 @@ struct ColorPalette
     static let divider = UIColor(hexCode: "EAECF0")
     static let softBlue = UIColor(hexCode: "EEF4FF")
 }
+
+extension UILabel {
+    /// 여러 줄 본문에 일관된 호흡을 제공한다. 호출 전에 font/textColor를 설정한다.
+    func setJinBonText(_ value: String, lineSpacing: CGFloat = 5) {
+        let style = NSMutableParagraphStyle()
+        style.lineSpacing = lineSpacing
+        style.alignment = textAlignment
+        attributedText = NSAttributedString(
+            string: value,
+            attributes: [
+                .font: font as Any,
+                .foregroundColor: textColor as Any,
+                .paragraphStyle: style
+            ]
+        )
+    }
+}

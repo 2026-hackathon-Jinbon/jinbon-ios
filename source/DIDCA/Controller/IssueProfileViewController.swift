@@ -111,6 +111,7 @@ class IssueProfileViewController: UIViewController
         SelectAuthHelper.show(on: self) { passcode in
             self.issueVcProcess(passcode: passcode)
         } cancelClosure: {
+            IssueVcProtocol.shared.cancelIssuance()
             PopupUtils.showAlertPopup(title: "Notification",
                                       content: "canceled by user",
                                       VC: self)

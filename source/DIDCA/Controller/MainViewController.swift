@@ -74,13 +74,7 @@ class MainViewController: UIViewController, DismissDelegate {
                 let vcIds = credentials.map { $0.id }
                 self.vcStatus = try await VCStatusGetter.getStatus(vcIds: vcIds)
                 
-                let didDoc = try WalletAPI.shared.getDidDocument(type: DidDocumentType.HolderDidDocumnet)
-                print("holderDidDoc : \(try didDoc.toJson(isPretty: true))")
-                
-                print("vcs: \(self.vcs.count)")
                 for vc in self.vcs {
-                    print("vc: \(try! vc.toJson())")
-                    
                     let vcSchemaId = vc.credentialSchema.id
                     if self.vcSchemas[vcSchemaId] == nil
                     {

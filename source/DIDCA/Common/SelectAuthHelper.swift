@@ -20,6 +20,36 @@ import DIDWalletSDK
 
 struct SelectAuthHelper
 {
+    /// Starts with biometrics when the wallet has a biometric key, falling back
+    /// to PIN when biometrics are not configured or unavailable on the device.
+    /// Passing `nil` lets DIDWalletSDK perform the system biometric challenge.
+    static func showPreferredBiometric(on viewController: UIViewController,
+                                       completeClosure: @escaping ((_ passcode: String?) -> Void),
+                                       cancelClosure: @escaping (() -> Void))
+    {
+        do
+        {
+            if try WalletAPI.shared.isSavedKey(keyId: KeyIds.bio)
+            {
+                try BiometricAuthenticator.canEvaluatePolicy()
+                DispatchQueue.main.async {
+                    completeClosure(nil)
+                }
+            }
+            else
+            {
+                showPin(on: viewController,
+                        completeClosure: completeClosure,
+                        cancelClosure: cancelClosure)
+            }
+        } catch {
+            print("Biometrics unavailable; falling back to PIN: \(error)")
+            showPin(on: viewController,
+                    completeClosure: completeClosure,
+                    cancelClosure: cancelClosure)
+        }
+    }
+
     static func show(on viewController: UIViewController,
                      completeClosure : @escaping ((_ passcode: String?) -> Void),
                      cancelClosure: @escaping (()->Void))

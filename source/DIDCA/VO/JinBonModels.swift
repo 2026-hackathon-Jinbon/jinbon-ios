@@ -62,6 +62,7 @@ struct VideoDetailData: Codable {
     let txHash: String?
     let blockNumber: String?
     let vcId: String?
+    let vcIssuanceStatus: String?
     let active: Bool?
     let registeredAt: String?
     let deactivatedAt: String?
@@ -77,6 +78,10 @@ struct VideoRegisterData: Codable {
     let blockNumber: String?
     let vcId: String?
     let registeredAt: String?
+    let alreadyRegistered: Bool?
+    let vcPlanId: String?
+    let vcIssuerDid: String?
+    let vcOfferId: String?
 }
 
 // MARK: - 영상 검증 응답

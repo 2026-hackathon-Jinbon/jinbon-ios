@@ -179,7 +179,12 @@ class StepViewController: UIViewController {
         buttonConfig.imagePadding = 8
         modernActionButton.configuration = buttonConfig
         modernActionButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
-        modernActionButton.addTarget(self, action: #selector(modernNextTapped), for: .touchUpInside)
+        modernActionButton.isEnabled = true
+        modernActionButton.isUserInteractionEnabled = true
+        modernActionButton.isExclusiveTouch = true
+        modernActionButton.addAction(UIAction { [weak self] _ in
+            self?.handleModernNext()
+        }, for: .touchUpInside)
         modernActionButton.heightAnchor.constraint(equalToConstant: 56).isActive = true
 
         let spacer = UIView()
@@ -190,6 +195,7 @@ class StepViewController: UIViewController {
         stack.setCustomSpacing(22, after: iconBox)
         stack.translatesAutoresizingMaskIntoConstraints = false
         content.addSubview(stack)
+        view.bringSubviewToFront(content)
 
         NSLayoutConstraint.activate([
             content.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -219,10 +225,10 @@ class StepViewController: UIViewController {
         icon.tintColor = ColorPalette.success
         icon.translatesAutoresizingMaskIntoConstraints = false
         let label = UILabel()
-        label.text = "개인키는 이 기기의 Wallet에만 안전하게 보관되며 진본 서버로 전송되지 않습니다."
         label.font = .systemFont(ofSize: 13, weight: .medium)
         label.textColor = ColorPalette.secondaryText
         label.numberOfLines = 0
+        label.setJinBonText("개인키는 이 기기에만 보관되며 서버로 전송되지 않아요.", lineSpacing: 4)
         let row = UIStackView(arrangedSubviews: [icon, label])
         row.axis = .horizontal
         row.alignment = .top
@@ -244,21 +250,27 @@ class StepViewController: UIViewController {
         let content: (String, String, String, String, String)
         switch stepType {
         case .STEP_TYPE_1:
-            content = ("1 / 3", "person.text.rectangle", "본인 정보를\n확인할게요", "Open DID Wallet에 필요한 기본 정보를 확인합니다. 입력한 정보는 디지털 신원 생성 목적으로만 사용돼요.", "본인 정보 확인하기")
+            content = ("1 / 3", "person.text.rectangle", "본인 정보를\n확인할게요", "DID 생성에 필요한 기본 정보를 확인해요.", "본인 정보 확인하기")
         case .STEP_TYPE_2:
-            content = ("2 / 3", "key.fill", "Wallet 보안을\n설정해주세요", "6자리 PIN과 선택적 생체인증으로 DID 개인키를 보호합니다.", "보안 설정하기")
+            content = ("2 / 3", "key.fill", "Wallet 보안을\n설정해주세요", "6자리 PIN으로 개인키를 보호해요.", "보안 설정하기")
         case .STEP_TYPE_3:
-            content = ("3 / 3", "checkmark.seal.fill", "디지털 신원을\n연결할게요", "새 DID Document에 서명하고 진본 계정과 안전하게 연결합니다.", "DID 연결 완료하기")
+            content = ("3 / 3", "checkmark.seal.fill", "디지털 신원을\n연결할게요", "DID에 서명하고 진본 계정에 연결해요.", "DID 연결 완료하기")
         }
         modernStepLabel.text = content.0
         modernIconView.image = UIImage(systemName: content.1)
         modernTitleLabel.text = content.2
-        modernDetailLabel.text = content.3
+        modernTitleLabel.setJinBonText(content.2, lineSpacing: 7)
+        modernDetailLabel.setJinBonText(content.3, lineSpacing: 5)
         modernActionButton.configuration?.title = content.4
     }
 
-    @objc private func modernNextTapped() {
+    private func handleModernNext() {
+        guard modernActionButton.isEnabled else { return }
+        modernActionButton.isEnabled = false
         nextBtnAction()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+            self?.modernActionButton.isEnabled = true
+        }
     }
     
     private func nextForStep2()
@@ -409,7 +421,7 @@ class StepViewController: UIViewController {
          
         let popupVC = UIStoryboard.init(name: "Popup", bundle: nil).instantiateViewController(withIdentifier: "TwoButtonDialogViewController") as! TwoButtonDialogViewController
         popupVC.modalPresentationStyle = .overCurrentContext
-        popupVC.setContentsMessage(message: "Would you like to additionally register biometric authentication?")
+        popupVC.setContentsMessage(message: "생체인증도 사용할까요?\nPIN 대신 Face ID로 간편하게 인증할 수 있어요.")
         popupVC.confirmButtonCompleteClosure = { [self] in
             ActivityUtil.show(vc: self){
                 // register BIO
@@ -454,9 +466,11 @@ extension StepViewController
     {
         let stepVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "UserRegWebViewController") as! UserRegWebViewController
         stepVC.modalPresentationStyle = .fullScreen
-        DispatchQueue.main.async {
-
-            self.present(stepVC, animated: false, completion: nil)
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.present(stepVC, animated: true) { [weak self] in
+                self?.modernActionButton.isEnabled = true
+            }
         }
     }
     

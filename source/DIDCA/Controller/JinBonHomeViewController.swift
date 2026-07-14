@@ -73,10 +73,10 @@ final class JinBonHomeViewController: UIViewController {
         title.textColor = ColorPalette.ink
 
         let detail = UILabel()
-        detail.text = "원본 영상과 인증서를 한곳에서 관리하세요."
         detail.numberOfLines = 0
         detail.font = .systemFont(ofSize: 15)
         detail.textColor = ColorPalette.secondaryText
+        detail.setJinBonText("원본 영상과 인증서를 관리하세요.")
 
         let stack = UIStackView(arrangedSubviews: [eyebrow, title, detail])
         stack.axis = .vertical
@@ -121,10 +121,10 @@ final class JinBonHomeViewController: UIViewController {
         title.textColor = .white
 
         let body = UILabel()
-        body.text = "영상의 해시를 블록체인에 기록해요."
         body.numberOfLines = 0
         body.font = .systemFont(ofSize: 14)
         body.textColor = UIColor.white.withAlphaComponent(0.9)
+        body.setJinBonText("영상 해시를 블록체인에 기록해요.")
 
         let button = UIButton(type: .system)
         var config = UIButton.Configuration.filled()

@@ -144,8 +144,6 @@ extension AppDelegate {
 extension AppDelegate: UNUserNotificationCenterDelegate, MessagingDelegate {
     
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-        print("messaging fcmToken: \(fcmToken ?? "")")
-        
         guard let fcmToken else { return }
         Properties.setPushToken(token: fcmToken)
         
@@ -164,11 +162,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate, MessagingDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         
         let userInfo = response.notification.request.content.userInfo
-        print("userInfo: \(userInfo)")
-        
         if let offerData = userInfo["offerData"] as? String {
-            print("offerData: \(offerData)")
-            
             do {
                 let dataPayload = try DataPayload.init(from: offerData)
                 let payload = try MultibaseUtils.decode(encoded: dataPayload.payload)
@@ -190,7 +184,6 @@ extension AppDelegate: UNUserNotificationCenterDelegate, MessagingDelegate {
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any]) {
         // 푸시 알림을 수신한 경우 처리할 코드 작성
-        print("didReceiveRemoteNotification userInfo: \(userInfo)")
 //        requestVC(qrData: <#T##Data#>)
         
         // {"payload":"ueyJpc3N1ZXIiOiJpc3N1ZXJEaWQiLCJvZmZlcklkIjoidGVzdCIsInR5cGUiOiJJc3N1ZU9mZmVyIiwidmFsaWRVbnRpbCI6IuyYpOuKmCIsInZjUGxhbklkIjoicElkIn0","payloadType":"issue"}

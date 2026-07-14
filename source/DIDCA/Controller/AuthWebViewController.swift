@@ -59,6 +59,7 @@ class AuthWebViewController: UIViewController {
         let contentController = WKUserContentController()
         contentController.add(self, name: "authCallback")
         contentController.add(self, name: "openDeepLink")
+        contentController.add(self, name: "authLog")
         config.userContentController = contentController
         config.defaultWebpagePreferences.allowsContentJavaScript = true
 
@@ -91,6 +92,7 @@ class AuthWebViewController: UIViewController {
     deinit {
         webView?.configuration.userContentController.removeScriptMessageHandler(forName: "authCallback")
         webView?.configuration.userContentController.removeScriptMessageHandler(forName: "openDeepLink")
+        webView?.configuration.userContentController.removeScriptMessageHandler(forName: "authLog")
     }
 }
 
@@ -101,6 +103,17 @@ extension AuthWebViewController: WKScriptMessageHandler {
         _ userContentController: WKUserContentController,
         didReceive message: WKScriptMessage
     ) {
+        guard WebOriginValidator.isTrusted(message, baseURL: URLs.JINBON_URL) else {
+            showLoadError("신뢰할 수 없는 인증 페이지의 요청을 차단했습니다.")
+            return
+        }
+        if message.name == "authLog" {
+#if DEBUG
+            print("[JinBonAuth] \(message.body)")
+#endif
+            return
+        }
+
         guard let body = message.body as? String else { return }
 
         if message.name == "openDeepLink" {
@@ -145,6 +158,26 @@ extension AuthWebViewController: WKScriptMessageHandler {
 // MARK: - WKNavigationDelegate
 
 extension AuthWebViewController: WKNavigationDelegate {
+    func webView(
+        _ webView: WKWebView,
+        decidePolicyFor navigationAction: WKNavigationAction,
+        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+    ) {
+        guard let url = navigationAction.request.url else {
+            decisionHandler(.cancel)
+            return
+        }
+
+        // 모바일 신분증 앱으로 전달되는 딥링크는 WebView에서 열지 않는다.
+        if url.scheme == "oacx" {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            decisionHandler(.cancel)
+            return
+        }
+
+        decisionHandler(WebOriginValidator.isTrusted(url, baseURL: URLs.JINBON_URL) ? .allow : .cancel)
+    }
+
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         let nsError = error as NSError
         if nsError.domain == WKError.errorDomain && nsError.code == 102 { return }
@@ -165,23 +198,4 @@ extension AuthWebViewController: WKNavigationDelegate {
         present(alert, animated: true)
     }
 
-    func webView(
-        _ webView: WKWebView,
-        decidePolicyFor navigationAction: WKNavigationAction,
-        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
-    ) {
-        guard let url = navigationAction.request.url else {
-            decisionHandler(.allow)
-            return
-        }
-
-        // oacx:// 딥링크 → 외부 앱으로 열기
-        if url.scheme == "oacx" {
-            UIApplication.shared.open(url, options: [:], completionHandler: nil)
-            decisionHandler(.cancel)
-            return
-        }
-
-        decisionHandler(.allow)
-    }
 }
