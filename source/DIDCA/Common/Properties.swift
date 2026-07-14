@@ -24,7 +24,6 @@ public class Properties {
     /// - Parameter token: push token
     public static func setPushToken(token: String) {
         UserDefaults.standard.setValue(token, forKey: "push_token")
-        UserDefaults.standard.synchronize()
     }
 
     /// get getPushToken
@@ -38,7 +37,6 @@ public class Properties {
     /// - Parameter id: userName
     public static func setUserName(name: String) {
         UserDefaults.standard.setValue(name, forKey: "user_name")
-        UserDefaults.standard.synchronize()
     }
     
     /// get UserName
@@ -59,7 +57,6 @@ public class Properties {
     /// - Parameter id: userId
     public static func setUserId(id: String) {
         UserDefaults.standard.setValue(id, forKey: "user_id")
-        UserDefaults.standard.synchronize()
     }
     
     
@@ -72,7 +69,6 @@ public class Properties {
 
     public static func setRegDidDocCompleted(status: Bool?) {
         UserDefaults.standard.setValue(status, forKey: "reg_diddoc_completed")
-        UserDefaults.standard.synchronize()
     }
     
 
@@ -84,7 +80,6 @@ public class Properties {
 
     public static func setSubmitCompleted(status: Bool?) -> Void {
         UserDefaults.standard.setValue(status, forKey: "submit_completed")
-        UserDefaults.standard.synchronize()
     }
     
 
@@ -96,7 +91,6 @@ public class Properties {
 
     public static func setTasUrl(status: String?) -> Void {
         UserDefaults.standard.setValue(status, forKey: "tas_url")
-        UserDefaults.standard.synchronize()
     }
     
 
@@ -108,7 +102,6 @@ public class Properties {
 
     public static func setVerifierUrl(status: String?) -> Void {
         UserDefaults.standard.setValue(status, forKey: "verifier_url")
-        UserDefaults.standard.synchronize()
     }
     
 
@@ -140,7 +133,83 @@ public class Properties {
         print("caAppId: \(caAppId)")
         
         UserDefaults.standard.setValue(caAppId, forKey: "caAppId")
-        UserDefaults.standard.synchronize()
     }
-    
+
+    // MARK: - JinBon JWT (Keychain)
+
+    public static func setAccessToken(_ token: String) {
+        KeychainHelper.save(key: "jinbon_access_token", value: token)
+    }
+
+    public static func getAccessToken() -> String? {
+        return KeychainHelper.load(key: "jinbon_access_token")
+    }
+
+    public static func setRefreshToken(_ token: String) {
+        KeychainHelper.save(key: "jinbon_refresh_token", value: token)
+    }
+
+    public static func getRefreshToken() -> String? {
+        return KeychainHelper.load(key: "jinbon_refresh_token")
+    }
+
+    public static func setMemberId(_ id: Int) {
+        UserDefaults.standard.setValue(id, forKey: "jinbon_member_id")
+    }
+
+    public static func getMemberId() -> Int? {
+        let val = UserDefaults.standard.object(forKey: "jinbon_member_id") as? Int
+        return val
+    }
+
+    public static func setMemberName(_ name: String) {
+        UserDefaults.standard.setValue(name, forKey: "jinbon_member_name")
+    }
+
+    public static func setMemberRole(_ role: String) {
+        UserDefaults.standard.set(role, forKey: "jinbon_member_role")
+    }
+
+    public static func getMemberRole() -> String? {
+        UserDefaults.standard.string(forKey: "jinbon_member_role")
+    }
+
+    public static func getMemberName() -> String? {
+        return UserDefaults.standard.string(forKey: "jinbon_member_name")
+    }
+
+    public static func isLoggedIn() -> Bool {
+        return getAccessToken() != nil
+    }
+
+    public static func clearAuth() {
+        KeychainHelper.delete(key: "jinbon_access_token")
+        KeychainHelper.delete(key: "jinbon_refresh_token")
+        let defaultsKeys = ["jinbon_member_id", "jinbon_member_name", "jinbon_member_role"]
+        defaultsKeys.forEach { UserDefaults.standard.removeObject(forKey: $0) }
+    }
+
+    public static func setSignupToken(_ token: String) {
+        UserDefaults.standard.set(token, forKey: "jinbon_signup_token")
+    }
+
+    public static func getSignupToken() -> String? {
+        UserDefaults.standard.string(forKey: "jinbon_signup_token")
+    }
+
+    public static func clearSignupToken() {
+        UserDefaults.standard.removeObject(forKey: "jinbon_signup_token")
+    }
+
+    public static func setDidRebindToken(_ token: String) {
+        UserDefaults.standard.set(token, forKey: "jinbon_did_rebind_token")
+    }
+
+    public static func getDidRebindToken() -> String? {
+        UserDefaults.standard.string(forKey: "jinbon_did_rebind_token")
+    }
+
+    public static func clearDidRebindToken() {
+        UserDefaults.standard.removeObject(forKey: "jinbon_did_rebind_token")
+    }
 }

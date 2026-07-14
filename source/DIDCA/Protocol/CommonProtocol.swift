@@ -122,7 +122,6 @@ class CommonProtocol {
         let signature = try WalletAPI.shared.sign(keyId: KeyIds.keyagree, data: source, type: type)
         
         reqEcdh.proof?.proofValue = MultibaseUtils.encode(type: .base58BTC, data: signature)
-        print("sig: \(String(describing: reqEcdh.proof?.proofValue)))")
         
         let request = RequestEcdh(id: SDKUtils.generateMessageID(), txId: txId, reqEcdh: reqEcdh)
         
@@ -133,13 +132,18 @@ class CommonProtocol {
     }
     
     internal func requestWalletTokenData(purpose: WalletTokenPurposeEnum) async throws {
-        self.hWalletToken = try await SDKUtils.createWalletToken(purpose: purpose, userId: Properties.getUserId()!)
+        guard let userId = Properties.getUserId() else {
+            throw NSError(domain: "CommonProtocol", code: -1, userInfo: [NSLocalizedDescriptionKey: "User ID not found"])
+        }
+        self.hWalletToken = try await SDKUtils.createWalletToken(purpose: purpose, userId: userId)
     }
-    
-    // To generate server token seeds
+
+    // 서버 토큰 시드 생성용 앱 인증 정보 요청
     internal func requestAttestedAppInfo() async throws -> AttestedAppInfo {
-        
-        let requestAttestedAppInfo = RequestAttestedAppInfo(appId: Properties.getCaAppId()!)
+        guard let appId = Properties.getCaAppId() else {
+            throw NSError(domain: "CommonProtocol", code: -1, userInfo: [NSLocalizedDescriptionKey: "CA App ID not found"])
+        }
+        let requestAttestedAppInfo = RequestAttestedAppInfo(appId: appId)
         
         let urlString = URLs.CAS_URL + "/cas/api/v1/request-attested-appinfo"
         
@@ -169,20 +173,11 @@ class CommonProtocol {
         let clientNonce = try MultibaseUtils.decode(encoded: self.clientNonce)
         let serverNonce = try MultibaseUtils.decode(encoded: ecdh.accEcdh.serverNonce)
         let mergedNonce = try SDKUtils.mergeNonce(clientNonce: clientNonce, serverNonce: serverNonce)
-        
-        
-        print("clientNonce: \(MultibaseUtils.encode(type: MultibaseType.base58BTC, data: clientNonce))")
-        print("mergedNonce: \(MultibaseUtils.encode(type: MultibaseType.base58BTC, data: mergedNonce))")
-        
-        // Generate session key
+
+        // 세션 키 생성
         let secretKey = try CryptoUtils.generateSharedSecret(ecType: ECType.secp256r1, privateKey: MultibaseUtils.decode(encoded: self.priKey), publicKey: MultibaseUtils.decode(encoded: ecdh.accEcdh.publicKey))
-        
-        print("ecdh.accEcdh.publicKey: \(ecdh.accEcdh.publicKey)")
-        print("secretKey: \(MultibaseUtils.encode(type: MultibaseType.base58BTC, data: secretKey))")
-        
+
         let clientMergedSharedSecret = SDKUtils.mergeSharedSecretAndNonce(sharedSecret: secretKey, nonce: mergedNonce, symmetricCipherType: SymmetricCipherType.aes256CBC)
-    
-        print("clientMergedSharedSecret: \(MultibaseUtils.encode(type: MultibaseType.base58BTC, data: clientMergedSharedSecret))")
         
         let iv = try MultibaseUtils.decode(encoded: requestCreateToken.iv)
         

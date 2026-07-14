@@ -47,18 +47,19 @@ class SplashViewController: UIViewController {
                         
                         // 유저등록 유무
                         if Properties.getSubmitCompleted() == true {
-                            let mainVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "MainViewController") as! MainViewController
-                            mainVC.modalPresentationStyle = .fullScreen
+                            let tabBarVC = JinBonTabBarController()
+                            tabBarVC.modalPresentationStyle = .fullScreen
                             DispatchQueue.main.async {
-                                self.present(mainVC, animated: false, completion: nil)
+                                self.present(tabBarVC, animated: false, completion: nil)
                             }
                         } else {
                             self.navigateToNextViewController()
                         }
                     }
                 }
-                pinVC.cancelButtonCompleteClosure = {
-                    exit(1)
+                pinVC.cancelButtonCompleteClosure = { [weak self] in
+                    guard let self else { return }
+                    PopupUtils.showAlertPopup(title: "Notification", content: "PIN authentication is required to use this app.", VC: self)
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     //                DispatchQueue.main.async {
@@ -102,7 +103,6 @@ class SplashViewController: UIViewController {
                                       content: message,
                                       VC: self) {
                 try? WalletAPI.shared.deleteWallet(deleteAll: true)
-                exit(1)
             }
         }
         
@@ -110,6 +110,8 @@ class SplashViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        buildJinBonSplashUI()
         
         Properties.generateCaAppId()
         Task { @MainActor in
@@ -117,6 +119,72 @@ class SplashViewController: UIViewController {
         
             checkWalletLock()
         }
+    }
+
+    private func buildJinBonSplashUI() {
+        // Storyboard에 남아 있는 OpenDID 데모 스플래시 대신 진본의 시작 화면과
+        // 동일한 색상·타이포그래피를 사용한다.
+        view.subviews.forEach { $0.removeFromSuperview() }
+        navigationController?.setNavigationBarHidden(true, animated: false)
+        view.backgroundColor = ColorPalette.canvas
+
+        let mark = UILabel()
+        mark.text = "J"
+        mark.textAlignment = .center
+        mark.font = .systemFont(ofSize: 32, weight: .black)
+        mark.textColor = .white
+        mark.backgroundColor = ColorPalette.primary
+        mark.layer.cornerRadius = 20
+        mark.clipsToBounds = true
+
+        let brand = UILabel()
+        brand.text = "진본"
+        brand.textAlignment = .center
+        brand.font = .systemFont(ofSize: 30, weight: .bold)
+        brand.textColor = ColorPalette.ink
+
+        let tagline = UILabel()
+        tagline.text = "진짜를 증명하는 가장 간단한 방법"
+        tagline.textAlignment = .center
+        tagline.font = .systemFont(ofSize: 15, weight: .medium)
+        tagline.textColor = ColorPalette.secondaryText
+
+        let indicator = UIActivityIndicatorView(style: .medium)
+        indicator.color = ColorPalette.primary
+        indicator.startAnimating()
+
+        let status = UILabel()
+        status.text = "안전한 Wallet을 준비하고 있어요"
+        status.textAlignment = .center
+        status.font = .systemFont(ofSize: 14, weight: .medium)
+        status.textColor = ColorPalette.secondaryText
+
+        let identity = UIStackView(arrangedSubviews: [mark, brand, tagline])
+        identity.axis = .vertical
+        identity.alignment = .center
+        identity.spacing = 10
+        identity.setCustomSpacing(18, after: mark)
+
+        let loading = UIStackView(arrangedSubviews: [indicator, status])
+        loading.axis = .vertical
+        loading.alignment = .center
+        loading.spacing = 12
+
+        [identity, loading].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview($0)
+        }
+
+        NSLayoutConstraint.activate([
+            mark.widthAnchor.constraint(equalToConstant: 64),
+            mark.heightAnchor.constraint(equalToConstant: 64),
+            identity.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            identity.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -42),
+            identity.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 24),
+            identity.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -24),
+            loading.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loading.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -42)
+        ])
     }
     
     private func navigateToNextViewController() {
@@ -131,19 +199,23 @@ class SplashViewController: UIViewController {
         }
         
         if Properties.getUserId() == nil {
-            let stepVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "StepViewController") as! StepViewController
-            stepVC.setStepType(stepType: StepTypeEnum.STEP_TYPE_1)
-            stepVC.modalPresentationStyle = .fullScreen
-            DispatchQueue.main.async { self.present(stepVC, animated: false, completion: nil) }
+            let welcome = JinBonWelcomeViewController()
+            (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?
+                .changeRootVC(welcome, animated: true)
         } else {
             if Properties.getRegDidDocCompleted() == true {
-                let nextVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "MainViewController") as! MainViewController
-                nextVC.modalPresentationStyle = .fullScreen
-                DispatchQueue.main.async { self.present(nextVC, animated: false, completion: nil) }
+                let tabBarVC = JinBonTabBarController()
+                tabBarVC.modalPresentationStyle = .fullScreen
+                DispatchQueue.main.async { self.present(tabBarVC, animated: false, completion: nil) }
             } else {
                 
                 Task { @MainActor in
-                    let isAnyKey = try! WalletAPI.shared.isAnyKeysSaved()
+                    guard let isAnyKey = try? WalletAPI.shared.isAnyKeysSaved() else {
+                        let welcome = JinBonWelcomeViewController()
+                        (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?
+                            .changeRootVC(welcome, animated: true)
+                        return
+                    }
                     
                     let stepVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "StepViewController") as! StepViewController
                     if isAnyKey {

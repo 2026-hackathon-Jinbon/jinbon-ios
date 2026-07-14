@@ -17,6 +17,8 @@
 	<array>
 		<string>_http._tcp</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>영상을 선택하여 등록하거나 검증하기 위해 사진 라이브러리 접근이 필요합니다.</string>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>Notifications may include alerts, sounds, and icon badges. These can be configured in Settings.</string>
 	<key>UIAppFonts</key>

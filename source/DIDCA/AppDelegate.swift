@@ -115,9 +115,6 @@ extension AppDelegate {
     
     func initWalletApiSettings() {
         WalletLogger.shared.setEnable(true)
-        WalletLogger.shared.setLogLevel(WalletLogLevel.debug)
-        
-        WalletLogger.shared.setEnable(true)
         WalletLogger.shared.setLogLevel(.debug)
     }
     
@@ -149,7 +146,8 @@ extension AppDelegate: UNUserNotificationCenterDelegate, MessagingDelegate {
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         print("messaging fcmToken: \(fcmToken ?? "")")
         
-        Properties.setPushToken(token: fcmToken!)
+        guard let fcmToken else { return }
+        Properties.setPushToken(token: fcmToken)
         
 //        if needToUpdatePushToken(),
 //           let newToken = fcmToken {

@@ -38,6 +38,11 @@ class StepViewController: UIViewController {
     @IBOutlet weak var lineImg2: UIButton!
     
     private var stepType: StepTypeEnum = StepTypeEnum.STEP_TYPE_1
+    private let modernTitleLabel = UILabel()
+    private let modernDetailLabel = UILabel()
+    private let modernStepLabel = UILabel()
+    private let modernIconView = UIImageView()
+    private let modernActionButton = UIButton(type: .system)
     
     public func setStepType(stepType: StepTypeEnum) {
         self.stepType = stepType
@@ -122,6 +127,138 @@ class StepViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         showUI()
+        buildModernUI()
+    }
+
+    private func buildModernUI() {
+        view.subviews.forEach { $0.isHidden = true }
+        view.backgroundColor = ColorPalette.canvas
+
+        let content = UIView()
+        content.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(content)
+
+        let brand = UILabel()
+        brand.text = "JINBON IDENTITY"
+        brand.font = .systemFont(ofSize: 12, weight: .bold)
+        brand.textColor = ColorPalette.primary
+
+        modernStepLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        modernStepLabel.textColor = ColorPalette.secondaryText
+        modernStepLabel.textAlignment = .right
+
+        let header = UIStackView(arrangedSubviews: [brand, modernStepLabel])
+        header.axis = .horizontal
+        header.distribution = .equalSpacing
+
+        let iconBox = UIView()
+        iconBox.backgroundColor = ColorPalette.softBlue
+        iconBox.layer.cornerRadius = 32
+        iconBox.translatesAutoresizingMaskIntoConstraints = false
+        modernIconView.tintColor = ColorPalette.primary
+        modernIconView.contentMode = .scaleAspectFit
+        modernIconView.translatesAutoresizingMaskIntoConstraints = false
+        iconBox.addSubview(modernIconView)
+
+        modernTitleLabel.font = .systemFont(ofSize: 29, weight: .bold)
+        modernTitleLabel.textColor = ColorPalette.ink
+        modernTitleLabel.numberOfLines = 0
+        modernDetailLabel.font = .systemFont(ofSize: 16)
+        modernDetailLabel.textColor = ColorPalette.secondaryText
+        modernDetailLabel.numberOfLines = 0
+        modernDetailLabel.setContentHuggingPriority(.required, for: .vertical)
+
+        let reassurance = makeReassuranceCard()
+
+        var buttonConfig = UIButton.Configuration.filled()
+        buttonConfig.cornerStyle = .large
+        buttonConfig.baseBackgroundColor = ColorPalette.primary
+        buttonConfig.baseForegroundColor = .white
+        buttonConfig.imagePlacement = .trailing
+        buttonConfig.image = UIImage(systemName: "arrow.right")
+        buttonConfig.imagePadding = 8
+        modernActionButton.configuration = buttonConfig
+        modernActionButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        modernActionButton.addTarget(self, action: #selector(modernNextTapped), for: .touchUpInside)
+        modernActionButton.heightAnchor.constraint(equalToConstant: 56).isActive = true
+
+        let spacer = UIView()
+        let stack = UIStackView(arrangedSubviews: [header, iconBox, modernTitleLabel, modernDetailLabel, reassurance, spacer, modernActionButton])
+        stack.axis = .vertical
+        stack.spacing = 18
+        stack.setCustomSpacing(28, after: header)
+        stack.setCustomSpacing(22, after: iconBox)
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            content.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            content.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            content.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+            content.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -18),
+            stack.topAnchor.constraint(equalTo: content.topAnchor, constant: 22),
+            stack.leadingAnchor.constraint(equalTo: content.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: content.trailingAnchor),
+            stack.bottomAnchor.constraint(equalTo: content.bottomAnchor),
+            iconBox.widthAnchor.constraint(equalToConstant: 64),
+            iconBox.heightAnchor.constraint(equalToConstant: 64),
+            modernIconView.centerXAnchor.constraint(equalTo: iconBox.centerXAnchor),
+            modernIconView.centerYAnchor.constraint(equalTo: iconBox.centerYAnchor),
+            modernIconView.widthAnchor.constraint(equalToConstant: 30),
+            modernIconView.heightAnchor.constraint(equalToConstant: 30)
+        ])
+        updateModernUI()
+    }
+
+    private func makeReassuranceCard() -> UIView {
+        let card = UIView()
+        card.backgroundColor = .white
+        card.layer.cornerRadius = 18
+        card.layer.cornerCurve = .continuous
+        let icon = UIImageView(image: UIImage(systemName: "lock.shield.fill"))
+        icon.tintColor = ColorPalette.success
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        let label = UILabel()
+        label.text = "개인키는 이 기기의 Wallet에만 안전하게 보관되며 진본 서버로 전송되지 않습니다."
+        label.font = .systemFont(ofSize: 13, weight: .medium)
+        label.textColor = ColorPalette.secondaryText
+        label.numberOfLines = 0
+        let row = UIStackView(arrangedSubviews: [icon, label])
+        row.axis = .horizontal
+        row.alignment = .top
+        row.spacing = 12
+        row.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(row)
+        NSLayoutConstraint.activate([
+            icon.widthAnchor.constraint(equalToConstant: 22), icon.heightAnchor.constraint(equalToConstant: 22),
+            row.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
+            row.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
+            row.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
+            row.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16)
+        ])
+        return card
+    }
+
+    private func updateModernUI() {
+        guard isViewLoaded else { return }
+        let content: (String, String, String, String, String)
+        switch stepType {
+        case .STEP_TYPE_1:
+            content = ("1 / 3", "person.text.rectangle", "본인 정보를\n확인할게요", "Open DID Wallet에 필요한 기본 정보를 확인합니다. 입력한 정보는 디지털 신원 생성 목적으로만 사용돼요.", "본인 정보 확인하기")
+        case .STEP_TYPE_2:
+            content = ("2 / 3", "key.fill", "Wallet 보안을\n설정해주세요", "6자리 PIN과 선택적 생체인증으로 DID 개인키를 보호합니다.", "보안 설정하기")
+        case .STEP_TYPE_3:
+            content = ("3 / 3", "checkmark.seal.fill", "디지털 신원을\n연결할게요", "새 DID Document에 서명하고 진본 계정과 안전하게 연결합니다.", "DID 연결 완료하기")
+        }
+        modernStepLabel.text = content.0
+        modernIconView.image = UIImage(systemName: content.1)
+        modernTitleLabel.text = content.2
+        modernDetailLabel.text = content.3
+        modernActionButton.configuration?.title = content.4
+    }
+
+    @objc private func modernNextTapped() {
+        nextBtnAction()
     }
     
     private func nextForStep2()
@@ -171,7 +308,7 @@ class StepViewController: UIViewController {
                 Properties.setRegDidDocCompleted(status: true)
                 
             } completeClosure: {
-                self.goMainView()
+                self.finishJinBonSignup()
             } failureCloseClosure: { title, message in
                 PopupUtils.showAlertPopup(title: title,
                                           content: message,
@@ -184,6 +321,37 @@ class StepViewController: UIViewController {
         DispatchQueue.main.async {
             self.present(pinVC, animated: false, completion: nil)
         }
+    }
+
+    private func finishJinBonSignup() {
+        guard Properties.getSignupToken() != nil || Properties.getDidRebindToken() != nil else {
+            goMainView()
+            return
+        }
+        Task {
+            do {
+                let didDoc = try WalletAPI.shared.getDidDocument(type: DidDocumentType.HolderDidDocumnet)
+                if let rebindToken = Properties.getDidRebindToken() {
+                    _ = try await JinBonAPIClient.shared.rebindDid(didRebindToken: rebindToken, did: didDoc.id)
+                    Properties.clearDidRebindToken()
+                } else if let signupToken = Properties.getSignupToken() {
+                    _ = try await JinBonAPIClient.shared.completeSignup(signupToken: signupToken, did: didDoc.id)
+                    Properties.clearSignupToken()
+                }
+                await MainActor.run { self.goJinBonMain() }
+            } catch {
+                await MainActor.run {
+                    let title = Properties.getDidRebindToken() == nil ? "회원가입 완료 실패" : "디지털 신원 재연결 실패"
+                    PopupUtils.showAlertPopup(title: title,
+                                              content: error.localizedDescription, VC: self)
+                }
+            }
+        }
+    }
+
+    private func goJinBonMain() {
+        let tab = JinBonTabBarController()
+        (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?.changeRootVC(tab, animated: true)
     }
     
     func registerPin()
@@ -275,6 +443,7 @@ class StepViewController: UIViewController {
     private func presentSubmitViewController() {
         self.setStepType(stepType: StepTypeEnum.STEP_TYPE_3)
         showUI()
+        updateModernUI()
     }
 }
 

@@ -78,7 +78,7 @@ class AuthSettingViewController: UITableViewController {
         
         let pinVC = UIStoryboard.init(name: "PIN", bundle: nil).instantiateViewController(withIdentifier: "PincodeViewController") as! PincodeViewController
         pinVC.modalPresentationStyle = .fullScreen
-//        pinVC.setRequestType(type: .change)
+        pinVC.setRequestType(type: .register(isLock: false))
         pinVC.confirmButtonCompleteClosure = { [self] passcode in
             
             do {

@@ -38,6 +38,7 @@ class UserRegWebViewController: UIViewController {
     }
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = ColorPalette.canvas
         // WebView web -> ios reg callback
         let contentController = WKUserContentController()
         let config = WKWebViewConfiguration()
@@ -56,13 +57,19 @@ class UserRegWebViewController: UIViewController {
         
         // WebView init and load
         webView = WKWebView(frame: .zero, configuration: config)
+        self.subView.backgroundColor = ColorPalette.canvas
+        let header = makeHeader()
+        self.subView.addSubview(header)
         self.subView.addSubview(webView)
         
         webView.translatesAutoresizingMaskIntoConstraints = false
         webView.leadingAnchor.constraint(equalTo: self.subView.leadingAnchor).isActive = true
         webView.trailingAnchor.constraint(equalTo: self.subView.trailingAnchor).isActive = true
-        webView.topAnchor.constraint(equalTo: self.subView.topAnchor).isActive = true
-        webView.bottomAnchor.constraint(equalTo: self.subView.bottomAnchor).isActive = true
+        webView.topAnchor.constraint(equalTo: header.bottomAnchor, constant: 14).isActive = true
+        webView.bottomAnchor.constraint(equalTo: self.subView.bottomAnchor, constant: -12).isActive = true
+        webView.layer.cornerRadius = 18
+        webView.layer.cornerCurve = .continuous
+        webView.clipsToBounds = true
         self.webView.endEditing(false)
         // 유저가 방문한 페이지 조회
         self.subView.sendSubviewToBack(webView)
@@ -76,10 +83,63 @@ class UserRegWebViewController: UIViewController {
         
         webView.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: .new, context: nil)
     }
+
+    private func makeHeader() -> UIView {
+        let header = UIView()
+        header.translatesAutoresizingMaskIntoConstraints = false
+
+        let close = UIButton(type: .system)
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(systemName: "xmark")
+        config.baseForegroundColor = ColorPalette.ink
+        close.configuration = config
+        close.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
+        close.translatesAutoresizingMaskIntoConstraints = false
+
+        let title = UILabel()
+        title.text = "본인 정보 확인"
+        title.font = .systemFont(ofSize: 21, weight: .bold)
+        title.textColor = ColorPalette.ink
+        title.translatesAutoresizingMaskIntoConstraints = false
+
+        let detail = UILabel()
+        detail.text = "디지털 신원 생성에 필요한 정보를 확인해주세요."
+        detail.font = .systemFont(ofSize: 13)
+        detail.textColor = ColorPalette.secondaryText
+        detail.translatesAutoresizingMaskIntoConstraints = false
+
+        header.addSubview(close)
+        header.addSubview(title)
+        header.addSubview(detail)
+        NSLayoutConstraint.activate([
+            header.topAnchor.constraint(equalTo: subView.topAnchor),
+            header.leadingAnchor.constraint(equalTo: subView.leadingAnchor, constant: 20),
+            header.trailingAnchor.constraint(equalTo: subView.trailingAnchor, constant: -20),
+            close.leadingAnchor.constraint(equalTo: header.leadingAnchor),
+            close.topAnchor.constraint(equalTo: header.topAnchor, constant: 8),
+            close.widthAnchor.constraint(equalToConstant: 36), close.heightAnchor.constraint(equalToConstant: 36),
+            title.leadingAnchor.constraint(equalTo: header.leadingAnchor),
+            title.topAnchor.constraint(equalTo: close.bottomAnchor, constant: 12),
+            title.trailingAnchor.constraint(equalTo: header.trailingAnchor),
+            detail.leadingAnchor.constraint(equalTo: title.leadingAnchor),
+            detail.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 5),
+            detail.trailingAnchor.constraint(equalTo: header.trailingAnchor),
+            detail.bottomAnchor.constraint(equalTo: header.bottomAnchor)
+        ])
+        return header
+    }
+
+    @objc private func closeTapped() {
+        dismiss(animated: true)
+    }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         loadWebView()
+    }
+
+    deinit {
+        webView?.removeObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress))
     }
     
     private func loadWebView() -> Void {
@@ -171,8 +231,6 @@ class UserRegWebViewController: UIViewController {
         pinVC.setRequestType(type: .register(isLock: true))
         pinVC.confirmButtonCompleteClosure = { [self] passcode in
             do {
-                print("hWalletToken: \(hWalletToken)")
-                print("passcode: \(passcode)")
                 _ = try WalletAPI.shared.registerLock(hWalletToken: hWalletToken, passcode: passcode, isLock: true)
                 nextView()
             } catch let error as WalletSDKError {

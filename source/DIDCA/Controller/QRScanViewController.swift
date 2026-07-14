@@ -17,13 +17,13 @@
 import UIKit
 import AVFoundation
 
-protocol ScanQRViewControllerDelegate {
+protocol ScanQRViewControllerDelegate: AnyObject {
     func extractStringfromQRCode(qrString:String)
 }
 
 class QRScanViewController: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 
-    var delegate: ScanQRViewControllerDelegate!
+    weak var delegate: (any ScanQRViewControllerDelegate)?
     
     @IBOutlet weak var viewPreview: UIView!
     
@@ -40,7 +40,7 @@ class QRScanViewController: UIViewController, AVCaptureMetadataOutputObjectsDele
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        
+        super.viewDidAppear(animated)
         self.startScanning()
     }
     
@@ -110,11 +110,9 @@ class QRScanViewController: UIViewController, AVCaptureMetadataOutputObjectsDele
 //            guard let stringValue = readableObject.stringValue else { return }
             AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
             if readableObject.type == AVMetadataObject.ObjectType.qr {
-                weak var weakSelf: QRScanViewController!
-                weakSelf = self;
-                DispatchQueue.main.async(execute: {
-                    weakSelf.processQRCode(metadataObj: readableObject)
-                })
+                DispatchQueue.main.async { [weak self] in
+                    self?.processQRCode(metadataObj: readableObject)
+                }
             }
         }
 
@@ -131,9 +129,9 @@ class QRScanViewController: UIViewController, AVCaptureMetadataOutputObjectsDele
                 
                 self.performSelector(onMainThread: #selector(stopScanning), with: nil, waitUntilDone: false)
                 
-                self.dismiss(animated: true) {
-                    print("qr origin: \(metadataObj.stringValue ?? "")")
-                    self.delegate.extractStringfromQRCode(qrString: metadataObj.stringValue ?? "")
+                self.dismiss(animated: true) { [weak self] in
+                    guard let self else { return }
+                    self.delegate?.extractStringfromQRCode(qrString: metadataObj.stringValue ?? "")
                 }
             }
         }

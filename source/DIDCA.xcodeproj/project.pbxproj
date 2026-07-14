@@ -94,6 +94,18 @@
 		C9D519452DED3CE200FD2E62 /* ActivityUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D519442DED3CE000FD2E62 /* ActivityUtil.swift */; };
 		C9D519492DED8BA600FD2E62 /* ErrorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D519482DED8BA100FD2E62 /* ErrorHandler.swift */; };
 		C9E1D6962E016306005A3ACE /* VCStatusGetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9E1D6952E0162FC005A3ACE /* VCStatusGetter.swift */; };
+		AA0001012F000001000B0001 /* JinBonAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000001000A0001 /* JinBonAPIClient.swift */; };
+		AA0001012F000002000B0001 /* JinBonModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000002000A0001 /* JinBonModels.swift */; };
+		AA0001012F000003000B0001 /* AuthWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000003000A0001 /* AuthWebViewController.swift */; };
+		AA0001012F000004000B0001 /* VideoListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000004000A0001 /* VideoListViewController.swift */; };
+		AA0001012F000005000B0001 /* VideoUploadViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000005000A0001 /* VideoUploadViewController.swift */; };
+		AA0001012F000006000B0001 /* VideoVerifyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000006000A0001 /* VideoVerifyViewController.swift */; };
+		AA0001012F000007000B0001 /* JinBonTabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000007000A0001 /* JinBonTabBarController.swift */; };
+		AA0001012F000008000B0001 /* JinBonWelcomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000008000A0001 /* JinBonWelcomeViewController.swift */; };
+		AA0001012F000009000B0001 /* JinBonHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000009000A0001 /* JinBonHomeViewController.swift */; };
+		AA0001012F000010000B0001 /* JinBonCertificateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000010000A0001 /* JinBonCertificateViewController.swift */; };
+		AA0001012F000011000B0001 /* JinBonSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000011000A0001 /* JinBonSettingsViewController.swift */; };
+		AA0001012F000012000B0001 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000012000A0001 /* KeychainHelper.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -216,6 +228,18 @@
 		C9D519442DED3CE000FD2E62 /* ActivityUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityUtil.swift; sourceTree = "<group>"; };
 		C9D519482DED8BA100FD2E62 /* ErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandler.swift; sourceTree = "<group>"; };
 		C9E1D6952E0162FC005A3ACE /* VCStatusGetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VCStatusGetter.swift; sourceTree = "<group>"; };
+		AA0001012F000001000A0001 /* JinBonAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonAPIClient.swift; sourceTree = "<group>"; };
+		AA0001012F000002000A0001 /* JinBonModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonModels.swift; sourceTree = "<group>"; };
+		AA0001012F000003000A0001 /* AuthWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthWebViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000004000A0001 /* VideoListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoListViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000005000A0001 /* VideoUploadViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoUploadViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000006000A0001 /* VideoVerifyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoVerifyViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000007000A0001 /* JinBonTabBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonTabBarController.swift; sourceTree = "<group>"; };
+		AA0001012F000008000A0001 /* JinBonWelcomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonWelcomeViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000009000A0001 /* JinBonHomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonHomeViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000010000A0001 /* JinBonCertificateViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonCertificateViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000011000A0001 /* JinBonSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonSettingsViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000012000A0001 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -307,6 +331,8 @@
 				7CB772882C86ABBC00E05B5D /* Properties.swift */,
 				7CB772962C86D1B600E05B5D /* PopupUtils.swift */,
 				C9D519442DED3CE000FD2E62 /* ActivityUtil.swift */,
+				AA0001012F000001000A0001 /* JinBonAPIClient.swift */,
+				AA0001012F000012000A0001 /* KeychainHelper.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -341,6 +367,15 @@
 				7CA982092C85CBEE00EDF367 /* VCDetailViewController.swift */,
 				7CA9820A2C85CBEE00EDF367 /* VerifyCompletedViewController.swift */,
 				7CA9820B2C85CBEE00EDF367 /* VerifyProfileViewController.swift */,
+				AA0001012F000003000A0001 /* AuthWebViewController.swift */,
+				AA0001012F000004000A0001 /* VideoListViewController.swift */,
+				AA0001012F000005000A0001 /* VideoUploadViewController.swift */,
+				AA0001012F000006000A0001 /* VideoVerifyViewController.swift */,
+				AA0001012F000007000A0001 /* JinBonTabBarController.swift */,
+				AA0001012F000008000A0001 /* JinBonWelcomeViewController.swift */,
+				AA0001012F000009000A0001 /* JinBonHomeViewController.swift */,
+				AA0001012F000010000A0001 /* JinBonCertificateViewController.swift */,
+				AA0001012F000011000A0001 /* JinBonSettingsViewController.swift */,
 			);
 			path = Controller;
 			sourceTree = "<group>";
@@ -440,6 +475,7 @@
 			children = (
 				7CB772C12C871FA200E05B5D /* UserVO.swift */,
 				7CFA77EB2CBDFDCB00893B70 /* UpdatePushTokenVO.swift */,
+				AA0001012F000002000A0001 /* JinBonModels.swift */,
 			);
 			path = VO;
 			sourceTree = "<group>";
@@ -690,6 +726,18 @@
 				7CA982472C85CBEE00EDF367 /* RevokeVcProtocol.swift in Sources */,
 				7CA982362C85CBEE00EDF367 /* SelectAuthViewController.swift in Sources */,
 				7CA982342C85CBEE00EDF367 /* MainViewController.swift in Sources */,
+				AA0001012F000001000B0001 /* JinBonAPIClient.swift in Sources */,
+				AA0001012F000002000B0001 /* JinBonModels.swift in Sources */,
+				AA0001012F000003000B0001 /* AuthWebViewController.swift in Sources */,
+				AA0001012F000004000B0001 /* VideoListViewController.swift in Sources */,
+				AA0001012F000005000B0001 /* VideoUploadViewController.swift in Sources */,
+				AA0001012F000006000B0001 /* VideoVerifyViewController.swift in Sources */,
+				AA0001012F000007000B0001 /* JinBonTabBarController.swift in Sources */,
+				AA0001012F000008000B0001 /* JinBonWelcomeViewController.swift in Sources */,
+				AA0001012F000009000B0001 /* JinBonHomeViewController.swift in Sources */,
+				AA0001012F000010000B0001 /* JinBonCertificateViewController.swift in Sources */,
+				AA0001012F000011000B0001 /* JinBonSettingsViewController.swift in Sources */,
+				AA0001012F000012000B0001 /* KeychainHelper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

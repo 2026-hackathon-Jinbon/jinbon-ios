@@ -19,13 +19,13 @@ import DIDWalletSDK
 
 private enum MessageLevel : String
 {
-    case register       = "Please register a PIN"
-    case registerLock   = "Please register a Unlock PIN"
-    case input          = "Please input a PIN"
-    case inputLock      = "Please input a Unlock PIN"
-    case reEnterPin     = "Please re-enter your PIN"
-    case newPin         = "Please input new PIN"
-    case notMatchPin    = "PIN does not match"
+    case register       = "사용할 6자리 PIN을 입력해주세요"
+    case registerLock   = "Wallet 잠금 PIN을 설정해주세요"
+    case input          = "PIN을 입력해주세요"
+    case inputLock      = "Wallet 잠금 PIN을 입력해주세요"
+    case reEnterPin     = "확인을 위해 PIN을 다시 입력해주세요"
+    case newPin         = "새로운 PIN을 입력해주세요"
+    case notMatchPin    = "PIN이 일치하지 않습니다"
 }
 
 enum PinCodeType
@@ -56,6 +56,7 @@ class PincodeViewController: UIViewController
     public var pinCodeType: PinCodeType = .authenticate(isLock: false)
     
     var retryCount : Int = 0
+    private weak var keypadContainer: UIView?
     
     public func setRequestType(type: PinCodeType)
     {
@@ -64,8 +65,57 @@ class PincodeViewController: UIViewController
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        applyJinBonStyle()
         updateUI()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        guard let keypadContainer,
+              keypadContainer.bounds.width > 0,
+              keypadContainer.bounds.height > 0,
+              let area = keypadContainer.superview else { return }
+        let widthScale = (view.bounds.width - 48) / keypadContainer.bounds.width
+        let heightScale = (area.bounds.height - 16) / keypadContainer.bounds.height
+        let scale = max(1, min(1.22, widthScale, heightScale))
+        keypadContainer.transform = CGAffineTransform(scaleX: scale, y: scale)
+    }
+
+    private func applyJinBonStyle() {
+        view.backgroundColor = ColorPalette.canvas
+        messageLbl.font = .systemFont(ofSize: 22, weight: .bold)
+        messageLbl.textColor = ColorPalette.ink
+        messageLbl.numberOfLines = 0
+
+        inputImgViews.forEach {
+            $0.image = UIImage(systemName: "circle")
+            $0.tintColor = ColorPalette.primary
+            $0.contentMode = .scaleAspectFit
+        }
+
+        let buttons = allSubviews(in: view).compactMap { $0 as? UIButton }
+        keypadContainer = buttons.first(where: { (0...9).contains($0.tag) })?.superview
+        buttons.forEach { button in
+            button.setBackgroundImage(nil, for: .normal)
+            button.setBackgroundImage(nil, for: .highlighted)
+            button.backgroundColor = button.tag < 0 ? .clear : .white
+            button.layer.cornerRadius = 28
+            button.layer.cornerCurve = .continuous
+            button.setTitleColor(ColorPalette.ink, for: .normal)
+            button.titleLabel?.font = .systemFont(ofSize: 30, weight: .semibold)
+            if button.tag == -1 {
+                button.setImage(UIImage(systemName: "delete.left"), for: .normal)
+                button.tintColor = ColorPalette.ink
+            } else if button.tag == -2 {
+                button.setTitle("취소", for: .normal)
+                button.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
+                button.setTitleColor(ColorPalette.secondaryText, for: .normal)
+            }
+        }
+    }
+
+    private func allSubviews(in root: UIView) -> [UIView] {
+        root.subviews + root.subviews.flatMap { allSubviews(in: $0) }
     }
         
     private func drawSecurityChar()
@@ -73,9 +123,9 @@ class PincodeViewController: UIViewController
         
         for inputImgView in inputImgViews
         {
-            inputImgView.image = UIImage(named: inputImgView.tag < securityNumber.count
-                                         ? "Pin_num_out"
-                                         : "Pin_num_in")
+            inputImgView.image = UIImage(systemName: inputImgView.tag < securityNumber.count
+                                         ? "circle.fill"
+                                         : "circle")
         }
     }
     
@@ -130,7 +180,7 @@ class PincodeViewController: UIViewController
         
         for inputImgView in inputImgViews
         {
-            inputImgView.image = UIImage(named: "Pin_num_in")
+            inputImgView.image = UIImage(systemName: "circle")
         }
     }
     

@@ -23,7 +23,7 @@ class IssueVCWebViewController: UIViewController {
 
     weak var delegate: DismissDelegate?
     private let hostUrlString = URLs.DEMO_URL + "/addVcInfo?did="
-    public var vcSchemaId : String!
+    public var vcSchemaId: String = ""
     
     private var webView: WKWebView!
     
@@ -81,9 +81,12 @@ class IssueVCWebViewController: UIViewController {
         do {
             let holderDidDoc = try WalletAPI.shared.getDidDocument(type: DidDocumentType.HolderDidDocumnet)
             
-            let serviceUrl = URL(string:"\(hostUrlString)\(holderDidDoc.id)&userName=\(Properties.getUserName()!)&vcSchemaId=\(vcSchemaId!)")
-            print("servierUrl: \(serviceUrl!)")
-            urlRequest = URLRequest(url: serviceUrl!)
+            let userName = Properties.getUserName() ?? ""
+            guard let serviceUrl = URL(string:"\(hostUrlString)\(holderDidDoc.id)&userName=\(userName)&vcSchemaId=\(vcSchemaId)") else {
+                print("Invalid service URL")
+                return
+            }
+            urlRequest = URLRequest(url: serviceUrl)
             // progress 바 구현시 사용
             webView.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: .new, context: nil)
         } catch {
@@ -92,9 +95,12 @@ class IssueVCWebViewController: UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        
         super.viewWillAppear(animated)
         loadWebView()
+    }
+
+    deinit {
+        webView?.removeObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress))
     }
     
     private func loadWebView() -> Void {

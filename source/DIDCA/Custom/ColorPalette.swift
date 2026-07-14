@@ -20,5 +20,15 @@ import UIKit
 
 struct ColorPalette
 {
-    static let primary : UIColor = UIColor(named: "AccentColor") ?? UIColor(hexCode: "1E3A5F")
+    static let primary = UIColor(hexCode: "2457E6")
+    static let ink = UIColor(hexCode: "111827")
+    // 흰색/캔버스 배경 모두에서 작은 본문이 선명하게 읽히는 중성색
+    static let secondaryText = UIColor(hexCode: "475467")
+    static let canvas = UIColor(hexCode: "F7F8FC")
+    static let success = UIColor(hexCode: "12B76A")
+    static let card = UIColor.white
+    static let warning = UIColor(hexCode: "F79009")
+    static let danger = UIColor(hexCode: "F04438")
+    static let divider = UIColor(hexCode: "EAECF0")
+    static let softBlue = UIColor(hexCode: "EEF4FF")
 }
