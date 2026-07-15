@@ -293,7 +293,7 @@ class StepViewController: UIViewController {
     
     private func nextForStep3() {
         // PIN view
-        let pinVC = UIStoryboard.init(name: "PIN", bundle: nil).instantiateViewController(withIdentifier: "PincodeViewController") as! PincodeViewController
+        let pinVC = Storyboard.pin.instance.instantiateViewController(withIdentifier: ViewControllerID.pincode.rawValue) as! PincodeViewController
         pinVC.modalPresentationStyle = .fullScreen
         pinVC.setRequestType(type: .authenticate(isLock: false))
         pinVC.confirmButtonCompleteClosure = { passcode in
@@ -368,7 +368,7 @@ class StepViewController: UIViewController {
     
     func registerPin()
     {
-        let pinVC = UIStoryboard.init(name: "PIN", bundle: nil).instantiateViewController(withIdentifier: "PincodeViewController") as! PincodeViewController
+        let pinVC = Storyboard.pin.instance.instantiateViewController(withIdentifier: ViewControllerID.pincode.rawValue) as! PincodeViewController
         pinVC.modalPresentationStyle = .fullScreen
         pinVC.setRequestType(type: .register(isLock: false))
         pinVC.confirmButtonCompleteClosure = { passcode in
@@ -419,7 +419,7 @@ class StepViewController: UIViewController {
     
     private func doNext() {
          
-        let popupVC = UIStoryboard.init(name: "Popup", bundle: nil).instantiateViewController(withIdentifier: "TwoButtonDialogViewController") as! TwoButtonDialogViewController
+        let popupVC = Storyboard.popup.instance.instantiateViewController(withIdentifier: ViewControllerID.twoButtonDialog.rawValue) as! TwoButtonDialogViewController
         popupVC.modalPresentationStyle = .overCurrentContext
         popupVC.setContentsMessage(message: "생체인증도 사용할까요?\nPIN 대신 Face ID로 간편하게 인증할 수 있어요.")
         popupVC.confirmButtonCompleteClosure = { [self] in
@@ -464,7 +464,7 @@ extension StepViewController
 {
     func showUserRegWebView()
     {
-        let stepVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "UserRegWebViewController") as! UserRegWebViewController
+        let stepVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.userRegWeb.rawValue) as! UserRegWebViewController
         stepVC.modalPresentationStyle = .fullScreen
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
@@ -476,7 +476,7 @@ extension StepViewController
     
     func goMainView()
     {
-        let submitVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "MainViewController") as! MainViewController
+        let submitVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.main.rawValue) as! MainViewController
         submitVC.modalPresentationStyle = .fullScreen
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {

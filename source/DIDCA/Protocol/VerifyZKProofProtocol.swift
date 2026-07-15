@@ -19,10 +19,11 @@ import Foundation
 import DIDWalletSDK
 
 class VerifyZKProofProtocol: CommonProtocol {
-    
+    private let stateLock = NSLock()
+    private var proofInProgress = false
+
     public static let shared: VerifyZKProofProtocol = {
         let instance = VerifyZKProofProtocol()
-
         return instance
     }()
     
@@ -74,21 +75,45 @@ class VerifyZKProofProtocol: CommonProtocol {
                         selectedReferents : [UserReferent],
                         proofParam: ZKProofParam,
                         proofRequestProfile: _RequestProofRequestProfile) async throws {
-        
+        defer { finishOperation() }
         super.hWalletToken = hWalletToken
         super.txId = txId
-        
+
         try await requestVerify(selectedReferents: selectedReferents,
                                 proofParam: proofParam,
                                 proofRequestProfile: proofRequestProfile)
     }
-    
+
     public func preProcess(id: String? = nil, txId: String? = nil, offerId: String? = nil) async throws {
-        
-        self.reset()
-        
-        try await requestProfile(txId: txId, offerId: offerId!)
-        
-        try await super.requestWalletTokenData(purpose: WalletTokenPurposeEnum.LIST_VC_AND_PRESENT_VP)
+        try beginOperation()
+        do {
+            self.reset()
+            try await requestProfile(txId: txId, offerId: offerId!)
+            try await super.requestWalletTokenData(purpose: WalletTokenPurposeEnum.LIST_VC_AND_PRESENT_VP)
+        } catch {
+            finishOperation()
+            throw error
+        }
+    }
+
+    public func cancelProof() {
+        finishOperation()
+        reset()
+    }
+
+    private func beginOperation() throws {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        guard !proofInProgress else {
+            throw NSError(domain: "JinBon.VerifyZKProof", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "Another ZKProof verification is already in progress"])
+        }
+        proofInProgress = true
+    }
+
+    private func finishOperation() {
+        stateLock.lock()
+        proofInProgress = false
+        stateLock.unlock()
     }
 }

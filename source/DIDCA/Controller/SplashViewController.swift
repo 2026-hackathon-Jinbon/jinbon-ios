@@ -32,13 +32,13 @@ class SplashViewController: UIViewController {
         do {
             if try WalletAPI.shared.isLock() {
                 // PIN 화면 호출
-                let pinVC = UIStoryboard.init(name: "PIN", bundle: nil).instantiateViewController(withIdentifier: "PincodeViewController") as! PincodeViewController
+                let pinVC = Storyboard.pin.instance.instantiateViewController(withIdentifier: ViewControllerID.pincode.rawValue) as! PincodeViewController
                 pinVC.modalPresentationStyle = .fullScreen
                 pinVC.setRequestType(type: .authenticate(isLock: true))
                 pinVC.confirmButtonCompleteClosure = { [self] passcode in
-                    
+
                     if let vcOfferPayload {
-                        let issueProfileVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "IssueProfileViewController") as! IssueProfileViewController
+                        let issueProfileVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.issueProfile.rawValue) as! IssueProfileViewController
                         issueProfileVC.setVcOffer(vcOfferPayload: vcOfferPayload)
                         issueProfileVC.modalPresentationStyle = .fullScreen
                                 
@@ -190,10 +190,10 @@ class SplashViewController: UIViewController {
     private func navigateToNextViewController() {
     
         if let vcOfferPayload {
-            let issueProfileVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "IssueProfileViewController") as! IssueProfileViewController
+            let issueProfileVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.issueProfile.rawValue) as! IssueProfileViewController
             issueProfileVC.setVcOffer(vcOfferPayload: vcOfferPayload)
             issueProfileVC.modalPresentationStyle = .fullScreen
-                    
+
             (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?.changeRootVC(issueProfileVC, animated: false)
             return
         }
@@ -217,7 +217,7 @@ class SplashViewController: UIViewController {
                         return
                     }
                     
-                    let stepVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "StepViewController") as! StepViewController
+                    let stepVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.stepVC.rawValue) as! StepViewController
                     if isAnyKey {
                         
                         try await RegUserProtocol.shared.preProcess()

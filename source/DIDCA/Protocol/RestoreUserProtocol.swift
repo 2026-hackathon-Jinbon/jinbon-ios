@@ -21,9 +21,11 @@ import DIDWalletSDK
 
 
 class RestoreUserProtocol: CommonProtocol {
+    private let stateLock = NSLock()
+    private var restoreInProgress = false
+
     public static let shared: RestoreUserProtocol = {
         let instance = RestoreUserProtocol()
-
         return instance
     }()
     
@@ -74,22 +76,43 @@ class RestoreUserProtocol: CommonProtocol {
     
     @discardableResult
     public func process(passcode: String? = nil) async throws -> _ConfirmRestoreDidDoc {
-        
+        defer { finishOperation() }
         let regUserResponse = try await requestRestoreUser(passcode: passcode)
-        
         return try await confirmRestoreUser(responseData: regUserResponse)
     }
-    
+
     public func preProcess(offerId: String, did: String) async throws {
-        
-        try await proposeRestoreUser(offerId: offerId, did: did)
-            
-        let accEcdh = try await super.requestEcdh(type: .DeviceDidDocument)
-                
-        let attestedAppInfo: AttestedAppInfo = try await super.requestAttestedAppInfo()
-        
-        try await super.requestWalletTokenData(purpose: WalletTokenPurposeEnum.RESTORE_DID)
-        
-        try await super.requestCreateToken(attestedAppInfo: attestedAppInfo, ecdh: accEcdh, purpose: WalletTokenPurposeEnum.RESTORE_DID)
+        try beginOperation()
+        do {
+            try await proposeRestoreUser(offerId: offerId, did: did)
+            let accEcdh = try await super.requestEcdh(type: .DeviceDidDocument)
+            let attestedAppInfo: AttestedAppInfo = try await super.requestAttestedAppInfo()
+            try await super.requestWalletTokenData(purpose: WalletTokenPurposeEnum.RESTORE_DID)
+            try await super.requestCreateToken(attestedAppInfo: attestedAppInfo, ecdh: accEcdh, purpose: WalletTokenPurposeEnum.RESTORE_DID)
+        } catch {
+            finishOperation()
+            throw error
+        }
+    }
+
+    public func cancelRestore() {
+        finishOperation()
+        reset()
+    }
+
+    private func beginOperation() throws {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        guard !restoreInProgress else {
+            throw NSError(domain: "JinBon.RestoreUser", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "Another DID restore is already in progress"])
+        }
+        restoreInProgress = true
+    }
+
+    private func finishOperation() {
+        stateLock.lock()
+        restoreInProgress = false
+        stateLock.unlock()
     }
 }

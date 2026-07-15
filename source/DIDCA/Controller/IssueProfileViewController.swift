@@ -94,7 +94,7 @@ class IssueProfileViewController: UIViewController
     
     @IBAction func issuanceBtnAction(_ sender: Any) {
         if self.isWebView == true {
-            let issueVcWeb = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "IssueVCWebViewController") as! IssueVCWebViewController
+            let issueVcWeb = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.issueVCWeb.rawValue) as! IssueVCWebViewController
             issueVcWeb.delegate = self
             issueVcWeb.vcSchemaId = self.vcSchemaId
             issueVcWeb.modalPresentationStyle = .fullScreen
@@ -140,7 +140,7 @@ extension IssueProfileViewController
 {
     func showIssueCompletedView()
     {
-        let issueCompletedVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "IssueCompletedViewController") as! IssueCompletedViewController
+        let issueCompletedVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.issueCompleted.rawValue) as! IssueCompletedViewController
         issueCompletedVC.titleString = self.vcNmLbl.text ?? "VC"
         
         DispatchQueue.main.async

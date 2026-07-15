@@ -209,7 +209,7 @@ extension VCDetailViewController: UITableViewDelegate, UITableViewDataSource
             
             if claim.type == .image
             {
-                let cell = tableView.dequeueReusableCell(withIdentifier: "imageCell") as! VCDetailImageTableViewCell
+                let cell = tableView.dequeueReusableCell(withIdentifier: CellID.imageCell.rawValue) as! VCDetailImageTableViewCell
                 cell.captionLabel.text    = claim.caption
                 cell.claimImageView.image = try! ImageUtils.generateImg(base64String: claim.value,
                                                                    targetSize: CGSize(width: 100, height: 100))
@@ -218,7 +218,7 @@ extension VCDetailViewController: UITableViewDelegate, UITableViewDataSource
             }
             else
             {
-                let cell = tableView.dequeueReusableCell(withIdentifier: "stringCell") as! VCDetailStringTableViewCell
+                let cell = tableView.dequeueReusableCell(withIdentifier: CellID.stringCell.rawValue) as! VCDetailStringTableViewCell
                 cell.captionLabel.text = claim.caption
                 cell.valueLabel.text   = claim.value
                 
@@ -227,7 +227,7 @@ extension VCDetailViewController: UITableViewDelegate, UITableViewDataSource
             
             
         case .zkp:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "stringCell") as! VCDetailStringTableViewCell
+            let cell = tableView.dequeueReusableCell(withIdentifier: CellID.stringCell.rawValue) as! VCDetailStringTableViewCell
             
             let keys = Array(zkpVC!.values.keys).sorted()
             let key = keys[row]

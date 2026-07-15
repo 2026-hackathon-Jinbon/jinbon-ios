@@ -19,6 +19,7 @@
 		7C537DA82CE31D7100C7E2F3 /* AuthSettingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C537DA72CE31D7100C7E2F3 /* AuthSettingViewController.swift */; };
 		7C5835DC2C87EE7700365849 /* SettingCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C5835DB2C87EE7700365849 /* SettingCell.swift */; };
 		7C5835DE2C87F5EE00365849 /* ErrorDialogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C5835DD2C87F5EE00365849 /* ErrorDialogViewController.swift */; };
+		BB00000100000001000B0001 /* StoryboardID.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00000200000001000B0001 /* StoryboardID.swift */; };
 		7CA9822B2C85CBEE00EDF367 /* SDKUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CA981F72C85CBEE00EDF367 /* SDKUtils.swift */; };
 		7CA9822C2C85CBEE00EDF367 /* UIImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CA981F82C85CBEE00EDF367 /* UIImage.swift */; };
 		7CA9822D2C85CBEE00EDF367 /* AddVCCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CA981FA2C85CBEE00EDF367 /* AddVCCell.swift */; };
@@ -153,6 +154,7 @@
 		7C5835DB2C87EE7700365849 /* SettingCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingCell.swift; sourceTree = "<group>"; };
 		7C5835DD2C87F5EE00365849 /* ErrorDialogViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ErrorDialogViewController.swift; sourceTree = "<group>"; };
 		7C985EA82BC9292A00AF788F /* DIDCA.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DIDCA.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB00000200000001000B0001 /* StoryboardID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryboardID.swift; sourceTree = "<group>"; };
 		7CA981F72C85CBEE00EDF367 /* SDKUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SDKUtils.swift; sourceTree = "<group>"; };
 		7CA981F82C85CBEE00EDF367 /* UIImage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIImage.swift; sourceTree = "<group>"; };
 		7CA981FA2C85CBEE00EDF367 /* AddVCCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddVCCell.swift; sourceTree = "<group>"; };
@@ -333,6 +335,7 @@
 				C9D519442DED3CE000FD2E62 /* ActivityUtil.swift */,
 				AA0001012F000001000A0001 /* JinBonAPIClient.swift */,
 				AA0001012F000012000A0001 /* KeychainHelper.swift */,
+				BB00000200000001000B0001 /* StoryboardID.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -707,6 +710,7 @@
 				C927020A2E00248900B4B9D9 /* BiometricAuthenticator.swift in Sources */,
 				7CA982372C85CBEE00EDF367 /* SplashViewController.swift in Sources */,
 				7CA9822D2C85CBEE00EDF367 /* AddVCCell.swift in Sources */,
+				BB00000100000001000B0001 /* StoryboardID.swift in Sources */,
 				7CA9822B2C85CBEE00EDF367 /* SDKUtils.swift in Sources */,
 				C91179332DD1B6F000F3B573 /* RoundedView.swift in Sources */,
 				7CA982302C85CBEE00EDF367 /* IssueCompletedViewController.swift in Sources */,

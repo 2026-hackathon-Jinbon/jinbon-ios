@@ -22,6 +22,9 @@ import DIDWalletSDK
 
 
 class RegUserProtocol: CommonProtocol {
+    private let stateLock = NSLock()
+    private var registrationInProgress = false
+
     public static let shared: RegUserProtocol = {
         let instance = RegUserProtocol()
         return instance
@@ -73,30 +76,47 @@ class RegUserProtocol: CommonProtocol {
     }
     
     @discardableResult
-    public func process(signedDidDoc: SignedDIDDoc) async throws -> _ConfirmRegisterUser
-    {
-        
+    public func process(signedDidDoc: SignedDIDDoc) async throws -> _ConfirmRegisterUser {
+        defer { finishOperation() }
         let regUserResponse = try await requestRegisterUser(signedDidDoc: signedDidDoc)
-        
         let result = try await confirmRegisterUser(responseData: regUserResponse)
-        
         try WalletAPI.shared.saveHolderDIDDocument()
-        
         return result
     }
-    
+
     public func preProcess() async throws {
-        
-        try await proposeRegisterUser()
-            
-        let accEcdh = try await super.requestEcdh(type: .DeviceDidDocument)
-                
-        let attestedAppInfo: AttestedAppInfo = try await super.requestAttestedAppInfo()
-        
-        try await super.requestWalletTokenData(purpose: WalletTokenPurposeEnum.CREATE_DID)
-        
-        try await super.requestCreateToken(attestedAppInfo: attestedAppInfo, ecdh: accEcdh, purpose: WalletTokenPurposeEnum.CREATE_DID)
-        
-        try await retrieveKyc()
+        try beginOperation()
+        do {
+            try await proposeRegisterUser()
+            let accEcdh = try await super.requestEcdh(type: .DeviceDidDocument)
+            let attestedAppInfo: AttestedAppInfo = try await super.requestAttestedAppInfo()
+            try await super.requestWalletTokenData(purpose: WalletTokenPurposeEnum.CREATE_DID)
+            try await super.requestCreateToken(attestedAppInfo: attestedAppInfo, ecdh: accEcdh, purpose: WalletTokenPurposeEnum.CREATE_DID)
+            try await retrieveKyc()
+        } catch {
+            finishOperation()
+            throw error
+        }
+    }
+
+    public func cancelRegistration() {
+        finishOperation()
+        reset()
+    }
+
+    private func beginOperation() throws {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        guard !registrationInProgress else {
+            throw NSError(domain: "JinBon.RegUser", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "Another user registration is already in progress"])
+        }
+        registrationInProgress = true
+    }
+
+    private func finishOperation() {
+        stateLock.lock()
+        registrationInProgress = false
+        stateLock.unlock()
     }
 }

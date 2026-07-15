@@ -22,7 +22,7 @@ public class PopupUtils {
                                       VC: UIViewController,
                                       completeClosure : (()->Void)? = nil)
     {
-        let popupVC = UIStoryboard.init(name: "Popup", bundle: nil).instantiateViewController(withIdentifier: "ErrorDialogViewController") as! ErrorDialogViewController
+        let popupVC = Storyboard.popup.instance.instantiateViewController(withIdentifier: ViewControllerID.errorDialog.rawValue) as! ErrorDialogViewController
         popupVC.modalPresentationStyle = .overCurrentContext
         popupVC.setTitleMessage(message: title)
         popupVC.setContentsMessage(message: content)
@@ -32,7 +32,7 @@ public class PopupUtils {
     }
     
     static public func showDialogPopup(title:String, content: String, VC: UIViewController) {
-        let popupVC = UIStoryboard.init(name: "Popup", bundle: nil).instantiateViewController(withIdentifier: "OneButtonDialogViewController") as! OneButtonDialogViewController
+        let popupVC = Storyboard.popup.instance.instantiateViewController(withIdentifier: ViewControllerID.oneButtonDialog.rawValue) as! OneButtonDialogViewController
         popupVC.modalPresentationStyle = .overCurrentContext
         popupVC.setTitleMessage(message: title)
         popupVC.setContentsMessage(message: content)
@@ -43,7 +43,7 @@ public class PopupUtils {
     
     static public func showInputPopUp(title: String, subtitle : String, VC: UIViewController, completeClosure : @escaping ((String)->Void))
     {
-        let popupVC = UIStoryboard.init(name: "Popup", bundle: nil).instantiateViewController(withIdentifier: "InputPopUpViewController") as! InputPopUpViewController
+        let popupVC = Storyboard.popup.instance.instantiateViewController(withIdentifier: ViewControllerID.inputPopUp.rawValue) as! InputPopUpViewController
         popupVC.modalPresentationStyle = .overCurrentContext
         popupVC.setTitleText(titleText: title)
         popupVC.setSubtitleText(subtitleText: subtitle)

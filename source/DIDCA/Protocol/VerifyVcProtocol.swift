@@ -18,10 +18,11 @@ import Foundation
 import DIDWalletSDK
 
 class VerifyVcProtocol: CommonProtocol {
-    
+    private let stateLock = NSLock()
+    private var verificationInProgress = false
+
     public static let shared: VerifyVcProtocol = {
         let instance = VerifyVcProtocol()
-
         return instance
     }()
     
@@ -70,18 +71,42 @@ class VerifyVcProtocol: CommonProtocol {
     
     
     public func process(hWalletToken: String, txId: String, claimInfos: [ClaimInfo]? = nil, verifierProfile: _RequestProfile, passcode: String? = nil) async throws {
-        
+        defer { finishOperation() }
         super.hWalletToken = hWalletToken
         super.txId = txId
         try await requestVerify(claimInfos: claimInfos, verifierProfile: verifierProfile, passcode:passcode)
     }
-    
+
     public func preProcess(id: String? = nil, txId: String? = nil, offerId: String? = nil) async throws {
-        
-        self.reset()
-        
-        try await requestProfile(txId: txId, offerId: offerId!)
-        
-        try await super.requestWalletTokenData(purpose: WalletTokenPurposeEnum.LIST_VC_AND_PRESENT_VP)
+        try beginOperation()
+        do {
+            self.reset()
+            try await requestProfile(txId: txId, offerId: offerId!)
+            try await super.requestWalletTokenData(purpose: WalletTokenPurposeEnum.LIST_VC_AND_PRESENT_VP)
+        } catch {
+            finishOperation()
+            throw error
+        }
+    }
+
+    public func cancelVerification() {
+        finishOperation()
+        reset()
+    }
+
+    private func beginOperation() throws {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        guard !verificationInProgress else {
+            throw NSError(domain: "JinBon.VerifyVc", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "Another verification is already in progress"])
+        }
+        verificationInProgress = true
+    }
+
+    private func finishOperation() {
+        stateLock.lock()
+        verificationInProgress = false
+        stateLock.unlock()
     }
 }

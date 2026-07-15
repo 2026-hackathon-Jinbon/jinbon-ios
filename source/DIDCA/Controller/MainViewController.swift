@@ -111,7 +111,7 @@ class MainViewController: UIViewController, DismissDelegate {
     
     @IBAction func addVCAction()
     {
-        let addVc = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "AddVcViewController") as! AddVcViewController
+        let addVc = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.addVc.rawValue) as! AddVcViewController
         
         let navi = UINavigationController(rootViewController: addVc)
         navi.isNavigationBarHidden = true
@@ -131,7 +131,7 @@ class MainViewController: UIViewController, DismissDelegate {
             
         }
 #else
-        let qrVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "QRScanViewController") as! QRScanViewController
+        let qrVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.qrScan.rawValue) as! QRScanViewController
         qrVC.delegate = self
         qrVC.modalPresentationStyle = .popover
         
@@ -143,8 +143,8 @@ class MainViewController: UIViewController, DismissDelegate {
     
     @IBAction func showSettings() {
         
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let viewController = storyboard.instantiateViewController(withIdentifier: "SettingViewController") as! SettingViewController
+        let storyboard = Storyboard.main.instance
+        let viewController = storyboard.instantiateViewController(withIdentifier: ViewControllerID.setting.rawValue) as! SettingViewController
         viewController.contents = [.tasURL, .verifierURL, .did, .userAuthentication]
         
         let navi = UINavigationController(rootViewController: viewController)
@@ -191,7 +191,7 @@ extension MainViewController: UICollectionViewDataSource {
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell
     {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "mainVCCell", for: indexPath) as! MainVCCollectionViewCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CellID.mainVCCell.rawValue, for: indexPath) as! MainVCCollectionViewCell
 
         let vc = vcs[indexPath.row]
         let isZkpIncluded = zkpIncludedStates[vc.id] ?? false
@@ -273,7 +273,7 @@ extension MainViewController
         let vpOffer = try VerifyOfferPayload(from: qrData)
         print("vpOffer JSON: \(try vpOffer.toJson())")
         
-        let verifyProfileVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "VerifyProfileViewController") as! VerifyProfileViewController
+        let verifyProfileVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.verifyProfile.rawValue) as! VerifyProfileViewController
 //        verifyProfileVC.modalPresentationStyle = .fullScreen
         verifyProfileVC.setVpOffer(vpOffer: vpOffer)
         
@@ -290,7 +290,7 @@ extension MainViewController
         let vcOffer = try IssueOfferPayload(from: qrData)
         print("vcOffer JSON: \(try vcOffer.toJson())")
         
-        let issueProfileVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "IssueProfileViewController") as! IssueProfileViewController
+        let issueProfileVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.issueProfile.rawValue) as! IssueProfileViewController
         issueProfileVC.setVcOffer(vcOfferPayload: vcOffer)
         issueProfileVC.modalPresentationStyle = .fullScreen
         
@@ -309,7 +309,7 @@ extension MainViewController
                                   zkpVC : ZKPCredential?,
                                   zkpSchema : ZKPCredentialSchema?)
     {
-        let detialVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "VCDetailViewController") as! VCDetailViewController
+        let detialVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.vcDetail.rawValue) as! VCDetailViewController
         detialVC.modalPresentationStyle = .fullScreen
         detialVC.setVcInfo(vc: vc,
                            zkpVC: zkpVC,

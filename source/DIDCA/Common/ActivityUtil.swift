@@ -24,7 +24,7 @@ class ActivityUtil
                      completeClosure: @escaping(() -> Void),
                      failureCloseClosure: @escaping((_ title : String, _ message : String) -> Void))
     {
-        let activity = UIStoryboard.init(name: "Popup", bundle: nil).instantiateViewController(withIdentifier: "ActivityIndicatorViewController") as! ActivityIndicatorViewController
+        let activity = Storyboard.popup.instance.instantiateViewController(withIdentifier: ViewControllerID.activityIndicator.rawValue) as! ActivityIndicatorViewController
         
         activity.modalPresentationStyle = .overCurrentContext
         

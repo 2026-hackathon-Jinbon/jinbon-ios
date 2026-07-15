@@ -18,9 +18,11 @@ import Foundation
 import DIDWalletSDK
 
 class UpdateUserProtocol: CommonProtocol {
+    private let stateLock = NSLock()
+    private var updateInProgress = false
+
     public static let shared: UpdateUserProtocol = {
         let instance = UpdateUserProtocol()
-
         return instance
     }()
     
@@ -69,26 +71,45 @@ class UpdateUserProtocol: CommonProtocol {
         
     @discardableResult
     public func process(passcode: String? = nil, signedDidDoc: SignedDIDDoc) async throws -> _ConfirmUpdateDidDoc {
-        
+        defer { finishOperation() }
         let regUpdateUserResponse = try await requestUpdateUser(passcode: passcode, signedDidDoc: signedDidDoc)
-        
         let response : _ConfirmUpdateDidDoc = try await confirmUpdateUser(responseData: regUpdateUserResponse)
-        
         try WalletAPI.shared.saveHolderDIDDocument()
-        
         return response
     }
-    
+
     public func preProcess(did: String) async throws {
-        
-        try await proposeUpdateUser(did: did)
-            
-        let accEcdh = try await super.requestEcdh(type: .DeviceDidDocument)
-                
-        let attestedAppInfo: AttestedAppInfo = try await super.requestAttestedAppInfo()
-        
-        try await super.requestWalletTokenData(purpose: WalletTokenPurposeEnum.UPDATE_DID)
-        
-        try await super.requestCreateToken(attestedAppInfo: attestedAppInfo, ecdh: accEcdh, purpose: WalletTokenPurposeEnum.UPDATE_DID)
+        try beginOperation()
+        do {
+            try await proposeUpdateUser(did: did)
+            let accEcdh = try await super.requestEcdh(type: .DeviceDidDocument)
+            let attestedAppInfo: AttestedAppInfo = try await super.requestAttestedAppInfo()
+            try await super.requestWalletTokenData(purpose: WalletTokenPurposeEnum.UPDATE_DID)
+            try await super.requestCreateToken(attestedAppInfo: attestedAppInfo, ecdh: accEcdh, purpose: WalletTokenPurposeEnum.UPDATE_DID)
+        } catch {
+            finishOperation()
+            throw error
+        }
+    }
+
+    public func cancelUpdate() {
+        finishOperation()
+        reset()
+    }
+
+    private func beginOperation() throws {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        guard !updateInProgress else {
+            throw NSError(domain: "JinBon.UpdateUser", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "Another DID update is already in progress"])
+        }
+        updateInProgress = true
+    }
+
+    private func finishOperation() {
+        stateLock.lock()
+        updateInProgress = false
+        stateLock.unlock()
     }
 }

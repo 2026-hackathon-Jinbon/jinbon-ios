@@ -88,7 +88,7 @@ extension AttrSelectionViewController: UITableViewDelegate, UITableViewDataSourc
             return UITableViewCell()
         }
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "attrSelectionCell") as! AttrSelectionTableViewCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: CellID.attrSelectionCell.rawValue) as! AttrSelectionTableViewCell
 //        cell.changeBorderColor(isSelected: selectedIndex == indexPath.row)
         
         

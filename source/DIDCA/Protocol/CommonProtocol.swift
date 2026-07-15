@@ -177,7 +177,7 @@ class CommonProtocol {
         // 세션 키 생성
         let secretKey = try CryptoUtils.generateSharedSecret(ecType: ECType.secp256r1, privateKey: MultibaseUtils.decode(encoded: self.priKey), publicKey: MultibaseUtils.decode(encoded: ecdh.accEcdh.publicKey))
 
-        let clientMergedSharedSecret = SDKUtils.mergeSharedSecretAndNonce(sharedSecret: secretKey, nonce: mergedNonce, symmetricCipherType: SymmetricCipherType.aes256CBC)
+        let clientMergedSharedSecret = try SDKUtils.mergeSharedSecretAndNonce(sharedSecret: secretKey, nonce: mergedNonce, symmetricCipherType: SymmetricCipherType.aes256CBC)
         
         let iv = try MultibaseUtils.decode(encoded: requestCreateToken.iv)
         

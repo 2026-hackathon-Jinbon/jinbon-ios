@@ -45,7 +45,7 @@ class AuthSettingViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "SettingCell") as? SettingCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: CellID.settingCell.rawValue) as? SettingCell else {
             return UITableViewCell()
         }
         
@@ -57,7 +57,7 @@ class AuthSettingViewController: UITableViewController {
 
         tableView.deselectRow(at: indexPath, animated: true)
         if indexPath.row == 0 {
-            let pinVC = UIStoryboard.init(name: "PIN", bundle: nil).instantiateViewController(withIdentifier: "PincodeViewController") as! PincodeViewController
+            let pinVC = Storyboard.pin.instance.instantiateViewController(withIdentifier: ViewControllerID.pincode.rawValue) as! PincodeViewController
             pinVC.modalPresentationStyle = .fullScreen
             pinVC.setRequestType(type: .authenticate(isLock: false))
             pinVC.confirmButtonCompleteClosure = { [self] passcode in
@@ -76,7 +76,7 @@ class AuthSettingViewController: UITableViewController {
     
     private func regPIN(oldPIN: String) {
         
-        let pinVC = UIStoryboard.init(name: "PIN", bundle: nil).instantiateViewController(withIdentifier: "PincodeViewController") as! PincodeViewController
+        let pinVC = Storyboard.pin.instance.instantiateViewController(withIdentifier: ViewControllerID.pincode.rawValue) as! PincodeViewController
         pinVC.modalPresentationStyle = .fullScreen
         pinVC.setRequestType(type: .register(isLock: false))
         pinVC.confirmButtonCompleteClosure = { [self] passcode in

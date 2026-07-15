@@ -82,7 +82,7 @@ extension AddVcViewController: UICollectionViewDataSource {
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "AddVCCell", for: indexPath) as! AddVCCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CellID.addVCCell.rawValue, for: indexPath) as! AddVCCell
 
         cell.layer.cornerRadius = 10
         cell.layer.masksToBounds = true
@@ -139,7 +139,7 @@ extension AddVcViewController
     func moveToProfileView(vcSchemaId : String,
                            vcOffer: IssueOfferPayload)
     {
-        let issueProfileVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "IssueProfileViewController") as! IssueProfileViewController
+        let issueProfileVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.issueProfile.rawValue) as! IssueProfileViewController
         issueProfileVC.vcSchemaId = vcSchemaId
         issueProfileVC.setVcOffer(vcOfferPayload: vcOffer,
                                   isWebView: true)

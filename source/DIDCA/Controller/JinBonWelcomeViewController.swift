@@ -219,8 +219,8 @@ extension JinBonWelcomeViewController: AuthWebViewDelegate {
     }
 
     private func showDidRegistration() {
-        let step = UIStoryboard(name: "Main", bundle: nil)
-            .instantiateViewController(withIdentifier: "StepViewController") as! StepViewController
+        let step = Storyboard.main.instance
+            .instantiateViewController(withIdentifier: ViewControllerID.stepVC.rawValue) as! StepViewController
         step.setStepType(stepType: Properties.getUserId() == nil ? .STEP_TYPE_1 : .STEP_TYPE_2)
         step.modalPresentationStyle = .fullScreen
         present(step, animated: true)

@@ -1,0 +1,12 @@
+// Prod.xcconfig
+// 프로덕션 환경 설정 - 실제 서버 URL로 교체 필요
+
+TAS_URL = https:/$()/jinbon-tas.example.com
+VERIFIER_URL = https:/$()/jinbon-verifier.example.com
+CAS_URL = https:/$()/jinbon-cas.example.com
+WALLET_URL = https:/$()/jinbon-wallet.example.com
+API_URL = https:/$()/jinbon-api.example.com
+DEMO_URL = https:/$()/jinbon-demo.example.com
+JINBON_URL = https:/$()/jinbon.example.com
+
+// ATS: 프로덕션에서는 Info.plist의 NSAllowsArbitraryLoads를 <false/>로 설정할 것

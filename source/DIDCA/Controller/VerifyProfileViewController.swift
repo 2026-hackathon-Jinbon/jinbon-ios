@@ -379,7 +379,7 @@ extension VerifyProfileViewController
 {
     func moveToSubmissionView(availableReferent : AvailableReferent)
     {
-        let submissionZKP = UIStoryboard.init(name: "ZKP", bundle: nil).instantiateViewController(withIdentifier: "ZKPSubmissionViewController") as! ZKPSubmissionViewController
+        let submissionZKP = Storyboard.zkp.instance.instantiateViewController(withIdentifier: ViewControllerID.zkpSubmission.rawValue) as! ZKPSubmissionViewController
         submissionZKP.availableReferent = availableReferent
         submissionZKP.zkpDefs = self.zkpDefs
         submissionZKP.zkpSchemas = self.zkpSchemas
@@ -395,7 +395,7 @@ extension VerifyProfileViewController
     
     func moveToCompleteView()
     {
-        let verifyCompletedVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "VerifyCompletedViewController") as! VerifyCompletedViewController
+        let verifyCompletedVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.verifyCompleted.rawValue) as! VerifyCompletedViewController
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.navigationController?.pushViewController(verifyCompletedVC, animated: false)

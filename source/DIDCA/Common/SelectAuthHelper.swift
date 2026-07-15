@@ -84,7 +84,7 @@ struct SelectAuthHelper
                                        completeClosure :  @escaping ((_ passcode: String?) -> Void),
                                        cancelClosure:  @escaping (()->Void))
     {
-        let selectAuthVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "SelectAuthViewController") as! SelectAuthViewController
+        let selectAuthVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.selectAuth.rawValue) as! SelectAuthViewController
         selectAuthVC.confirmButtonCompleteClosure = completeClosure
         selectAuthVC.cancelButtonCompleteClosure = cancelClosure
         
@@ -101,7 +101,7 @@ struct SelectAuthHelper
                                 completeClosure : @escaping ((_ passcode: String?) -> Void),
                                 cancelClosure:@escaping (()->Void))
     {
-        let pinVC = UIStoryboard.init(name: "PIN", bundle: nil).instantiateViewController(withIdentifier: "PincodeViewController") as! PincodeViewController
+        let pinVC = Storyboard.pin.instance.instantiateViewController(withIdentifier: ViewControllerID.pincode.rawValue) as! PincodeViewController
         pinVC.modalPresentationStyle = .fullScreen
         pinVC.setRequestType(type: .authenticate(isLock: false))
         pinVC.confirmButtonCompleteClosure = completeClosure

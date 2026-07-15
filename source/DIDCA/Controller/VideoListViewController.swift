@@ -120,7 +120,7 @@ class VideoListViewController: UIViewController {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.register(VideoTableViewCell.self, forCellReuseIdentifier: "VideoCell")
+        tableView.register(VideoTableViewCell.self, forCellReuseIdentifier: CellID.videoCell.rawValue)
         tableView.separatorStyle = .none
         tableView.backgroundColor = ColorPalette.canvas
         tableView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 24, right: 0)
@@ -274,7 +274,7 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "VideoCell", for: indexPath) as! VideoTableViewCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: CellID.videoCell.rawValue, for: indexPath) as! VideoTableViewCell
         cell.configure(with: videos[indexPath.row])
         return cell
     }
@@ -421,8 +421,8 @@ extension VideoListViewController: AuthWebViewDelegate {
     }
 
     private func showDidRegistration() {
-        let step = UIStoryboard(name: "Main", bundle: nil)
-            .instantiateViewController(withIdentifier: "StepViewController") as! StepViewController
+        let step = Storyboard.main.instance
+            .instantiateViewController(withIdentifier: ViewControllerID.stepVC.rawValue) as! StepViewController
         step.setStepType(stepType: Properties.getUserId() == nil ? .STEP_TYPE_1 : .STEP_TYPE_2)
         step.modalPresentationStyle = .fullScreen
         present(step, animated: true)

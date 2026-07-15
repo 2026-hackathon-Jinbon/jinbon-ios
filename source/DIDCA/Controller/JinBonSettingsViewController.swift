@@ -153,8 +153,8 @@ final class JinBonSettingsViewController: UIViewController {
     }
 
     @objc private func showWalletSecurity() {
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let settings = storyboard.instantiateViewController(withIdentifier: "AuthSettingViewController")
+        let storyboard = Storyboard.main.instance
+        let settings = storyboard.instantiateViewController(withIdentifier: ViewControllerID.authSetting.rawValue)
         navigationController?.pushViewController(settings, animated: true)
     }
 

@@ -151,7 +151,7 @@ class UserRegWebViewController: UIViewController {
     }
     
     private func presentSubmitViewController() {
-        let submitVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "MainViewController") as! MainViewController
+        let submitVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.main.rawValue) as! MainViewController
         submitVC.modalPresentationStyle = .fullScreen
         DispatchQueue.main.async {
             self.present(submitVC, animated: false, completion: nil)
@@ -159,7 +159,7 @@ class UserRegWebViewController: UIViewController {
     }
     
     private func userRegAction() {
-        let popupVC = UIStoryboard.init(name: "Popup", bundle: nil).instantiateViewController(withIdentifier: "TwoButtonDialogViewController") as! TwoButtonDialogViewController
+        let popupVC = Storyboard.popup.instance.instantiateViewController(withIdentifier: ViewControllerID.twoButtonDialog.rawValue) as! TwoButtonDialogViewController
         popupVC.modalPresentationStyle = .overCurrentContext
         popupVC.setContentsMessage(message: "Wallet 잠금을 설정할까요?\nPIN으로 디지털 신원을 안전하게 보호할 수 있어요.")
         popupVC.confirmButtonCompleteClosure = { [self] in
@@ -219,7 +219,7 @@ class UserRegWebViewController: UIViewController {
     }
     
     func nextView() {
-        let stepVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "StepViewController") as! StepViewController
+        let stepVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.stepVC.rawValue) as! StepViewController
         stepVC.setStepType(stepType: StepTypeEnum.STEP_TYPE_2)
         stepVC.modalPresentationStyle = .fullScreen
         DispatchQueue.main.async {
@@ -229,7 +229,7 @@ class UserRegWebViewController: UIViewController {
 
     func showPin(hWalletToken: String) {
         // PIN view
-        let pinVC = UIStoryboard.init(name: "PIN", bundle: nil).instantiateViewController(withIdentifier: "PincodeViewController") as! PincodeViewController
+        let pinVC = Storyboard.pin.instance.instantiateViewController(withIdentifier: ViewControllerID.pincode.rawValue) as! PincodeViewController
         pinVC.modalPresentationStyle = .fullScreen
         pinVC.setRequestType(type: .register(isLock: true))
         pinVC.confirmButtonCompleteClosure = { [self] passcode in

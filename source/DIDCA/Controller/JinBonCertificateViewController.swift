@@ -38,7 +38,7 @@ final class JinBonCertificateViewController: UIViewController {
         tableView.contentInset = UIEdgeInsets(top: 12, left: 0, bottom: 28, right: 0)
         tableView.dataSource = self
         tableView.delegate = self
-        tableView.register(JinBonCertificateCell.self, forCellReuseIdentifier: "certificate")
+        tableView.register(JinBonCertificateCell.self, forCellReuseIdentifier: CellID.certificate.rawValue)
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -135,7 +135,7 @@ extension JinBonCertificateViewController: UITableViewDataSource, UITableViewDel
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { credentials.count }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "certificate", for: indexPath) as! JinBonCertificateCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: CellID.certificate.rawValue, for: indexPath) as! JinBonCertificateCell
         cell.configure(credentials[indexPath.row])
         return cell
     }

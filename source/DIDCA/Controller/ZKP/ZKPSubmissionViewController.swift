@@ -118,7 +118,7 @@ class ZKPSubmissionViewController: UIViewController {
     
     func moveToCompltedView()
     {
-        let verifyCompletedVC = UIStoryboard.init(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "VerifyCompletedViewController") as! VerifyCompletedViewController
+        let verifyCompletedVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.verifyCompleted.rawValue) as! VerifyCompletedViewController
 //        verifyCompletedVC.modalPresentationStyle = .fullScreen
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1)
         {
@@ -296,7 +296,7 @@ extension ZKPSubmissionViewController: UITableViewDelegate, UITableViewDataSourc
         switch section
         {
         case .attributes, .predicates:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "zkpSubmissionCell") as! ZKPSubmissionTableViewCell
+            let cell = tableView.dequeueReusableCell(withIdentifier: CellID.zkpSubmissionCell.rawValue) as! ZKPSubmissionTableViewCell
             cell.delegate = (section == .attributes) ? self : nil
             cell.eyeBtn.isHidden = (section != .attributes)
             cell.eyeBtn.tag = row
@@ -315,7 +315,7 @@ extension ZKPSubmissionViewController: UITableViewDelegate, UITableViewDataSourc
             }
             return cell
         case .selfAttributes:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "zkpSubmissionTextCell") as! ZKPSubmissionTextTableViewCell
+            let cell = tableView.dequeueReusableCell(withIdentifier: CellID.zkpSubmissionTextCell.rawValue) as! ZKPSubmissionTextTableViewCell
             cell.refNameLabel.text = referentName
             cell.textField.text = selfRawMap[row] ?? ""
             cell.textField.tag = row
@@ -340,7 +340,7 @@ extension ZKPSubmissionViewController
 {
     func moveToSelectionViewController(indexPath : IndexPath)
     {
-        let vc = UIStoryboard(name: "ZKP", bundle: nil).instantiateViewController(withIdentifier: "AttrSelectionViewController") as! AttrSelectionViewController
+        let vc = Storyboard.zkp.instance.instantiateViewController(withIdentifier: ViewControllerID.attrSelection.rawValue) as! AttrSelectionViewController
         
         vc.modalPresentationStyle = .overFullScreen
         

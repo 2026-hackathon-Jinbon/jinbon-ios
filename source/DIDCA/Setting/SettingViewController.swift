@@ -90,7 +90,7 @@ class SettingViewController: UITableViewController {
         
         if option < .pinSettings
         {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "SettingCell", for: indexPath) as! SettingCell
+            let cell = tableView.dequeueReusableCell(withIdentifier: CellID.settingCell.rawValue, for: indexPath) as! SettingCell
             cell.content1.text = option.title
             
             switch option
@@ -110,7 +110,7 @@ class SettingViewController: UITableViewController {
         }
         else
         {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "ChevronCell", for: indexPath) as! ChevronSettingCell
+            let cell = tableView.dequeueReusableCell(withIdentifier: CellID.chevronCell.rawValue, for: indexPath) as! ChevronSettingCell
             cell.label.text = option.title
             cell.chevronImgV.isHidden = (!(option == .biometricsSettings || option == .pinSettings))
             cell.chevronImgV.isHighlighted = expanded.contains(option)
@@ -156,7 +156,7 @@ class SettingViewController: UITableViewController {
                 self.tableView.reloadData()
             }
         case .changePIN4Sign:
-            let pinVC = UIStoryboard.init(name: "PIN", bundle: nil).instantiateViewController(withIdentifier: "PincodeViewController") as! PincodeViewController
+            let pinVC = Storyboard.pin.instance.instantiateViewController(withIdentifier: ViewControllerID.pincode.rawValue) as! PincodeViewController
             pinVC.modalPresentationStyle = .fullScreen
             pinVC.setRequestType(type: .change(isLock: false))
             pinVC.changeConfirmButtonCompleteClosure = { oldPasscode, newPasscode in
@@ -189,7 +189,7 @@ class SettingViewController: UITableViewController {
                 return
             }
             
-            let pinVC = UIStoryboard.init(name: "PIN", bundle: nil).instantiateViewController(withIdentifier: "PincodeViewController") as! PincodeViewController
+            let pinVC = Storyboard.pin.instance.instantiateViewController(withIdentifier: ViewControllerID.pincode.rawValue) as! PincodeViewController
             pinVC.modalPresentationStyle = .fullScreen
             pinVC.setRequestType(type: .change(isLock: true))
             pinVC.changeConfirmButtonCompleteClosure = { oldPasscode, newPasscode in
@@ -234,7 +234,7 @@ class SettingViewController: UITableViewController {
                                                          promptMsg: "Authenticate to access your private key")
                     
                     
-                    let pinVC = UIStoryboard.init(name: "PIN", bundle: nil).instantiateViewController(withIdentifier: "PincodeViewController") as! PincodeViewController
+                    let pinVC = Storyboard.pin.instance.instantiateViewController(withIdentifier: ViewControllerID.pincode.rawValue) as! PincodeViewController
                     pinVC.modalPresentationStyle = .fullScreen
                     pinVC.setRequestType(type: .authenticate(isLock: false))
                     pinVC.confirmButtonCompleteClosure = { passcode in
@@ -311,8 +311,8 @@ extension SettingViewController
 {
     func callSettings(options : [TitleOption])
     {
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let viewController = storyboard.instantiateViewController(withIdentifier: "SettingViewController") as! SettingViewController
+        let storyboard = Storyboard.main.instance
+        let viewController = storyboard.instantiateViewController(withIdentifier: ViewControllerID.setting.rawValue) as! SettingViewController
         viewController.contents = options
         self.navigationController?.pushViewController(viewController, animated: true)
     }

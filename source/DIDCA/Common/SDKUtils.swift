@@ -37,7 +37,11 @@ public class SDKUtils {
         let resultNonce = try await WalletAPI.shared.createNonceForWalletToken(walletTokenData: walletTokenData,
                                                                                APIGatewayURL: URLs.API_URL)
         
-        let digest = DigestUtils.getDigest(source: (try! walletTokenData.toJson()+resultNonce).data(using: String.Encoding.utf8)!, digestEnum: DigestEnum.sha256)
+        let jsonString = try walletTokenData.toJson() + resultNonce
+        guard let sourceData = jsonString.data(using: .utf8) else {
+            throw NSError(domain: "SDKUtils", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to encode wallet token data to UTF-8"])
+        }
+        let digest = DigestUtils.getDigest(source: sourceData, digestEnum: DigestEnum.sha256)
         // Hex
         let hWalletToken = String(MultibaseUtils.encode(type: MultibaseType.base16, data: digest).dropFirst())
         return hWalletToken
@@ -163,26 +167,26 @@ public class SDKUtils {
         return DigestUtils.getDigest(source: combinedData, digestEnum: DigestEnum.sha256)
     }
     
-    public static func mergeSharedSecretAndNonce(sharedSecret: Data, nonce: Data, symmetricCipherType: SymmetricCipherType) -> Data {
-        
+    public static func mergeSharedSecretAndNonce(sharedSecret: Data, nonce: Data, symmetricCipherType: SymmetricCipherType) throws -> Data {
+
         var digest = Data()
         digest.append(sharedSecret)
         digest.append(nonce)
-        
+
         let combinedResult = DigestUtils.getDigest(source: digest, digestEnum: DigestEnum.sha256)
-        
+
         switch symmetricCipherType {
         case SymmetricCipherType.aes128CBC, SymmetricCipherType.aes128ECB:
             return combinedResult.prefix(16)
         case SymmetricCipherType.aes256CBC, SymmetricCipherType.aes256ECB:
             return combinedResult.prefix(32)
         @unknown default:
-            fatalError()
+            throw NSError(domain: "SDKUtils", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unsupported symmetric cipher type"])
         }
-        
+
     }
     
-    func generateRandomBytes() -> Data {
+    func generateRandomBytes() throws -> Data {
         var data = Data(count: 16)
         let result = data.withUnsafeMutableBytes { mutableBytes in
             mutableBytes.bindMemory(to: UInt8.self).baseAddress.map {
@@ -192,8 +196,8 @@ public class SDKUtils {
                 return true
             } ?? false
         }
-        if !result {
-            fatalError("Failed to generate random bytes")
+        guard result else {
+            throw NSError(domain: "SDKUtils", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to generate random bytes"])
         }
         return data
     }

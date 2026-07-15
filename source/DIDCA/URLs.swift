@@ -16,14 +16,33 @@
 
 import Foundation
 
-struct URLs
-{
-    public static let TAS_URL       : String = "http://192.168.219.103:8090"
-    public static let VERIFIER_URL  : String = "http://192.168.219.103:8092"
-    public static let CAS_URL       : String = "http://192.168.219.103:8094"
-    public static let WALLET_URL    : String = "http://192.168.219.103:8095"
-    public static let API_URL       : String = "http://192.168.219.103:8093"
-    public static let DEMO_URL      : String = "http://192.168.219.103:8099"
-    public static let JINBON_URL    : String = "http://192.168.219.103:8080"
+struct URLs {
+
+    // 개발 환경 기본값 — xcconfig 연결 시 Info.plist 값이 우선 적용됨
+    private static let defaults: [String: String] = [
+        "TAS_URL":      "http://192.168.219.101:8090",
+        "VERIFIER_URL": "http://192.168.219.101:8092",
+        "CAS_URL":      "http://192.168.219.101:8094",
+        "WALLET_URL":   "http://192.168.219.101:8095",
+        "API_URL":      "http://192.168.219.101:8093",
+        "DEMO_URL":     "http://192.168.219.101:8099",
+        "JINBON_URL":   "http://192.168.219.101:8080",
+    ]
+
+    private static func resolve(_ key: String) -> String {
+        if let value = Bundle.main.infoDictionary?[key] as? String, !value.isEmpty {
+            return value
+        }
+        return defaults[key]!
+    }
+
+    public static var TAS_URL: String      { resolve("TAS_URL") }
+    public static var VERIFIER_URL: String  { resolve("VERIFIER_URL") }
+    public static var CAS_URL: String      { resolve("CAS_URL") }
+    public static var WALLET_URL: String   { resolve("WALLET_URL") }
+    public static var API_URL: String      { resolve("API_URL") }
+    public static var DEMO_URL: String     { resolve("DEMO_URL") }
+    public static var JINBON_URL: String   { resolve("JINBON_URL") }
+
     public static let JINBON_VC_SCHEMA_ID: String = "jinbon-video-schema-01"
 }

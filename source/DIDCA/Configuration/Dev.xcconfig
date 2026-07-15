@@ -1,0 +1,13 @@
+// Dev.xcconfig
+// 개발 환경 설정
+
+TAS_URL = http:/$()/192.168.219.101:8090
+VERIFIER_URL = http:/$()/192.168.219.101:8092
+CAS_URL = http:/$()/192.168.219.101:8094
+WALLET_URL = http:/$()/192.168.219.101:8095
+API_URL = http:/$()/192.168.219.101:8093
+DEMO_URL = http:/$()/192.168.219.101:8099
+JINBON_URL = http:/$()/192.168.219.101:8080
+
+// ATS: Info.plist에서 NSAllowsArbitraryLoads를 직접 관리
+// 프로덕션 배포 전 <false/>로 변경 필요

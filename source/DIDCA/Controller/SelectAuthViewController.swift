@@ -49,7 +49,7 @@ class SelectAuthViewController: UIViewController, UITableViewDelegate, UITableVi
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "AuthTypeCell") else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: CellID.authTypeCell.rawValue) else {
             return UITableViewCell()
         }
         
@@ -84,7 +84,7 @@ extension SelectAuthViewController
 {
     func showPin()
     {
-        let pinVC = UIStoryboard.init(name: "PIN", bundle: nil).instantiateViewController(withIdentifier: "PincodeViewController") as! PincodeViewController
+        let pinVC = Storyboard.pin.instance.instantiateViewController(withIdentifier: ViewControllerID.pincode.rawValue) as! PincodeViewController
         pinVC.modalPresentationStyle = .fullScreen
         pinVC.setRequestType(type: .authenticate(isLock: false))
         pinVC.confirmButtonCompleteClosure = confirmButtonCompleteClosure

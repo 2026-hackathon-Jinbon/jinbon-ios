@@ -21,6 +21,9 @@ import DIDWalletSDK
 
 
 class RevokeVcProtocol : CommonProtocol {
+    private let stateLock = NSLock()
+    private var revocationInProgress = false
+
     public static let shared: RevokeVcProtocol = {
         let instance = RevokeVcProtocol()
         return instance
@@ -80,22 +83,43 @@ class RevokeVcProtocol : CommonProtocol {
     }
     
     public func process(passcode: String? = nil) async throws -> _ConfirmRevokeVc {
-        
+        defer { finishOperation() }
         let response = try await requestRevokeVc(authType: super.authType, passcode: passcode)
-        
         return try await confirmRevokeVc(txId: response.txId)
     }
-    
+
     public func preProcess(vcId: String) async throws {
-        
-        try await proposeRevokeVc(vcId: vcId)
-                
-        let ecdh = try await super.requestEcdh(type: .HolderDidDocumnet)
-                
-        let attestedAppInfo: AttestedAppInfo = try await super.requestAttestedAppInfo()
-                    
-        try await requestWalletTokenData(purpose: WalletTokenPurposeEnum.REMOVE_VC)
-                    
-        try await requestCreateToken(attestedAppInfo: attestedAppInfo, ecdh: ecdh, purpose: WalletTokenPurposeEnum.REMOVE_VC)
+        try beginOperation()
+        do {
+            try await proposeRevokeVc(vcId: vcId)
+            let ecdh = try await super.requestEcdh(type: .HolderDidDocumnet)
+            let attestedAppInfo: AttestedAppInfo = try await super.requestAttestedAppInfo()
+            try await requestWalletTokenData(purpose: WalletTokenPurposeEnum.REMOVE_VC)
+            try await requestCreateToken(attestedAppInfo: attestedAppInfo, ecdh: ecdh, purpose: WalletTokenPurposeEnum.REMOVE_VC)
+        } catch {
+            finishOperation()
+            throw error
+        }
+    }
+
+    public func cancelRevocation() {
+        finishOperation()
+        reset()
+    }
+
+    private func beginOperation() throws {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        guard !revocationInProgress else {
+            throw NSError(domain: "JinBon.RevokeVc", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "Another VC revocation is already in progress"])
+        }
+        revocationInProgress = true
+    }
+
+    private func finishOperation() {
+        stateLock.lock()
+        revocationInProgress = false
+        stateLock.unlock()
     }
 }
