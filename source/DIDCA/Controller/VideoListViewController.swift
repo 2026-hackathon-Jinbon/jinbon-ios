@@ -24,12 +24,16 @@ class VideoListViewController: UIViewController {
 
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let emptyLabel = UILabel()
+    private let stateIcon = UIImageView()
+    private let retryButton = UIButton(type: .system)
+    private let loadingIndicator = UIActivityIndicatorView(style: .medium)
     private let loginPromptView = UIView()
 
     private var videos: [VideoDetailData] = []
     private var isLoggedIn: Bool { Properties.isLoggedIn() }
     private var tableTopToPrompt: NSLayoutConstraint!
     private var tableTopToSafeArea: NSLayoutConstraint!
+    private var loadTask: Task<Void, Never>?
 
     // MARK: - Lifecycle
 
@@ -41,7 +45,7 @@ class VideoListViewController: UIViewController {
         setupNavigationBar()
         setupLoginPromptView()
         setupTableView()
-        setupEmptyLabel()
+        setupStateView()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -124,6 +128,10 @@ class VideoListViewController: UIViewController {
         tableView.separatorStyle = .none
         tableView.backgroundColor = ColorPalette.canvas
         tableView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 24, right: 0)
+        let refreshControl = UIRefreshControl()
+        refreshControl.tintColor = ColorPalette.primary
+        refreshControl.addTarget(self, action: #selector(refreshVideos), for: .valueChanged)
+        tableView.refreshControl = refreshControl
         view.addSubview(tableView)
 
         tableTopToPrompt = tableView.topAnchor.constraint(equalTo: loginPromptView.bottomAnchor, constant: 8)
@@ -138,19 +146,47 @@ class VideoListViewController: UIViewController {
         ])
     }
 
-    private func setupEmptyLabel() {
-        emptyLabel.text = "아직 등록한 영상이 없습니다\n홈에서 첫 원본 영상을 등록해 보세요."
+    private func setupStateView() {
+        stateIcon.image = UIImage(systemName: "video.slash")
+        stateIcon.tintColor = ColorPalette.primary
+        stateIcon.contentMode = .scaleAspectFit
+        stateIcon.translatesAutoresizingMaskIntoConstraints = false
+
         emptyLabel.numberOfLines = 0
         emptyLabel.textColor = ColorPalette.secondaryText
-        emptyLabel.font = .jinBonFont(ofSize: 15, weight: .medium)
         emptyLabel.font = .jinBonFont(ofSize: 15)
         emptyLabel.textAlignment = .center
-        emptyLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(emptyLabel)
+        emptyLabel.setJinBonText("아직 등록한 영상이 없습니다\n홈에서 첫 원본 영상을 등록해 보세요.", lineSpacing: 5)
+
+        var retryConfiguration = UIButton.Configuration.filled()
+        retryConfiguration.title = "다시 시도"
+        retryConfiguration.image = UIImage(systemName: "arrow.clockwise")
+        retryConfiguration.imagePadding = 7
+        retryConfiguration.baseBackgroundColor = ColorPalette.primary
+        retryConfiguration.cornerStyle = .large
+        retryButton.configuration = retryConfiguration
+        retryButton.addTarget(self, action: #selector(retryLoad), for: .touchUpInside)
+        retryButton.isHidden = true
+
+        loadingIndicator.color = ColorPalette.primary
+
+        let stateStack = UIStackView(arrangedSubviews: [
+            loadingIndicator, stateIcon, emptyLabel, retryButton
+        ])
+        stateStack.axis = .vertical
+        stateStack.alignment = .center
+        stateStack.spacing = 12
+        stateStack.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(stateStack)
 
         NSLayoutConstraint.activate([
-            emptyLabel.centerXAnchor.constraint(equalTo: tableView.centerXAnchor),
-            emptyLabel.centerYAnchor.constraint(equalTo: tableView.centerYAnchor)
+            stateStack.centerXAnchor.constraint(equalTo: tableView.centerXAnchor),
+            stateStack.centerYAnchor.constraint(equalTo: tableView.centerYAnchor, constant: -24),
+            stateStack.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 30),
+            stateStack.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -30),
+            stateIcon.widthAnchor.constraint(equalToConstant: 42),
+            stateIcon.heightAnchor.constraint(equalToConstant: 42),
+            retryButton.heightAnchor.constraint(equalToConstant: 44)
         ])
     }
 
@@ -225,6 +261,7 @@ class VideoListViewController: UIViewController {
                 action: #selector(uploadTapped)
             )
             navigationItem.rightBarButtonItems = [uploadItem]
+            uploadItem.accessibilityLabel = "새 원본 영상 등록"
 
             loadVideos()
         } else {
@@ -237,30 +274,80 @@ class VideoListViewController: UIViewController {
 
             videos = []
             tableView.reloadData()
-            emptyLabel.isHidden = true
+            setState(.hidden)
         }
     }
 
-    private func loadVideos() {
-        Task {
+    private func loadVideos(showLoading: Bool = true) {
+        loadTask?.cancel()
+        if showLoading, videos.isEmpty { setState(.loading) }
+        loadTask = Task {
             do {
                 let result = try await JinBonAPIClient.shared.getMyVideos()
-                DispatchQueue.main.async { [weak self] in
-                    self?.videos = result
-                    self?.tableView.reloadData()
-                    self?.emptyLabel.isHidden = !result.isEmpty
+                guard !Task.isCancelled else { return }
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    self.tableView.refreshControl?.endRefreshing()
+                    self.videos = result
+                    self.tableView.reloadData()
+                    self.setState(result.isEmpty ? .empty : .hidden)
                 }
             } catch {
-                print("Failed to load videos: \(error)")
-                DispatchQueue.main.async { [weak self] in
+                guard !Task.isCancelled else { return }
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    self.tableView.refreshControl?.endRefreshing()
                     if case JinBonError.notAuthenticated = error {
-                        self?.updateUI()
+                        self.updateUI()
                         return
                     }
-                    self?.emptyLabel.text = "영상 목록을 불러올 수 없습니다"
-                    self?.emptyLabel.isHidden = false
+                    self.setState(.error(error.localizedDescription))
                 }
             }
+        }
+    }
+
+    @objc private func refreshVideos() {
+        loadVideos(showLoading: false)
+    }
+
+    @objc private func retryLoad() {
+        loadVideos()
+    }
+
+    private enum ContentState {
+        case hidden
+        case loading
+        case empty
+        case error(String)
+    }
+
+    private func setState(_ state: ContentState) {
+        loadingIndicator.stopAnimating()
+        stateIcon.isHidden = false
+        emptyLabel.isHidden = false
+        retryButton.isHidden = true
+        switch state {
+        case .hidden:
+            stateIcon.isHidden = true
+            emptyLabel.isHidden = true
+        case .loading:
+            loadingIndicator.startAnimating()
+            stateIcon.isHidden = true
+            emptyLabel.text = "영상 목록을 불러오는 중입니다"
+        case .empty:
+            stateIcon.image = UIImage(systemName: "video.slash")
+            emptyLabel.setJinBonText(
+                "아직 등록한 영상이 없습니다\n홈에서 첫 원본 영상을 등록해 보세요.",
+                lineSpacing: 5
+            )
+        case .error(let message):
+            stateIcon.image = UIImage(systemName: "wifi.exclamationmark")
+            emptyLabel.setJinBonText(
+                "영상 목록을 불러오지 못했습니다\n\(message)",
+                lineSpacing: 5
+            )
+            retryButton.isHidden = false
         }
     }
 }
@@ -583,5 +670,9 @@ class VideoTableViewCell: UITableViewCell {
         } else {
             dateLabel.text = isActive ? "인증 유효" : "비활성"
         }
+        isAccessibilityElement = true
+        accessibilityLabel = "\(video.title), \(dateLabel.text ?? "")"
+        accessibilityHint = "영상 상세 정보와 관리 메뉴를 엽니다"
+        accessibilityTraits = .button
     }
 }

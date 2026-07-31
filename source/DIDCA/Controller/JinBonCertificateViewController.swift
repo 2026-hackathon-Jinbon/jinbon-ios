@@ -5,6 +5,10 @@ final class JinBonCertificateViewController: UIViewController {
 
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let stateView = UIView()
+    private let stateIcon = UIImageView()
+    private let stateTitle = UILabel()
+    private let stateDetail = UILabel()
+    private let retryButton = UIButton(type: .system)
     private var credentials: [VerifiableCredential] = []
 
     override func viewDidLoad() {
@@ -39,6 +43,10 @@ final class JinBonCertificateViewController: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.register(JinBonCertificateCell.self, forCellReuseIdentifier: CellID.certificate.rawValue)
+        let refreshControl = UIRefreshControl()
+        refreshControl.tintColor = ColorPalette.primary
+        refreshControl.addTarget(self, action: #selector(refreshCredentials), for: .valueChanged)
+        tableView.refreshControl = refreshControl
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -54,25 +62,26 @@ final class JinBonCertificateViewController: UIViewController {
         iconBox.backgroundColor = ColorPalette.softBlue
         iconBox.layer.cornerRadius = 30
         iconBox.translatesAutoresizingMaskIntoConstraints = false
-        let icon = UIImageView(image: UIImage(systemName: "checkmark.seal"))
-        icon.tintColor = ColorPalette.primary
-        icon.translatesAutoresizingMaskIntoConstraints = false
-        iconBox.addSubview(icon)
+        stateIcon.image = UIImage(systemName: "checkmark.seal")
+        stateIcon.tintColor = ColorPalette.primary
+        stateIcon.translatesAutoresizingMaskIntoConstraints = false
+        iconBox.addSubview(stateIcon)
 
-        let title = UILabel()
-        title.text = "아직 발급된 인증서가 없습니다"
-        title.font = .jinBonFont(ofSize: 18, weight: .bold)
-        title.textColor = ColorPalette.ink
-        title.textAlignment = .center
+        stateTitle.font = .jinBonFont(ofSize: 18, weight: .bold)
+        stateTitle.textColor = ColorPalette.ink
+        stateTitle.textAlignment = .center
 
-        let detail = UILabel()
-        detail.numberOfLines = 0
-        detail.font = .jinBonFont(ofSize: 14)
-        detail.textColor = ColorPalette.secondaryText
-        detail.textAlignment = .center
-        detail.setJinBonText("영상을 등록하면 인증서가\n이 Wallet에 저장돼요.", lineSpacing: 5)
+        stateDetail.numberOfLines = 0
+        stateDetail.font = .jinBonFont(ofSize: 14)
+        stateDetail.textColor = ColorPalette.secondaryText
+        stateDetail.textAlignment = .center
 
-        let stack = UIStackView(arrangedSubviews: [iconBox, title, detail])
+        retryButton.setTitle("다시 시도", for: .normal)
+        retryButton.titleLabel?.font = .jinBonFont(ofSize: 14, weight: .bold)
+        retryButton.tintColor = ColorPalette.primary
+        retryButton.addTarget(self, action: #selector(retryLoad), for: .touchUpInside)
+
+        let stack = UIStackView(arrangedSubviews: [iconBox, stateTitle, stateDetail, retryButton])
         stack.axis = .vertical
         stack.alignment = .center
         stack.spacing = 12
@@ -80,14 +89,15 @@ final class JinBonCertificateViewController: UIViewController {
         stateView.addSubview(stack)
         NSLayoutConstraint.activate([
             iconBox.widthAnchor.constraint(equalToConstant: 60), iconBox.heightAnchor.constraint(equalToConstant: 60),
-            icon.centerXAnchor.constraint(equalTo: iconBox.centerXAnchor), icon.centerYAnchor.constraint(equalTo: iconBox.centerYAnchor),
-            icon.widthAnchor.constraint(equalToConstant: 28), icon.heightAnchor.constraint(equalToConstant: 28),
+            stateIcon.centerXAnchor.constraint(equalTo: iconBox.centerXAnchor), stateIcon.centerYAnchor.constraint(equalTo: iconBox.centerYAnchor),
+            stateIcon.widthAnchor.constraint(equalToConstant: 28), stateIcon.heightAnchor.constraint(equalToConstant: 28),
             stack.centerXAnchor.constraint(equalTo: stateView.centerXAnchor),
             stack.centerYAnchor.constraint(equalTo: stateView.centerYAnchor, constant: -40),
             stack.leadingAnchor.constraint(greaterThanOrEqualTo: stateView.leadingAnchor, constant: 24),
             stack.trailingAnchor.constraint(lessThanOrEqualTo: stateView.trailingAnchor, constant: -24)
         ])
         tableView.backgroundView = stateView
+        showEmptyState()
     }
 
     private func loadCredentials() {
@@ -95,6 +105,11 @@ final class JinBonCertificateViewController: UIViewController {
             credentials = []
             tableView.reloadData()
             tableView.backgroundView?.isHidden = false
+            stateIcon.image = UIImage(systemName: "person.crop.circle.badge.exclamationmark")
+            stateTitle.text = "로그인이 필요합니다"
+            stateDetail.setJinBonText("로그인하면 발급된 인증서를\n이 Wallet에서 확인할 수 있어요.", lineSpacing: 5)
+            retryButton.isHidden = true
+            tableView.refreshControl?.endRefreshing()
             return
         }
         Task {
@@ -105,16 +120,39 @@ final class JinBonCertificateViewController: UIViewController {
                 await MainActor.run {
                     self.credentials = items
                     self.tableView.backgroundView?.isHidden = !items.isEmpty
+                    if items.isEmpty { self.showEmptyState() }
                     self.tableView.reloadData()
+                    self.tableView.refreshControl?.endRefreshing()
                 }
             } catch {
                 await MainActor.run {
                     self.credentials = []
                     self.tableView.backgroundView?.isHidden = false
+                    self.stateIcon.image = UIImage(systemName: "exclamationmark.arrow.triangle.2.circlepath")
+                    self.stateTitle.text = "인증서를 불러오지 못했습니다"
+                    self.stateDetail.setJinBonText(
+                        "Wallet 상태를 확인한 뒤\n다시 시도해주세요.", lineSpacing: 5)
+                    self.retryButton.isHidden = false
                     self.tableView.reloadData()
+                    self.tableView.refreshControl?.endRefreshing()
                 }
             }
         }
+    }
+
+    private func showEmptyState() {
+        stateIcon.image = UIImage(systemName: "checkmark.seal")
+        stateTitle.text = "아직 발급된 인증서가 없습니다"
+        stateDetail.setJinBonText("영상을 등록하면 인증서가\n이 Wallet에 저장돼요.", lineSpacing: 5)
+        retryButton.isHidden = true
+    }
+
+    @objc private func refreshCredentials() {
+        loadCredentials()
+    }
+
+    @objc private func retryLoad() {
+        loadCredentials()
     }
 
     private static func isJinBonCredential(_ credential: VerifiableCredential) -> Bool {
@@ -424,5 +462,9 @@ private final class JinBonCertificateCell: UITableViewCell {
         titleLabel.text = "진본 디지털 인증서"
         idLabel.text = credential.id
         dateLabel.text = "발급일  \(SDKUtils.convertDateFormat(dateString: credential.issuanceDate) ?? credential.issuanceDate)"
+        isAccessibilityElement = true
+        accessibilityLabel = "\(titleLabel.text ?? ""), \(dateLabel.text ?? "")"
+        accessibilityHint = "인증서 상세 내용을 엽니다"
+        accessibilityTraits = .button
     }
 }

@@ -34,6 +34,10 @@ final class JinBonHomeViewController: UIViewController {
     private func buildUI() {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.alwaysBounceVertical = true
+        let refreshControl = UIRefreshControl()
+        refreshControl.tintColor = ColorPalette.primary
+        refreshControl.addTarget(self, action: #selector(refreshPulled), for: .valueChanged)
+        scrollView.refreshControl = refreshControl
         view.addSubview(scrollView)
 
         contentStack.axis = .vertical
@@ -135,6 +139,7 @@ final class JinBonHomeViewController: UIViewController {
         config.baseForegroundColor = ColorPalette.primary
         config.cornerStyle = .large
         button.configuration = config
+        button.accessibilityHint = "갤러리에서 원본 영상을 선택하고 등록합니다"
         button.addTarget(self, action: #selector(registerTapped), for: .touchUpInside)
         button.heightAnchor.constraint(equalToConstant: 50).isActive = true
 
@@ -200,22 +205,39 @@ final class JinBonHomeViewController: UIViewController {
         row.spacing = 12
         pin(row, to: card, insets: UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16))
         card.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(verifyTapped)))
+        card.isAccessibilityElement = true
+        card.accessibilityLabel = "영상 검증 도구"
+        card.accessibilityHint = "영상이 진본으로 등록되었는지 확인합니다"
+        card.accessibilityTraits = .button
         return card
     }
 
     private func refreshDashboard() {
         Task {
             guard Properties.isLoggedIn() else {
-                await MainActor.run { self.showRecent([]) }
+                await MainActor.run {
+                    self.scrollView.refreshControl?.endRefreshing()
+                    self.showRecent([])
+                }
                 return
             }
             do {
                 let videos = try await JinBonAPIClient.shared.getMyVideos()
-                await MainActor.run { self.showRecent(videos) }
+                await MainActor.run {
+                    self.scrollView.refreshControl?.endRefreshing()
+                    self.showRecent(videos)
+                }
             } catch {
-                await MainActor.run { self.showRecent([]) }
+                await MainActor.run {
+                    self.scrollView.refreshControl?.endRefreshing()
+                    self.showRecentError(error.localizedDescription)
+                }
             }
         }
+    }
+
+    @objc private func refreshPulled() {
+        refreshDashboard()
     }
 
     private func showRecent(_ videos: [VideoDetailData]) {
@@ -233,6 +255,35 @@ final class JinBonHomeViewController: UIViewController {
             return
         }
         videos.prefix(3).forEach { recentStack.addArrangedSubview(makeVideoRow($0)) }
+    }
+
+    private func showRecentError(_ message: String) {
+        recentStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        summaryLabel.text = ""
+
+        let icon = UIImageView(image: UIImage(systemName: "wifi.exclamationmark"))
+        icon.tintColor = ColorPalette.warning
+        icon.contentMode = .scaleAspectFit
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        label.font = .jinBonFont(ofSize: 14)
+        label.textColor = ColorPalette.secondaryText
+        label.setJinBonText("최근 등록을 불러오지 못했습니다\n\(message)", lineSpacing: 4)
+        let retry = UIButton(type: .system)
+        retry.setTitle("다시 시도", for: .normal)
+        retry.titleLabel?.font = .jinBonFont(ofSize: 14, weight: .bold)
+        retry.addTarget(self, action: #selector(refreshPulled), for: .touchUpInside)
+        let stack = UIStackView(arrangedSubviews: [icon, label, retry])
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = 10
+        let card = baseCard(background: .white)
+        pin(stack, to: card, insets: UIEdgeInsets(top: 20, left: 16, bottom: 18, right: 16))
+        icon.widthAnchor.constraint(equalToConstant: 28).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 28).isActive = true
+        recentStack.addArrangedSubview(card)
     }
 
     private func makeVideoRow(_ video: VideoDetailData) -> UIView {
@@ -259,6 +310,8 @@ final class JinBonHomeViewController: UIViewController {
         row.alignment = .center
         row.spacing = 12
         pin(row, to: card, insets: UIEdgeInsets(top: 14, left: 14, bottom: 14, right: 14))
+        card.isAccessibilityElement = true
+        card.accessibilityLabel = "\(video.title), \(badge.text ?? ""), \(date.text ?? "")"
         return card
     }
 

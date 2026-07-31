@@ -57,6 +57,12 @@ class VideoVerifyViewController: UIViewController {
         setupUI()
     }
 
+    deinit {
+        if let selectedVideoURL {
+            try? FileManager.default.removeItem(at: selectedVideoURL)
+        }
+    }
+
     // MARK: - Setup
 
     private func setupUI() {
@@ -114,6 +120,10 @@ class VideoVerifyViewController: UIViewController {
         selectArea.translatesAutoresizingMaskIntoConstraints = false
         selectArea.isUserInteractionEnabled = true
         selectArea.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(selectVideoTapped)))
+        selectArea.isAccessibilityElement = true
+        selectArea.accessibilityLabel = "검증할 영상 선택"
+        selectArea.accessibilityHint = "사진 보관함에서 영상 한 개를 선택합니다"
+        selectArea.accessibilityTraits = .button
 
         thumbnailView.contentMode = .scaleAspectFill
         thumbnailView.clipsToBounds = true
@@ -183,6 +193,8 @@ class VideoVerifyViewController: UIViewController {
         verifyButton.translatesAutoresizingMaskIntoConstraints = false
         verifyButton.addTarget(self, action: #selector(verifyTapped), for: .touchUpInside)
         verifyButton.heightAnchor.constraint(equalToConstant: 56).isActive = true
+        verifyButton.accessibilityHint = "선택한 영상을 등록된 원본과 비교합니다"
+        setVerifyButton(enabled: false, title: "영상을 먼저 선택해주세요")
 
         contentStack.addArrangedSubview(verifyButton)
 
@@ -215,8 +227,7 @@ class VideoVerifyViewController: UIViewController {
             return
         }
 
-        verifyButton.isEnabled = false
-        verifyButton.setTitle("검증 중...", for: .normal)
+        setVerifyButton(enabled: false, title: "검증 중...")
 
         Task {
             do {
@@ -227,22 +238,22 @@ class VideoVerifyViewController: UIViewController {
             } catch {
                 DispatchQueue.main.async { [weak self] in
                     self?.showAlert("검증 실패: \(error.localizedDescription)")
-                    self?.verifyButton.isEnabled = true
-                    self?.verifyButton.setTitle("영상 검증하기", for: .normal)
+                    self?.setVerifyButton(enabled: true, title: "영상 검증하기")
                 }
             }
         }
     }
 
     private func showResult(_ data: VideoVerifyData) {
-        verifyButton.isEnabled = true
-        verifyButton.setTitle("다시 검증", for: .normal)
+        setVerifyButton(enabled: true, title: "다시 검증")
 
         resultCard.isHidden = false
         resultCard.subviews.forEach { $0.removeFromSuperview() }
 
         let presentation = resultPresentation(for: data.effectiveVerdict)
         resultCard.backgroundColor = presentation.color.withAlphaComponent(0.1)
+        resultCard.isAccessibilityElement = true
+        resultCard.accessibilityLabel = "검증 결과, \(presentation.title)"
 
         let stack = UIStackView()
         stack.axis = .vertical
@@ -315,6 +326,13 @@ class VideoVerifyViewController: UIViewController {
             stack.trailingAnchor.constraint(equalTo: resultCard.trailingAnchor, constant: -20),
             stack.bottomAnchor.constraint(equalTo: resultCard.bottomAnchor, constant: -20)
         ])
+        UIAccessibility.post(notification: .announcement, argument: presentation.title)
+    }
+
+    private func setVerifyButton(enabled: Bool, title: String) {
+        verifyButton.isEnabled = enabled
+        verifyButton.alpha = enabled ? 1 : 0.55
+        verifyButton.setTitle(title, for: .normal)
     }
 
     private func resultPresentation(
@@ -376,23 +394,39 @@ extension VideoVerifyViewController: PHPickerViewControllerDelegate {
 
         if provider.hasItemConformingToTypeIdentifier("public.movie") {
             provider.loadFileRepresentation(forTypeIdentifier: "public.movie") { [weak self] url, error in
-                guard let url = url else { return }
+                guard let self else { return }
+                guard let url else {
+                    DispatchQueue.main.async {
+                        self.showAlert(error?.localizedDescription ?? "영상을 불러오지 못했습니다. 다시 선택해주세요.")
+                    }
+                    return
+                }
 
                 let tempURL = FileManager.default.temporaryDirectory
                     .appendingPathComponent(UUID().uuidString)
                     .appendingPathExtension(url.pathExtension)
-                try? FileManager.default.copyItem(at: url, to: tempURL)
+                do {
+                    try FileManager.default.copyItem(at: url, to: tempURL)
+                } catch {
+                    DispatchQueue.main.async {
+                        self.showAlert("선택한 영상을 준비하지 못했습니다. 저장 공간을 확인한 뒤 다시 시도해주세요.")
+                    }
+                    return
+                }
 
                 DispatchQueue.main.async {
-                    self?.selectedVideoURL = tempURL
-                    self?.fileNameLabel.text = url.lastPathComponent
-                    self?.fileNameLabel.isHidden = false
+                    if let previousURL = self.selectedVideoURL {
+                        try? FileManager.default.removeItem(at: previousURL)
+                    }
+                    self.selectedVideoURL = tempURL
+                    self.fileNameLabel.text = url.lastPathComponent
+                    self.fileNameLabel.isHidden = false
 
-                    self?.generateThumbnail(from: tempURL)
+                    self.generateThumbnail(from: tempURL)
 
                     // 결과 초기화
-                    self?.resultCard.isHidden = true
-                    self?.verifyButton.setTitle("영상 검증하기", for: .normal)
+                    self.resultCard.isHidden = true
+                    self.setVerifyButton(enabled: true, title: "영상 검증하기")
                 }
             }
         }
