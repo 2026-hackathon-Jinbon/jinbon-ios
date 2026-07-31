@@ -104,13 +104,13 @@ class UserRegWebViewController: UIViewController {
 
         let title = UILabel()
         title.text = "본인 정보 확인"
-        title.font = .systemFont(ofSize: 21, weight: .bold)
+        title.font = .jinBonFont(ofSize: 21, weight: .bold)
         title.textColor = ColorPalette.ink
         title.translatesAutoresizingMaskIntoConstraints = false
 
         let detail = UILabel()
         detail.text = "디지털 신원 생성에 필요한 정보를 확인해주세요."
-        detail.font = .systemFont(ofSize: 13)
+        detail.font = .jinBonFont(ofSize: 13)
         detail.textColor = ColorPalette.secondaryText
         detail.translatesAutoresizingMaskIntoConstraints = false
 

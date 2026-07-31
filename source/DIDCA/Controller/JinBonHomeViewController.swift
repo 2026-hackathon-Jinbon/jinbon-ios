@@ -63,18 +63,18 @@ final class JinBonHomeViewController: UIViewController {
         let container = UIView()
         let eyebrow = UILabel()
         eyebrow.text = "진본 크리에이터 월렛"
-        eyebrow.font = .systemFont(ofSize: 13, weight: .bold)
+        eyebrow.font = .jinBonFont(ofSize: 13, weight: .bold)
         eyebrow.textColor = ColorPalette.primary
 
         let title = UILabel()
         let name = Properties.getMemberName() ?? "등록자"
         title.text = "안녕하세요, \(name)님"
-        title.font = .systemFont(ofSize: 28, weight: .bold)
+        title.font = .jinBonFont(ofSize: 28, weight: .bold)
         title.textColor = ColorPalette.ink
 
         let detail = UILabel()
         detail.numberOfLines = 0
-        detail.font = .systemFont(ofSize: 15)
+        detail.font = .jinBonFont(ofSize: 15)
         detail.textColor = ColorPalette.secondaryText
         detail.setJinBonText("원본 영상과 인증서를 관리하세요.")
 
@@ -92,13 +92,13 @@ final class JinBonHomeViewController: UIViewController {
 
         let title = UILabel()
         title.text = Properties.isLoggedIn() ? "디지털 신원 연결됨" : "로그인이 필요합니다"
-        title.font = .systemFont(ofSize: 17, weight: .bold)
+        title.font = .jinBonFont(ofSize: 17, weight: .bold)
         title.textColor = .white
 
         let role = Properties.getMemberRole() ?? "GUEST"
         let subtitle = UILabel()
         subtitle.text = role == "ISSUER" ? "공인 등록자 · 영상 등록 가능" : "\(role) · 등록 권한 확인 필요"
-        subtitle.font = .systemFont(ofSize: 14, weight: .medium)
+        subtitle.font = .jinBonFont(ofSize: 14, weight: .medium)
         subtitle.textColor = UIColor.white.withAlphaComponent(0.86)
 
         let labels = UIStackView(arrangedSubviews: [title, subtitle])
@@ -117,12 +117,12 @@ final class JinBonHomeViewController: UIViewController {
         let card = baseCard(background: ColorPalette.primary)
         let title = UILabel()
         title.text = "새 원본 영상 등록"
-        title.font = .systemFont(ofSize: 22, weight: .bold)
+        title.font = .jinBonFont(ofSize: 22, weight: .bold)
         title.textColor = .white
 
         let body = UILabel()
         body.numberOfLines = 0
-        body.font = .systemFont(ofSize: 14)
+        body.font = .jinBonFont(ofSize: 14)
         body.textColor = UIColor.white.withAlphaComponent(0.9)
         body.setJinBonText("영상 해시를 블록체인에 기록해요.")
 
@@ -149,10 +149,10 @@ final class JinBonHomeViewController: UIViewController {
         let container = UIView()
         let title = UILabel()
         title.text = "최근 등록"
-        title.font = .systemFont(ofSize: 19, weight: .bold)
+        title.font = .jinBonFont(ofSize: 19, weight: .bold)
         title.textColor = ColorPalette.ink
 
-        summaryLabel.font = .systemFont(ofSize: 14, weight: .semibold)
+        summaryLabel.font = .jinBonFont(ofSize: 14, weight: .semibold)
         summaryLabel.textColor = ColorPalette.secondaryText
         summaryLabel.textAlignment = .right
 
@@ -179,12 +179,12 @@ final class JinBonHomeViewController: UIViewController {
                            background: ColorPalette.softBlue)
         let title = UILabel()
         title.text = "영상 검증 도구"
-        title.font = .systemFont(ofSize: 15, weight: .bold)
+        title.font = .jinBonFont(ofSize: 15, weight: .bold)
         title.textColor = ColorPalette.ink
 
         let detail = UILabel()
         detail.text = "영상이 진본으로 등록됐는지 확인"
-        detail.font = .systemFont(ofSize: 14)
+        detail.font = .jinBonFont(ofSize: 14)
         detail.textColor = ColorPalette.secondaryText
         detail.numberOfLines = 0
 
@@ -224,7 +224,7 @@ final class JinBonHomeViewController: UIViewController {
         if videos.isEmpty {
             let empty = UILabel()
             empty.text = Properties.isLoggedIn() ? "아직 등록한 영상이 없습니다." : "로그인 후 등록 현황을 확인할 수 있습니다."
-            empty.font = .systemFont(ofSize: 14)
+            empty.font = .jinBonFont(ofSize: 14)
             empty.textColor = ColorPalette.secondaryText
             empty.textAlignment = .center
             let card = baseCard(background: .white)
@@ -241,18 +241,18 @@ final class JinBonHomeViewController: UIViewController {
                            background: ColorPalette.softBlue)
         let title = UILabel()
         title.text = video.title
-        title.font = .systemFont(ofSize: 15, weight: .semibold)
+        title.font = .jinBonFont(ofSize: 15, weight: .semibold)
         title.textColor = ColorPalette.ink
         let date = UILabel()
         date.text = video.registeredAt.map { String($0.prefix(10)) } ?? "등록일 확인 중"
-        date.font = .systemFont(ofSize: 13)
+        date.font = .jinBonFont(ofSize: 13)
         date.textColor = ColorPalette.secondaryText
         let labels = UIStackView(arrangedSubviews: [title, date])
         labels.axis = .vertical
         labels.spacing = 4
         let badge = UILabel()
         badge.text = video.active == false ? "취소" : "인증 유효"
-        badge.font = .systemFont(ofSize: 13, weight: .bold)
+        badge.font = .jinBonFont(ofSize: 13, weight: .bold)
         badge.textColor = video.active == false ? ColorPalette.danger : ColorPalette.success
         let row = UIStackView(arrangedSubviews: [icon, labels, badge])
         row.axis = .horizontal

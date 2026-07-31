@@ -140,10 +140,10 @@ class StepViewController: UIViewController {
 
         let brand = UILabel()
         brand.text = "JINBON IDENTITY"
-        brand.font = .systemFont(ofSize: 12, weight: .bold)
+        brand.font = .jinBonFont(ofSize: 12, weight: .bold)
         brand.textColor = ColorPalette.primary
 
-        modernStepLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        modernStepLabel.font = .jinBonFont(ofSize: 13, weight: .semibold)
         modernStepLabel.textColor = ColorPalette.secondaryText
         modernStepLabel.textAlignment = .right
 
@@ -160,10 +160,10 @@ class StepViewController: UIViewController {
         modernIconView.translatesAutoresizingMaskIntoConstraints = false
         iconBox.addSubview(modernIconView)
 
-        modernTitleLabel.font = .systemFont(ofSize: 29, weight: .bold)
+        modernTitleLabel.font = .jinBonFont(ofSize: 29, weight: .bold)
         modernTitleLabel.textColor = ColorPalette.ink
         modernTitleLabel.numberOfLines = 0
-        modernDetailLabel.font = .systemFont(ofSize: 16)
+        modernDetailLabel.font = .jinBonFont(ofSize: 16)
         modernDetailLabel.textColor = ColorPalette.secondaryText
         modernDetailLabel.numberOfLines = 0
         modernDetailLabel.setContentHuggingPriority(.required, for: .vertical)
@@ -178,7 +178,7 @@ class StepViewController: UIViewController {
         buttonConfig.image = UIImage(systemName: "arrow.right")
         buttonConfig.imagePadding = 8
         modernActionButton.configuration = buttonConfig
-        modernActionButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        modernActionButton.titleLabel?.font = .jinBonFont(ofSize: 16, weight: .bold)
         modernActionButton.isEnabled = true
         modernActionButton.isUserInteractionEnabled = true
         modernActionButton.isExclusiveTouch = true
@@ -225,7 +225,7 @@ class StepViewController: UIViewController {
         icon.tintColor = ColorPalette.success
         icon.translatesAutoresizingMaskIntoConstraints = false
         let label = UILabel()
-        label.font = .systemFont(ofSize: 13, weight: .medium)
+        label.font = .jinBonFont(ofSize: 13, weight: .medium)
         label.textColor = ColorPalette.secondaryText
         label.numberOfLines = 0
         label.setJinBonText("개인키는 이 기기에만 보관되며 서버로 전송되지 않아요.", lineSpacing: 4)

@@ -20,7 +20,7 @@ import UIKit
 @IBDesignable
 class RoundedButton : UIButton
 {
-    static let defaultRadius: CGFloat = 10
+    static let defaultRadius: CGFloat = 14
     
     @IBInspectable var cornerRadius: CGFloat = defaultRadius {
         didSet {
@@ -37,5 +37,31 @@ class RoundedButton : UIButton
         didSet {
             layer.borderColor = borderColor.cgColor
         }
+    }
+
+    override var isHighlighted: Bool {
+        didSet {
+            UIView.animate(
+                withDuration: 0.14,
+                delay: 0,
+                options: [.allowUserInteraction, .beginFromCurrentState]
+            ) {
+                self.transform = self.isHighlighted
+                    ? CGAffineTransform(scaleX: 0.98, y: 0.98)
+                    : .identity
+                self.alpha = self.isHighlighted ? 0.9 : (self.isEnabled ? 1 : 0.55)
+            }
+        }
+    }
+
+    override var isEnabled: Bool {
+        didSet { alpha = isEnabled ? 1 : 0.55 }
+    }
+
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        layer.cornerCurve = .continuous
+        titleLabel?.font = .jinBonFont(ofSize: titleLabel?.font.pointSize ?? 16, weight: .bold)
+        titleLabel?.adjustsFontForContentSizeCategory = true
     }
 }

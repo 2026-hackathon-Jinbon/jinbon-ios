@@ -21,13 +21,27 @@ import UIKit
 class UnderlinedTextField: UITextField {
 
     // 선 색상 변경 가능하도록 설정
-    @IBInspectable var underlineColor: UIColor = .black {
+    @IBInspectable var underlineColor: UIColor = ColorPalette.divider {
         didSet {
             setNeedsDisplay()
         }
     }
 
     private var underlineLayer: CALayer?
+
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        borderStyle = .none
+        textColor = ColorPalette.ink
+        tintColor = ColorPalette.primary
+        font = .jinBonFont(ofSize: font?.pointSize ?? 16)
+        adjustsFontForContentSizeCategory = true
+        addTarget(self, action: #selector(editingStateChanged), for: [.editingDidBegin, .editingDidEnd])
+    }
+
+    @objc private func editingStateChanged() {
+        setNeedsLayout()
+    }
 
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -37,8 +51,13 @@ class UnderlinedTextField: UITextField {
 
         // 새로운 선 추가
         let underline = CALayer()
-        underline.backgroundColor = underlineColor.cgColor
-        underline.frame = CGRect(x: 0, y: frame.height - 1, width: frame.width, height: 1)
+        underline.backgroundColor = (isEditing ? ColorPalette.primary : underlineColor).cgColor
+        underline.frame = CGRect(
+            x: 0,
+            y: frame.height - (isEditing ? 2 : 1),
+            width: frame.width,
+            height: isEditing ? 2 : 1
+        )
 
         layer.addSublayer(underline)
         underlineLayer = underline

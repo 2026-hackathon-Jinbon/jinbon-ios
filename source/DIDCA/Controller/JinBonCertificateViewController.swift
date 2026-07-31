@@ -61,13 +61,13 @@ final class JinBonCertificateViewController: UIViewController {
 
         let title = UILabel()
         title.text = "아직 발급된 인증서가 없습니다"
-        title.font = .systemFont(ofSize: 18, weight: .bold)
+        title.font = .jinBonFont(ofSize: 18, weight: .bold)
         title.textColor = ColorPalette.ink
         title.textAlignment = .center
 
         let detail = UILabel()
         detail.numberOfLines = 0
-        detail.font = .systemFont(ofSize: 14)
+        detail.font = .jinBonFont(ofSize: 14)
         detail.textColor = ColorPalette.secondaryText
         detail.textAlignment = .center
         detail.setJinBonText("영상을 등록하면 인증서가\n이 Wallet에 저장돼요.", lineSpacing: 5)
@@ -195,7 +195,7 @@ private final class JinBonCertificateDetailViewController: UIViewController {
 
         let sectionTitle = UILabel()
         sectionTitle.text = "인증 내용"
-        sectionTitle.font = .systemFont(ofSize: 18, weight: .bold)
+        sectionTitle.font = .jinBonFont(ofSize: 18, weight: .bold)
         sectionTitle.textColor = ColorPalette.ink
         stack.addArrangedSubview(sectionTitle)
 
@@ -245,7 +245,7 @@ private final class JinBonCertificateDetailViewController: UIViewController {
 
         let notice = UILabel()
         notice.numberOfLines = 0
-        notice.font = .systemFont(ofSize: 13, weight: .regular)
+        notice.font = .jinBonFont(ofSize: 13, weight: .regular)
         notice.textColor = ColorPalette.secondaryText
         notice.setJinBonText(
             "이 인증서는 영상의 내용이 사실임을 보증하는 문서가 아니라, 해당 파일을 진본에 등록한 사실과 등록 시점의 무결성을 증명합니다.",
@@ -266,14 +266,14 @@ private final class JinBonCertificateDetailViewController: UIViewController {
         icon.translatesAutoresizingMaskIntoConstraints = false
         let title = UILabel()
         title.text = "영상 등록 인증서"
-        title.font = .systemFont(ofSize: 22, weight: .bold)
+        title.font = .jinBonFont(ofSize: 22, weight: .bold)
         title.textColor = .white
         let description = UILabel()
         description.text = "JinBon Verifiable Credential"
-        description.font = .systemFont(ofSize: 12, weight: .semibold)
+        description.font = .jinBonFont(ofSize: 12, weight: .semibold)
         description.textColor = UIColor.white.withAlphaComponent(0.68)
         statusLabel.text = "상태 확인 중"
-        statusLabel.font = .systemFont(ofSize: 12, weight: .bold)
+        statusLabel.font = .jinBonFont(ofSize: 12, weight: .bold)
         statusLabel.textColor = .white
         statusLabel.textAlignment = .center
         statusLabel.backgroundColor = UIColor.white.withAlphaComponent(0.16)
@@ -304,11 +304,11 @@ private final class JinBonCertificateDetailViewController: UIViewController {
     private func makeClaimRow(caption: String, value: String) -> UIView {
         let captionLabel = UILabel()
         captionLabel.text = caption
-        captionLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        captionLabel.font = .jinBonFont(ofSize: 13, weight: .semibold)
         captionLabel.textColor = ColorPalette.secondaryText
         let valueLabel = UILabel()
         valueLabel.text = value.isEmpty ? "정보 없음" : value
-        valueLabel.font = .systemFont(ofSize: 14, weight: .medium)
+        valueLabel.font = .jinBonFont(ofSize: 14, weight: .medium)
         valueLabel.textColor = ColorPalette.ink
         valueLabel.numberOfLines = 0
         valueLabel.lineBreakMode = .byCharWrapping
@@ -379,7 +379,7 @@ private final class JinBonCertificateCell: UITableViewCell {
         let mark = UILabel()
         mark.text = "J"
         mark.textAlignment = .center
-        mark.font = .systemFont(ofSize: 18, weight: .black)
+        mark.font = .jinBonFont(ofSize: 18, weight: .black)
         mark.textColor = .white
         mark.backgroundColor = ColorPalette.primary
         mark.layer.cornerRadius = 10
@@ -388,18 +388,18 @@ private final class JinBonCertificateCell: UITableViewCell {
 
         let badge = UILabel()
         badge.text = "VERIFIABLE CREDENTIAL"
-        badge.font = .systemFont(ofSize: 11, weight: .bold)
+        badge.font = .jinBonFont(ofSize: 11, weight: .bold)
         badge.textColor = UIColor.white.withAlphaComponent(0.82)
         badge.translatesAutoresizingMaskIntoConstraints = false
 
-        titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
+        titleLabel.font = .jinBonFont(ofSize: 18, weight: .bold)
         titleLabel.textColor = .white
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         idLabel.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
         idLabel.textColor = UIColor.white.withAlphaComponent(0.76)
         idLabel.lineBreakMode = .byTruncatingMiddle
         idLabel.translatesAutoresizingMaskIntoConstraints = false
-        dateLabel.font = .systemFont(ofSize: 13, weight: .medium)
+        dateLabel.font = .jinBonFont(ofSize: 13, weight: .medium)
         dateLabel.textColor = UIColor.white.withAlphaComponent(0.88)
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
 

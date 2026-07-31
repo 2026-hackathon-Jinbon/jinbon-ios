@@ -82,22 +82,22 @@ class VideoVerifyViewController: UIViewController {
 
         // 안내 문구
         let infoLabel = UILabel()
-        let infoText = "영상이 진본인지 확인하세요\n갤러리에서 영상 하나를 선택하면 돼요."
+        let infoText = "공식 등록 영상과 비교하세요\n갤러리에서 영상 하나를 선택하면 돼요."
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
         paragraph.lineSpacing = 7
         let attributedInfo = NSMutableAttributedString(
             string: infoText,
             attributes: [
-                .font: UIFont.systemFont(ofSize: 15),
+                .font: UIFont.jinBonFont(ofSize: 15),
                 .foregroundColor: ColorPalette.secondaryText,
                 .paragraphStyle: paragraph
             ]
         )
         attributedInfo.addAttributes([
-            .font: UIFont.systemFont(ofSize: 19, weight: .bold),
+            .font: UIFont.jinBonFont(ofSize: 19, weight: .bold),
             .foregroundColor: ColorPalette.ink
-        ], range: NSRange(location: 0, length: "영상이 진본인지 확인하세요".utf16.count))
+        ], range: NSRange(location: 0, length: "공식 등록 영상과 비교하세요".utf16.count))
         infoLabel.attributedText = attributedInfo
         infoLabel.numberOfLines = 0
         infoLabel.textAlignment = .center
@@ -130,12 +130,12 @@ class VideoVerifyViewController: UIViewController {
 
         let selectLabel = UILabel()
         selectLabel.text = "탭하여 영상 선택"
-        selectLabel.font = .systemFont(ofSize: 16, weight: .bold)
+        selectLabel.font = .jinBonFont(ofSize: 16, weight: .bold)
         selectLabel.textColor = ColorPalette.ink
         selectLabel.tag = 101
         selectLabel.translatesAutoresizingMaskIntoConstraints = false
 
-        fileNameLabel.font = .systemFont(ofSize: 12, weight: .semibold)
+        fileNameLabel.font = .jinBonFont(ofSize: 12, weight: .semibold)
         fileNameLabel.textColor = .white
         fileNameLabel.backgroundColor = UIColor.black.withAlphaComponent(0.62)
         fileNameLabel.layer.cornerRadius = 13
@@ -176,7 +176,7 @@ class VideoVerifyViewController: UIViewController {
 
         // 검증 버튼
         verifyButton.setTitle("영상 검증하기", for: .normal)
-        verifyButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        verifyButton.titleLabel?.font = .jinBonFont(ofSize: 16, weight: .bold)
         verifyButton.backgroundColor = ColorPalette.primary
         verifyButton.setTitleColor(.white, for: .normal)
         verifyButton.layer.cornerRadius = 16
@@ -241,10 +241,8 @@ class VideoVerifyViewController: UIViewController {
         resultCard.isHidden = false
         resultCard.subviews.forEach { $0.removeFromSuperview() }
 
-        let isAuthentic = data.authentic
-        resultCard.backgroundColor = isAuthentic
-            ? UIColor.systemGreen.withAlphaComponent(0.1)
-            : UIColor.systemRed.withAlphaComponent(0.1)
+        let presentation = resultPresentation(for: data.effectiveVerdict)
+        resultCard.backgroundColor = presentation.color.withAlphaComponent(0.1)
 
         let stack = UIStackView()
         stack.axis = .vertical
@@ -257,16 +255,17 @@ class VideoVerifyViewController: UIViewController {
         headerStack.spacing = 8
         headerStack.alignment = .center
 
-        let icon = UIImageView(image: UIImage(systemName: isAuthentic ? "checkmark.seal.fill" : "xmark.seal.fill"))
-        icon.tintColor = isAuthentic ? .systemGreen : .systemRed
+        let icon = UIImageView(image: UIImage(systemName: presentation.symbol))
+        icon.tintColor = presentation.color
         icon.translatesAutoresizingMaskIntoConstraints = false
         icon.widthAnchor.constraint(equalToConstant: 28).isActive = true
         icon.heightAnchor.constraint(equalToConstant: 28).isActive = true
 
         let titleLabel = UILabel()
-        titleLabel.text = isAuthentic ? "진본 영상입니다" : "진본이 아닌 영상입니다"
-        titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
-        titleLabel.textColor = isAuthentic ? .systemGreen : .systemRed
+        titleLabel.text = presentation.title
+        titleLabel.font = .jinBonFont(ofSize: 18, weight: .bold)
+        titleLabel.textColor = presentation.color
+        titleLabel.numberOfLines = 0
 
         headerStack.addArrangedSubview(icon)
         headerStack.addArrangedSubview(titleLabel)
@@ -274,8 +273,8 @@ class VideoVerifyViewController: UIViewController {
 
         // 상세 정보
         let details: [(String, String)] = [
-            ("블록체인 검증", data.blockchainVerified ? "통과" : "실패"),
-            ("VC 검증", data.vcVerified ? "통과" : "실패"),
+            ("블록체인 검증", data.blockchainVerified ? "통과" : "확인되지 않음"),
+            ("VC 검증", data.vcVerified ? "통과" : "확인되지 않음"),
             ("메시지", data.message ?? "-")
         ]
 
@@ -289,6 +288,26 @@ class VideoVerifyViewController: UIViewController {
             stack.addArrangedSubview(row)
         }
 
+        if let distance = data.similarityDistance,
+           data.effectiveVerdict == .similarMatch {
+            stack.addArrangedSubview(makeDetailRow(
+                label: "유사도 거리", value: String(format: "%.1f", distance)))
+        }
+
+        if let notice = data.notice, !notice.isEmpty {
+            let noticeLabel = UILabel()
+            noticeLabel.text = notice
+            noticeLabel.font = .jinBonFont(ofSize: 13, weight: .medium)
+            noticeLabel.textColor = ColorPalette.secondaryText
+            noticeLabel.numberOfLines = 0
+            noticeLabel.backgroundColor = UIColor.secondarySystemBackground
+            noticeLabel.layer.cornerRadius = 10
+            noticeLabel.clipsToBounds = true
+            noticeLabel.textAlignment = .center
+            noticeLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
+            stack.addArrangedSubview(noticeLabel)
+        }
+
         resultCard.addSubview(stack)
         NSLayoutConstraint.activate([
             stack.topAnchor.constraint(equalTo: resultCard.topAnchor, constant: 20),
@@ -298,6 +317,23 @@ class VideoVerifyViewController: UIViewController {
         ])
     }
 
+    private func resultPresentation(
+        for verdict: VideoVerificationVerdict
+    ) -> (title: String, symbol: String, color: UIColor) {
+        switch verdict {
+        case .exactMatch:
+            return ("등록된 원본과 정확히 일치합니다", "checkmark.seal.fill", .systemGreen)
+        case .similarMatch:
+            return ("등록 영상과 유사합니다", "equal.circle.fill", .systemBlue)
+        case .registeredButRevoked:
+            return ("비활성화된 등록 영상입니다", "exclamationmark.shield.fill", .systemOrange)
+        case .notRegistered:
+            return ("등록 기록을 찾지 못했습니다", "questionmark.circle.fill", .systemGray)
+        case .verificationUnavailable:
+            return ("현재 검증할 수 없습니다", "exclamationmark.triangle.fill", .systemOrange)
+        }
+    }
+
     private func makeDetailRow(label: String, value: String) -> UIStackView {
         let row = UIStackView()
         row.axis = .horizontal
@@ -305,13 +341,13 @@ class VideoVerifyViewController: UIViewController {
 
         let labelView = UILabel()
         labelView.text = label
-        labelView.font = .systemFont(ofSize: 14)
+        labelView.font = .jinBonFont(ofSize: 14)
         labelView.textColor = ColorPalette.secondaryText
         labelView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
 
         let valueView = UILabel()
         valueView.text = value
-        valueView.font = .systemFont(ofSize: 14, weight: .medium)
+        valueView.font = .jinBonFont(ofSize: 14, weight: .medium)
         valueView.textColor = ColorPalette.ink
         valueView.textAlignment = .right
         valueView.numberOfLines = 0

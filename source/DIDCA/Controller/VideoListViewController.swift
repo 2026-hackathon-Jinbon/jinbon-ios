@@ -78,7 +78,7 @@ class VideoListViewController: UIViewController {
 
         let titleLabel = UILabel()
         titleLabel.text = "로그인하고 내 영상을 관리하세요"
-        titleLabel.font = .systemFont(ofSize: 17, weight: .bold)
+        titleLabel.font = .jinBonFont(ofSize: 17, weight: .bold)
         titleLabel.textColor = ColorPalette.ink
         titleLabel.textAlignment = .center
 
@@ -142,8 +142,8 @@ class VideoListViewController: UIViewController {
         emptyLabel.text = "아직 등록한 영상이 없습니다\n홈에서 첫 원본 영상을 등록해 보세요."
         emptyLabel.numberOfLines = 0
         emptyLabel.textColor = ColorPalette.secondaryText
-        emptyLabel.font = .systemFont(ofSize: 15, weight: .medium)
-        emptyLabel.font = .systemFont(ofSize: 15)
+        emptyLabel.font = .jinBonFont(ofSize: 15, weight: .medium)
+        emptyLabel.font = .jinBonFont(ofSize: 15)
         emptyLabel.textAlignment = .center
         emptyLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(emptyLabel)
@@ -157,7 +157,7 @@ class VideoListViewController: UIViewController {
     private func makeActionButton(title: String, action: Selector) -> UIButton {
         let btn = UIButton(type: .system)
         btn.setTitle(title, for: .normal)
-        btn.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+        btn.titleLabel?.font = .jinBonFont(ofSize: 14, weight: .semibold)
         btn.layer.cornerRadius = 8
         btn.layer.borderWidth = 1
         btn.layer.borderColor = ColorPalette.primary.cgColor
@@ -301,6 +301,11 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
                 self?.confirmDeactivation(video)
             })
         }
+        if video.active != false, video.vcIssuanceStatus != "ISSUED" {
+            detail.addAction(UIAlertAction(title: "Wallet 인증서 발급", style: .default) { [weak self] _ in
+                self?.prepareVcIssuance(for: video)
+            })
+        }
         if let videoURL = JinBonVideoStore.videoURL(videoId: video.videoId) {
             detail.addAction(UIAlertAction(title: "영상 재생", style: .default) { [weak self] _ in
                 self?.playVideo(at: videoURL)
@@ -308,6 +313,40 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
         }
         detail.addAction(UIAlertAction(title: "확인", style: .default))
         present(detail, animated: true)
+    }
+
+    private func prepareVcIssuance(for video: VideoDetailData) {
+        let progress = UIAlertController(
+            title: "인증서 발급 준비 중",
+            message: "안전한 발급 정보를 확인하고 있어요.",
+            preferredStyle: .alert
+        )
+        present(progress, animated: true)
+
+        Task { @MainActor [weak self, weak progress] in
+            guard let self else { return }
+            do {
+                let result = try await JinBonAPIClient.shared.prepareVideoVc(videoId: video.videoId)
+                progress?.dismiss(animated: true) { [weak self] in
+                    guard let self else { return }
+                    let upload = VideoUploadViewController()
+                    upload.resumeVcIssuance(with: result)
+                    let navigation = UINavigationController(rootViewController: upload)
+                    navigation.modalPresentationStyle = .fullScreen
+                    self.present(navigation, animated: true)
+                }
+            } catch {
+                progress?.dismiss(animated: true) { [weak self] in
+                    let alert = UIAlertController(
+                        title: "인증서 발급을 준비하지 못했습니다",
+                        message: error.localizedDescription,
+                        preferredStyle: .alert
+                    )
+                    alert.addAction(UIAlertAction(title: "확인", style: .default))
+                    self?.present(alert, animated: true)
+                }
+            }
+        }
     }
 
     private func playVideo(at url: URL) {
@@ -482,11 +521,11 @@ class VideoTableViewCell: UITableViewCell {
         statusIcon.translatesAutoresizingMaskIntoConstraints = false
         iconContainer.addSubview(statusIcon)
 
-        titleLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        titleLabel.font = .jinBonFont(ofSize: 16, weight: .medium)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(titleLabel)
 
-        dateLabel.font = .systemFont(ofSize: 13)
+        dateLabel.font = .jinBonFont(ofSize: 13)
         dateLabel.textColor = ColorPalette.secondaryText
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(dateLabel)

@@ -20,7 +20,7 @@ import UIKit
 
 class RoundedLabel: UILabel {
 
-    static let defaultRadius: CGFloat = 10
+    static let defaultRadius: CGFloat = 12
     
     @IBInspectable var cornerRadius: CGFloat = defaultRadius {
         didSet {
@@ -40,6 +40,12 @@ class RoundedLabel: UILabel {
             layer.borderColor = borderColor.cgColor
             layer.masksToBounds = true
         }
+    }
+
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        layer.cornerCurve = .continuous
+        adjustsFontForContentSizeCategory = true
     }
 
 }

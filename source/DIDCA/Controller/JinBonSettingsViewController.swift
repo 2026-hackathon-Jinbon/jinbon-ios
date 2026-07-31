@@ -68,7 +68,7 @@ final class JinBonSettingsViewController: UIViewController {
         let avatar = UILabel()
         avatar.text = String((Properties.getMemberName() ?? "진").prefix(1))
         avatar.textAlignment = .center
-        avatar.font = .systemFont(ofSize: 22, weight: .bold)
+        avatar.font = .jinBonFont(ofSize: 22, weight: .bold)
         avatar.textColor = .white
         avatar.backgroundColor = ColorPalette.primary
         avatar.layer.cornerRadius = 25
@@ -77,11 +77,11 @@ final class JinBonSettingsViewController: UIViewController {
 
         let name = UILabel()
         name.text = Properties.getMemberName() ?? "로그인이 필요합니다"
-        name.font = .systemFont(ofSize: 18, weight: .bold)
+        name.font = .jinBonFont(ofSize: 18, weight: .bold)
         name.textColor = ColorPalette.ink
         let role = UILabel()
         role.text = Properties.getMemberRole() == "ISSUER" ? "공인 등록자" : (Properties.getMemberRole() ?? "비회원")
-        role.font = .systemFont(ofSize: 14, weight: .medium)
+        role.font = .jinBonFont(ofSize: 14, weight: .medium)
         role.textColor = ColorPalette.secondaryText
         let labels = UIStackView(arrangedSubviews: [name, role])
         labels.axis = .vertical
@@ -103,7 +103,7 @@ final class JinBonSettingsViewController: UIViewController {
     private func sectionTitle(_ text: String) -> UILabel {
         let label = UILabel()
         label.text = text
-        label.font = .systemFont(ofSize: 15, weight: .bold)
+        label.font = .jinBonFont(ofSize: 15, weight: .bold)
         label.textColor = ColorPalette.ink
         return label
     }
@@ -121,9 +121,9 @@ final class JinBonSettingsViewController: UIViewController {
             let icon = UIImageView(image: UIImage(systemName: item.0))
             icon.tintColor = destructive ? ColorPalette.danger : ColorPalette.primary
             icon.translatesAutoresizingMaskIntoConstraints = false
-            let title = UILabel(); title.text = item.1; title.font = .systemFont(ofSize: 15, weight: .semibold)
+            let title = UILabel(); title.text = item.1; title.font = .jinBonFont(ofSize: 15, weight: .semibold)
             title.textColor = destructive ? ColorPalette.danger : ColorPalette.ink
-            let detail = UILabel(); detail.text = item.2; detail.font = .systemFont(ofSize: 13); detail.textColor = ColorPalette.secondaryText
+            let detail = UILabel(); detail.text = item.2; detail.font = .jinBonFont(ofSize: 13); detail.textColor = ColorPalette.secondaryText
             let labels = UIStackView(arrangedSubviews: [title, detail]); labels.axis = .vertical; labels.spacing = 3
             let chevron = UIImageView(image: UIImage(systemName: "chevron.right")); chevron.tintColor = ColorPalette.secondaryText
             let row = UIStackView(arrangedSubviews: [icon, labels, chevron]); row.axis = .horizontal; row.alignment = .center; row.spacing = 13

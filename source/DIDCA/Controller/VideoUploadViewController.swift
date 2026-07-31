@@ -39,6 +39,7 @@ class VideoUploadViewController: UIViewController {
     private var selectedVideoURL: URL?
     private var isUploadComplete = false
     private var issuedVcId: String?
+    private var resumedVcResult: VideoRegisterData?
 
     // MARK: - Lifecycle
 
@@ -63,6 +64,19 @@ class VideoUploadViewController: UIViewController {
 
         setupUI()
         setupKeyboardHandling()
+        if let resumedVcResult {
+            DispatchQueue.main.async { [weak self] in
+                self?.showResult(resumedVcResult)
+                self?.offerVcIssuanceIfNeeded(resumedVcResult)
+            }
+        }
+    }
+
+    func resumeVcIssuance(with result: VideoRegisterData) {
+        resumedVcResult = result
+        guard isViewLoaded else { return }
+        showResult(result)
+        offerVcIssuanceIfNeeded(result)
     }
 
     deinit {
@@ -97,18 +111,18 @@ class VideoUploadViewController: UIViewController {
 
         let eyebrow = UILabel()
         eyebrow.text = "원본 등록"
-        eyebrow.font = .systemFont(ofSize: 12, weight: .bold)
+        eyebrow.font = .jinBonFont(ofSize: 12, weight: .bold)
         eyebrow.textColor = ColorPalette.primary
 
         let heading = UILabel()
         heading.numberOfLines = 0
-        heading.font = .systemFont(ofSize: 28, weight: .bold)
+        heading.font = .jinBonFont(ofSize: 28, weight: .bold)
         heading.textColor = ColorPalette.ink
         heading.setJinBonText("원본 영상을 등록하세요", lineSpacing: 7)
 
         let description = UILabel()
         description.numberOfLines = 0
-        description.font = .systemFont(ofSize: 15, weight: .regular)
+        description.font = .jinBonFont(ofSize: 15, weight: .regular)
         description.textColor = ColorPalette.secondaryText
         description.setJinBonText("영상 해시를 블록체인에 기록해요.")
 
@@ -146,12 +160,12 @@ class VideoUploadViewController: UIViewController {
 
         let selectLabel = UILabel()
         selectLabel.text = "탭하여 영상 선택"
-        selectLabel.font = .systemFont(ofSize: 16, weight: .bold)
+        selectLabel.font = .jinBonFont(ofSize: 16, weight: .bold)
         selectLabel.textColor = ColorPalette.ink
         selectLabel.tag = 101
         selectLabel.translatesAutoresizingMaskIntoConstraints = false
 
-        fileNameLabel.font = .systemFont(ofSize: 12, weight: .semibold)
+        fileNameLabel.font = .jinBonFont(ofSize: 12, weight: .semibold)
         fileNameLabel.textColor = .white
         fileNameLabel.backgroundColor = UIColor.black.withAlphaComponent(0.62)
         fileNameLabel.layer.cornerRadius = 13
@@ -201,7 +215,7 @@ class VideoUploadViewController: UIViewController {
 
         let titleHeaderLabel = UILabel()
         titleHeaderLabel.text = "제목"
-        titleHeaderLabel.font = .systemFont(ofSize: 13, weight: .bold)
+        titleHeaderLabel.font = .jinBonFont(ofSize: 13, weight: .bold)
         titleHeaderLabel.textColor = ColorPalette.secondaryText
         titleHeaderLabel.translatesAutoresizingMaskIntoConstraints = false
 
@@ -209,11 +223,11 @@ class VideoUploadViewController: UIViewController {
             string: "영상 제목을 입력하세요",
             attributes: [
                 .foregroundColor: ColorPalette.secondaryText,
-                .font: UIFont.systemFont(ofSize: 16, weight: .regular)
+                .font: UIFont.jinBonFont(ofSize: 16, weight: .regular)
             ]
         )
         titleField.borderStyle = .none
-        titleField.font = .systemFont(ofSize: 17, weight: .semibold)
+        titleField.font = .jinBonFont(ofSize: 17, weight: .semibold)
         titleField.textColor = ColorPalette.ink
         titleField.clearButtonMode = .whileEditing
         titleField.returnKeyType = .done
@@ -254,7 +268,7 @@ class VideoUploadViewController: UIViewController {
             configuration.image = UIImage(systemName: "checkmark.shield.fill")
             configuration.imagePadding = 9
             configuration.title = "원본 영상 등록하기"
-            configuration.attributedTitle?.font = .systemFont(ofSize: 16, weight: .bold)
+            configuration.attributedTitle?.font = .jinBonFont(ofSize: 16, weight: .bold)
             return configuration
         }()
         uploadButton.translatesAutoresizingMaskIntoConstraints = false
@@ -278,13 +292,13 @@ class VideoUploadViewController: UIViewController {
         resultIcon.widthAnchor.constraint(equalToConstant: 34).isActive = true
         resultIcon.heightAnchor.constraint(equalToConstant: 34).isActive = true
 
-        resultTitleLabel.font = .systemFont(ofSize: 18, weight: .bold)
+        resultTitleLabel.font = .jinBonFont(ofSize: 18, weight: .bold)
         resultTitleLabel.textColor = ColorPalette.ink
-        resultMessageLabel.font = .systemFont(ofSize: 14, weight: .regular)
+        resultMessageLabel.font = .jinBonFont(ofSize: 14, weight: .regular)
         resultMessageLabel.textColor = ColorPalette.secondaryText
         resultMessageLabel.numberOfLines = 0
 
-        vcStatusLabel.font = .systemFont(ofSize: 13, weight: .bold)
+        vcStatusLabel.font = .jinBonFont(ofSize: 13, weight: .bold)
         vcStatusLabel.textAlignment = .center
         vcStatusLabel.layer.cornerRadius = 14
         vcStatusLabel.clipsToBounds = true
@@ -322,7 +336,7 @@ class VideoUploadViewController: UIViewController {
         let badge = UILabel()
         badge.text = step
         badge.textAlignment = .center
-        badge.font = .systemFont(ofSize: 13, weight: .bold)
+        badge.font = .jinBonFont(ofSize: 13, weight: .bold)
         badge.textColor = .white
         badge.backgroundColor = ColorPalette.primary
         badge.layer.cornerRadius = 12
@@ -332,11 +346,11 @@ class VideoUploadViewController: UIViewController {
 
         let titleLabel = UILabel()
         titleLabel.text = title
-        titleLabel.font = .systemFont(ofSize: 17, weight: .bold)
+        titleLabel.font = .jinBonFont(ofSize: 17, weight: .bold)
         titleLabel.textColor = ColorPalette.ink
         let captionLabel = UILabel()
         captionLabel.text = caption
-        captionLabel.font = .systemFont(ofSize: 13, weight: .medium)
+        captionLabel.font = .jinBonFont(ofSize: 13, weight: .medium)
         captionLabel.textColor = ColorPalette.secondaryText
         let labels = UIStackView(arrangedSubviews: [titleLabel, captionLabel])
         labels.axis = .vertical
@@ -356,7 +370,7 @@ class VideoUploadViewController: UIViewController {
 
         let label = UILabel()
         label.numberOfLines = 0
-        label.font = .systemFont(ofSize: 13, weight: .medium)
+        label.font = .jinBonFont(ofSize: 13, weight: .medium)
         label.textColor = ColorPalette.secondaryText
         label.setJinBonText("원본은 서버에 저장되지 않고 해시만 등록돼요.", lineSpacing: 4)
 
@@ -477,8 +491,8 @@ class VideoUploadViewController: UIViewController {
     private func offerVcIssuanceIfNeeded(_ data: VideoRegisterData) {
         guard data.vcId == nil, let videoId = data.videoId else { return }
 
-        if let pendingVcId = Properties.getPendingVideoVc(videoId: videoId) {
-            reconnectIssuedVc(videoId: videoId, vcId: pendingVcId)
+        if let pending = Properties.getPendingVideoVc(videoId: videoId) {
+            reconnectIssuedVc(videoId: videoId, pending: pending)
             return
         }
 
@@ -504,7 +518,7 @@ class VideoUploadViewController: UIViewController {
         } completeClosure: { [weak self] in
             guard let self else { return }
             SelectAuthHelper.showPreferredBiometric(on: self) { [weak self] passcode in
-                self?.issueVc(videoId: videoId, passcode: passcode)
+                self?.issueVc(videoId: videoId, offerId: offerId, passcode: passcode)
             } cancelClosure: { [weak self] in
                 IssueVcProtocol.shared.cancelIssuance()
                 self?.showAlert("인증서 발급이 취소됐어요. Wallet 발급 버튼에서 다시 시도할 수 있어요.")
@@ -515,12 +529,16 @@ class VideoUploadViewController: UIViewController {
         }
     }
 
-    private func issueVc(videoId: Int, passcode: String?) {
+    private func issueVc(videoId: Int, offerId: String, passcode: String?) {
         ActivityUtil.show(vc: self) {
             let vcId = try await IssueVcProtocol.shared.process(passcode: passcode)
             self.issuedVcId = vcId
-            Properties.setPendingVideoVc(vcId, videoId: videoId)
-            try await JinBonAPIClient.shared.completeVideoVc(videoId: videoId, vcId: vcId)
+            Properties.setPendingVideoVc(
+                PendingVideoVcData(vcId: vcId, offerId: offerId),
+                videoId: videoId
+            )
+            try await JinBonAPIClient.shared.completeVideoVc(
+                videoId: videoId, vcId: vcId, offerId: offerId)
             Properties.clearPendingVideoVc(videoId: videoId)
         } completeClosure: { [weak self] in
             guard let self else { return }
@@ -534,14 +552,15 @@ class VideoUploadViewController: UIViewController {
         }
     }
 
-    private func reconnectIssuedVc(videoId: Int, vcId: String) {
+    private func reconnectIssuedVc(videoId: Int, pending: PendingVideoVcData) {
         ActivityUtil.show(vc: self) {
-            try await JinBonAPIClient.shared.completeVideoVc(videoId: videoId, vcId: vcId)
+            try await JinBonAPIClient.shared.completeVideoVc(
+                videoId: videoId, vcId: pending.vcId, offerId: pending.offerId)
             Properties.clearPendingVideoVc(videoId: videoId)
-            self.issuedVcId = vcId
+            self.issuedVcId = pending.vcId
         } completeClosure: { [weak self] in
             guard let self else { return }
-            self.updateVcStatus(vcId: vcId)
+            self.updateVcStatus(vcId: pending.vcId)
             self.resultMessageLabel.setJinBonText(
                 "기존 Wallet 인증서를 영상에 다시 연결했어요.", lineSpacing: 4)
             self.showAlert("Wallet에 이미 저장된 인증서를 안전하게 다시 연결했어요.")
@@ -653,19 +672,19 @@ private final class JinBonVcOfferViewController: UIViewController {
 
         let brand = UILabel()
         brand.text = "JINBON WALLET"
-        brand.font = .systemFont(ofSize: 12, weight: .bold)
+        brand.font = .jinBonFont(ofSize: 12, weight: .bold)
         brand.textColor = ColorPalette.primary
         brand.textAlignment = .center
 
         let title = UILabel()
         title.text = "진본 인증서를 받을까요?"
-        title.font = .systemFont(ofSize: 22, weight: .bold)
+        title.font = .jinBonFont(ofSize: 22, weight: .bold)
         title.textColor = ColorPalette.ink
         title.textAlignment = .center
         title.numberOfLines = 0
 
         let message = UILabel()
-        message.font = .systemFont(ofSize: 14, weight: .regular)
+        message.font = .jinBonFont(ofSize: 14, weight: .regular)
         message.textColor = ColorPalette.secondaryText
         message.textAlignment = .center
         message.numberOfLines = 0
@@ -721,7 +740,7 @@ private final class JinBonVcOfferViewController: UIViewController {
     private func makeButton(title: String, filled: Bool) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        button.titleLabel?.font = .jinBonFont(ofSize: 16, weight: .bold)
         button.layer.cornerRadius = 16
         if filled {
             button.backgroundColor = ColorPalette.primary

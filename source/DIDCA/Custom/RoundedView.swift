@@ -20,7 +20,7 @@ import UIKit
 @IBDesignable
 class RoundedView : UIView
 {
-    static let defaultRadius: CGFloat = 10
+    static let defaultRadius: CGFloat = 16
     
     @IBInspectable var cornerRadius: CGFloat = defaultRadius {
         didSet {
@@ -38,5 +38,9 @@ class RoundedView : UIView
             layer.borderColor = borderColor.cgColor
         }
     }
-}
 
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        layer.cornerCurve = .continuous
+    }
+}

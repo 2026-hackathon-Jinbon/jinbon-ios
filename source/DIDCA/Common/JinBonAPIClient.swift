@@ -49,14 +49,26 @@ class JinBonAPIClient {
         )
     }
 
-    func completeVideoVc(videoId: Int, vcId: String) async throws {
+    func completeVideoVc(videoId: Int, vcId: String, offerId: String) async throws {
         _ = try await request(
             path: "/api/videos/\(videoId)/vc/complete",
             method: "POST",
-            body: ["vcId": vcId],
+            body: ["vcId": vcId, "offerId": offerId],
             authenticated: true,
             responseType: String.self
         )
+    }
+
+    func prepareVideoVc(videoId: Int) async throws -> VideoRegisterData {
+        guard let data = try await request(
+            path: "/api/videos/\(videoId)/vc/prepare",
+            method: "POST",
+            authenticated: true,
+            responseType: VideoRegisterData.self
+        ) else {
+            throw JinBonError.serverError("인증서 발급을 준비하지 못했습니다.")
+        }
+        return data
     }
 
     func completeSignup(signupToken: String, did: String) async throws -> AuthTokenData {

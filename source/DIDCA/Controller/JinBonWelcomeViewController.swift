@@ -23,7 +23,7 @@ final class JinBonWelcomeViewController: UIViewController {
         let mark = UILabel()
         mark.text = "J"
         mark.textAlignment = .center
-        mark.font = .systemFont(ofSize: 30, weight: .black)
+        mark.font = .jinBonFont(ofSize: 30, weight: .black)
         mark.textColor = .white
         mark.backgroundColor = ColorPalette.primary
         mark.layer.cornerRadius = 18
@@ -31,13 +31,13 @@ final class JinBonWelcomeViewController: UIViewController {
 
         let title = UILabel()
         title.numberOfLines = 0
-        title.font = .systemFont(ofSize: 34, weight: .bold)
+        title.font = .jinBonFont(ofSize: 34, weight: .bold)
         title.textColor = ColorPalette.ink
         title.setJinBonText("진짜를 증명하는\n가장 간단한 방법", lineSpacing: 7)
 
         let subtitle = UILabel()
         subtitle.numberOfLines = 0
-        subtitle.font = .systemFont(ofSize: 16, weight: .regular)
+        subtitle.font = .jinBonFont(ofSize: 16, weight: .regular)
         subtitle.textColor = ColorPalette.secondaryText
         subtitle.setJinBonText("영상의 원본 여부를 안전하게 증명하세요.", lineSpacing: 5)
 
@@ -53,7 +53,7 @@ final class JinBonWelcomeViewController: UIViewController {
         let verify = UIButton(type: .system)
         verify.setTitle("로그인 없이 영상 검증하기  →", for: .normal)
         verify.setTitleColor(ColorPalette.primary, for: .normal)
-        verify.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
+        verify.titleLabel?.font = .jinBonFont(ofSize: 15, weight: .semibold)
         verify.addTarget(self, action: #selector(verifyTapped), for: .touchUpInside)
         verify.heightAnchor.constraint(equalToConstant: 48).isActive = true
 
@@ -91,18 +91,18 @@ final class JinBonWelcomeViewController: UIViewController {
 
         let titleLabel = UILabel()
         titleLabel.text = title
-        titleLabel.font = .systemFont(ofSize: 17, weight: .bold)
+        titleLabel.font = .jinBonFont(ofSize: 17, weight: .bold)
         titleLabel.textColor = ColorPalette.ink
 
         let detailLabel = UILabel()
         detailLabel.text = detail
-        detailLabel.font = .systemFont(ofSize: 14)
+        detailLabel.font = .jinBonFont(ofSize: 14)
         detailLabel.textColor = ColorPalette.secondaryText
         detailLabel.numberOfLines = 0
 
         let button = UIButton(type: .system)
         button.setTitle(buttonTitle, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        button.titleLabel?.font = .jinBonFont(ofSize: 16, weight: .bold)
         button.layer.cornerRadius = 13
         button.backgroundColor = primary ? ColorPalette.primary : ColorPalette.primary.withAlphaComponent(0.09)
         button.setTitleColor(primary ? .white : ColorPalette.primary, for: .normal)
