@@ -159,6 +159,15 @@ class UserRegWebViewController: UIViewController {
     }
     
     private func userRegAction() {
+        guard WalletAPI.shared.isExistWallet() else {
+            PopupUtils.showAlertPopup(
+                title: "Wallet 생성 필요",
+                content: "Wallet 생성이 완료되지 않았습니다. 앱을 다시 시작해주세요.",
+                VC: self
+            )
+            return
+        }
+
         let popupVC = Storyboard.popup.instance.instantiateViewController(withIdentifier: ViewControllerID.twoButtonDialog.rawValue) as! TwoButtonDialogViewController
         popupVC.modalPresentationStyle = .overCurrentContext
         popupVC.setContentsMessage(message: "Wallet 잠금을 설정할까요?\nPIN으로 디지털 신원을 안전하게 보호할 수 있어요.")

@@ -85,14 +85,17 @@ class SplashViewController: UIViewController {
     }
     
     
-    private func createWallet() async {
+    private func createWallet() async -> Bool {
                 
         // create wallet
         do
         {
             if WalletAPI.shared.isExistWallet() == false {
-                print("createWallet: \(try await WalletAPI.shared.createWallet(tasURL: URLs.TAS_URL, walletURL: URLs.WALLET_URL))")
+                let created = try await WalletAPI.shared.createWallet(tasURL: URLs.TAS_URL, walletURL: URLs.WALLET_URL)
+                print("createWallet: \(created)")
+                return created && WalletAPI.shared.isExistWallet()
             }
+            return true
         }
         catch
         {
@@ -104,6 +107,7 @@ class SplashViewController: UIViewController {
                                       VC: self) {
                 try? WalletAPI.shared.deleteWallet(deleteAll: true)
             }
+            return false
         }
         
     }
@@ -115,8 +119,7 @@ class SplashViewController: UIViewController {
         
         Properties.generateCaAppId()
         Task { @MainActor in
-            await createWallet()
-        
+            guard await createWallet() else { return }
             checkWalletLock()
         }
     }
