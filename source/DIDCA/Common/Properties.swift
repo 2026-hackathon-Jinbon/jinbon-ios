@@ -1,5 +1,6 @@
 /*
- * Copyright 2025 JinBon.
+ * Copyright 2024 OmniOne.
+ * Modifications Copyright 2025-2026 JinBon contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -268,14 +269,23 @@ public class Properties {
         UserDefaults.standard.removeObject(forKey: "jinbon_did_rebind_token")
     }
 
-    public static func setPendingVideoVc(_ vcId: String, videoId: Int) {
+    public static func setPendingVideoVc(_ pending: PendingVideoVcData, videoId: Int) {
         guard let memberId = getMemberId() else { return }
-        KeychainHelper.save(key: pendingVideoVcKey(memberId: memberId, videoId: videoId), value: vcId)
+        guard
+            let data = try? JSONEncoder().encode(pending),
+            let value = String(data: data, encoding: .utf8)
+        else { return }
+        KeychainHelper.save(key: pendingVideoVcKey(memberId: memberId, videoId: videoId), value: value)
     }
 
-    public static func getPendingVideoVc(videoId: Int) -> String? {
+    public static func getPendingVideoVc(videoId: Int) -> PendingVideoVcData? {
         guard let memberId = getMemberId() else { return nil }
-        return KeychainHelper.load(key: pendingVideoVcKey(memberId: memberId, videoId: videoId))
+        guard
+            let value = KeychainHelper.load(key: pendingVideoVcKey(memberId: memberId, videoId: videoId)),
+            let data = value.data(using: .utf8),
+            let pending = try? JSONDecoder().decode(PendingVideoVcData.self, from: data)
+        else { return nil }
+        return pending
     }
 
     public static func clearPendingVideoVc(videoId: Int) {

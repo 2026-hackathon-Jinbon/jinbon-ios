@@ -1,5 +1,14 @@
 # DIDCA Guide
 
+> **Open-source origin**
+>
+> JinBon Wallet is based in part on
+> [OmniOneID/did-ca-ios](https://github.com/OmniOneID/did-ca-ios) and uses
+> [OmniOneID/did-client-sdk-ios](https://github.com/OmniOneID/did-client-sdk-ios).
+> The original work is Copyright 2024 OmniOne and licensed under the
+> Apache License 2.0. JinBon-specific changes are maintained by the JinBon
+> contributors. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
 ![Platform](https://img.shields.io/cocoapods/p/SquishButton.svg?style=flat)
 [![Swift](https://img.shields.io/badge/Swift-5-orange.svg?style=flat)](https://developer.apple.com/swift)
 
@@ -178,4 +187,3 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_
 
 ## License
 [Apache 2.0](LICENSE)
-

@@ -1,5 +1,6 @@
 /*
- * Copyright 2025 JinBon.
+ * Copyright 2024 OmniOne.
+ * Modifications Copyright 2025-2026 JinBon contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,7 +84,7 @@ class PincodeViewController: UIViewController
 
     private func applyJinBonStyle() {
         view.backgroundColor = ColorPalette.canvas
-        messageLbl.font = .systemFont(ofSize: 22, weight: .bold)
+        messageLbl.font = .jinBonFont(ofSize: 22, weight: .bold)
         messageLbl.textColor = ColorPalette.ink
         messageLbl.numberOfLines = 0
 
@@ -102,13 +103,13 @@ class PincodeViewController: UIViewController
             button.layer.cornerRadius = 28
             button.layer.cornerCurve = .continuous
             button.setTitleColor(ColorPalette.ink, for: .normal)
-            button.titleLabel?.font = .systemFont(ofSize: 30, weight: .semibold)
+            button.titleLabel?.font = .jinBonFont(ofSize: 30, weight: .semibold)
             if button.tag == -1 {
                 button.setImage(UIImage(systemName: "delete.left"), for: .normal)
                 button.tintColor = ColorPalette.ink
             } else if button.tag == -2 {
                 button.setTitle("취소", for: .normal)
-                button.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
+                button.titleLabel?.font = .jinBonFont(ofSize: 15, weight: .semibold)
                 button.setTitleColor(ColorPalette.secondaryText, for: .normal)
             }
         }

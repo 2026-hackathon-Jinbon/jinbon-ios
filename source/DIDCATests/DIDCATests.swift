@@ -1,5 +1,6 @@
 /*
- * Copyright 2025 JinBon.
+ * Copyright 2024 OmniOne.
+ * Modifications Copyright 2025-2026 JinBon contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +17,88 @@
 
 import XCTest
 @testable import DIDCA
+
+final class PendingVideoVcDataTests: XCTestCase {
+
+    func testPendingContextRoundTripPreservesOffer() throws {
+        let expected = PendingVideoVcData(vcId: "vc-123", offerId: "offer-456")
+
+        let encoded = try JSONEncoder().encode(expected)
+        let decoded = try JSONDecoder().decode(PendingVideoVcData.self, from: encoded)
+
+        XCTAssertEqual(decoded, expected)
+    }
+}
+
+final class VideoVerifyDataTests: XCTestCase {
+
+    func testDecodesAllBackendVerdicts() throws {
+        for verdict in VideoVerificationVerdict.allCases {
+            let json = """
+            {
+              "verdict": "\(verdict.rawValue)",
+              "similarityDistance": 3.5,
+              "authentic": \(verdict == .exactMatch || verdict == .similarMatch),
+              "videoId": 1,
+              "issuerDid": "did:omn:issuer",
+              "registeredAt": "2026-07-31T12:00:00",
+              "blockchainVerified": true,
+              "vcVerified": false,
+              "active": true,
+              "message": "message",
+              "notice": "notice"
+            }
+            """
+
+            let decoded = try JSONDecoder().decode(
+                VideoVerifyData.self, from: Data(json.utf8))
+
+            XCTAssertEqual(decoded.verdict, verdict)
+            XCTAssertEqual(decoded.effectiveVerdict, verdict)
+        }
+    }
+
+    func testLegacyResponseFallsBackWithoutCallingItFake() throws {
+        let json = """
+        {
+          "authentic": false,
+          "videoId": null,
+          "issuerDid": null,
+          "registeredAt": null,
+          "blockchainVerified": false,
+          "vcVerified": false,
+          "active": false,
+          "message": "not registered"
+        }
+        """
+
+        let decoded = try JSONDecoder().decode(
+            VideoVerifyData.self, from: Data(json.utf8))
+
+        XCTAssertEqual(decoded.effectiveVerdict, .notRegistered)
+    }
+
+    func testUnknownFutureVerdictFallsBackToUnavailable() throws {
+        let json = """
+        {
+          "verdict": "FUTURE_VERDICT",
+          "authentic": false,
+          "videoId": 1,
+          "issuerDid": "did:omn:issuer",
+          "registeredAt": null,
+          "blockchainVerified": false,
+          "vcVerified": false,
+          "active": true,
+          "message": "unknown"
+        }
+        """
+
+        let decoded = try JSONDecoder().decode(
+            VideoVerifyData.self, from: Data(json.utf8))
+
+        XCTAssertEqual(decoded.effectiveVerdict, .verificationUnavailable)
+    }
+}
 
 // MARK: - SDKUtils Tests
 

@@ -1,5 +1,6 @@
 /*
- * Copyright 2025 JinBon.
+ * Copyright 2024 OmniOne.
+ * Modifications Copyright 2025-2026 JinBon contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -134,7 +135,7 @@ class SplashViewController: UIViewController {
         let mark = UILabel()
         mark.text = "J"
         mark.textAlignment = .center
-        mark.font = .systemFont(ofSize: 32, weight: .black)
+        mark.font = .jinBonFont(ofSize: 32, weight: .black)
         mark.textColor = .white
         mark.backgroundColor = ColorPalette.primary
         mark.layer.cornerRadius = 20
@@ -143,13 +144,13 @@ class SplashViewController: UIViewController {
         let brand = UILabel()
         brand.text = "진본"
         brand.textAlignment = .center
-        brand.font = .systemFont(ofSize: 30, weight: .bold)
+        brand.font = .jinBonFont(ofSize: 30, weight: .bold)
         brand.textColor = ColorPalette.ink
 
         let tagline = UILabel()
         tagline.text = "진짜를 증명하는 가장 간단한 방법"
         tagline.textAlignment = .center
-        tagline.font = .systemFont(ofSize: 15, weight: .medium)
+        tagline.font = .jinBonFont(ofSize: 15, weight: .medium)
         tagline.textColor = ColorPalette.secondaryText
 
         let indicator = UIActivityIndicatorView(style: .medium)
@@ -159,7 +160,7 @@ class SplashViewController: UIViewController {
         let status = UILabel()
         status.text = "안전한 Wallet을 준비하고 있어요"
         status.textAlignment = .center
-        status.font = .systemFont(ofSize: 14, weight: .medium)
+        status.font = .jinBonFont(ofSize: 14, weight: .medium)
         status.textColor = ColorPalette.secondaryText
 
         let identity = UIStackView(arrangedSubviews: [mark, brand, tagline])

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA1000012F100001000B0001 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = AA1000012F100001000A0001 /* LICENSE */; };
+		AA1000012F100002000B0001 /* THIRD_PARTY_NOTICES.md in Resources */ = {isa = PBXBuildFile; fileRef = AA1000012F100002000A0001 /* THIRD_PARTY_NOTICES.md */; };
 		7C285E532C53393400136B91 /* SUIT-Light.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7C285E4A2C53393400136B91 /* SUIT-Light.otf */; };
 		7C285E542C53393400136B91 /* SUIT-ExtraBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7C285E4B2C53393400136B91 /* SUIT-ExtraBold.otf */; };
 		7C285E552C53393400136B91 /* SUIT-ExtraLight.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7C285E4C2C53393400136B91 /* SUIT-ExtraLight.otf */; };
@@ -141,6 +143,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AA1000012F100001000A0001 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = SOURCE_ROOT; };
+		AA1000012F100002000A0001 /* THIRD_PARTY_NOTICES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = THIRD_PARTY_NOTICES.md; path = ../THIRD_PARTY_NOTICES.md; sourceTree = SOURCE_ROOT; };
 		7C285E4A2C53393400136B91 /* SUIT-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SUIT-Light.otf"; sourceTree = "<group>"; };
 		7C285E4B2C53393400136B91 /* SUIT-ExtraBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SUIT-ExtraBold.otf"; sourceTree = "<group>"; };
 		7C285E4C2C53393400136B91 /* SUIT-ExtraLight.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SUIT-ExtraLight.otf"; sourceTree = "<group>"; };
@@ -301,6 +305,8 @@
 		7C985E9F2BC9292A00AF788F = {
 			isa = PBXGroup;
 			children = (
+				AA1000012F100001000A0001 /* LICENSE */,
+				AA1000012F100002000A0001 /* THIRD_PARTY_NOTICES.md */,
 				7CA982292C85CBEE00EDF367 /* DIDCA */,
 				7C37B5DC2C51F341001E4341 /* Font */,
 				7CA9825C2C85CCE600EDF367 /* DIDCATests */,
@@ -626,6 +632,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA1000012F100001000B0001 /* LICENSE in Resources */,
+				AA1000012F100002000B0001 /* THIRD_PARTY_NOTICES.md in Resources */,
 				7CA9824D2C85CBEE00EDF367 /* GoogleService-Info.plist in Resources */,
 				7C285E582C53393400136B91 /* SUIT-Heavy.otf in Resources */,
 				C936B5782DCDDBA100ADA345 /* ColorAssets.xcassets in Resources */,

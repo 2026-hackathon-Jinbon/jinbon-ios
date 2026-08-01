@@ -1,5 +1,15 @@
 # DIDCA Guide
 
+> **오픈소스 출처**
+>
+> 진본 Wallet은
+> [OmniOneID/did-ca-ios](https://github.com/OmniOneID/did-ca-ios)를 기반으로
+> 제작되었으며
+> [OmniOneID/did-client-sdk-ios](https://github.com/OmniOneID/did-client-sdk-ios)를
+> 사용합니다. 원본 저작물은 Copyright 2024 OmniOne이며 Apache License 2.0으로
+> 제공됩니다. 진본 서비스에 맞춘 변경 사항은 JinBon 기여자들이 관리합니다.
+> 자세한 내용은 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)를 확인하세요.
+
 ![Platform](https://img.shields.io/cocoapods/p/SquishButton.svg?style=flat)
 [![Swift](https://img.shields.io/badge/Swift-5-orange.svg?style=flat)](https://developer.apple.com/swift)
 

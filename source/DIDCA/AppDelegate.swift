@@ -1,5 +1,6 @@
 /*
- * Copyright 2025 JinBon.
+ * Copyright 2024 OmniOne.
+ * Modifications Copyright 2025-2026 JinBon contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +29,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        JinBonTheme.apply()
         
         initWalletApiSettings()
         

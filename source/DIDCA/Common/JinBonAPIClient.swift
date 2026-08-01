@@ -49,14 +49,26 @@ class JinBonAPIClient {
         )
     }
 
-    func completeVideoVc(videoId: Int, vcId: String) async throws {
+    func completeVideoVc(videoId: Int, vcId: String, offerId: String) async throws {
         _ = try await request(
             path: "/api/videos/\(videoId)/vc/complete",
             method: "POST",
-            body: ["vcId": vcId],
+            body: ["vcId": vcId, "offerId": offerId],
             authenticated: true,
             responseType: String.self
         )
+    }
+
+    func prepareVideoVc(videoId: Int) async throws -> VideoRegisterData {
+        guard let data = try await request(
+            path: "/api/videos/\(videoId)/vc/prepare",
+            method: "POST",
+            authenticated: true,
+            responseType: VideoRegisterData.self
+        ) else {
+            throw JinBonError.serverError("인증서 발급을 준비하지 못했습니다.")
+        }
+        return data
     }
 
     func completeSignup(signupToken: String, did: String) async throws -> AuthTokenData {
@@ -180,7 +192,10 @@ class JinBonAPIClient {
         responseType: T.Type,
         isRetry: Bool = false
     ) async throws -> T? {
-        var request = URLRequest(url: URL(string: "\(baseURL)\(path)")!)
+        guard let url = URL(string: "\(baseURL)\(path)") else {
+            throw JinBonError.invalidRequest
+        }
+        var request = URLRequest(url: url)
         request.httpMethod = method
 
         if authenticated, let token = Properties.getAccessToken() {
@@ -192,7 +207,12 @@ class JinBonAPIClient {
             request.httpBody = try JSONEncoder().encode(AnyEncodable(body))
         }
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            throw mapTransportError(error)
+        }
         if let http = response as? HTTPURLResponse,
            http.statusCode == 401, authenticated, !isRetry {
             do {
@@ -207,7 +227,7 @@ class JinBonAPIClient {
                 throw JinBonError.notAuthenticated
             }
         }
-        try checkHTTPResponse(response)
+        try checkHTTPResponse(response, data: data)
 
         let result = try decoder.decode(JinBonResponse<T>.self, from: data)
 
@@ -234,7 +254,10 @@ class JinBonAPIClient {
             sourceURL: fileURL, title: title, boundary: boundary)
         defer { try? FileManager.default.removeItem(at: multipartURL) }
 
-        var request = URLRequest(url: URL(string: "\(baseURL)\(path)")!)
+        guard let url = URL(string: "\(baseURL)\(path)") else {
+            throw JinBonError.invalidRequest
+        }
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.timeoutInterval = 120
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
@@ -242,7 +265,12 @@ class JinBonAPIClient {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
 
-        let (data, response) = try await session.upload(for: request, fromFile: multipartURL)
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.upload(for: request, fromFile: multipartURL)
+        } catch {
+            throw mapTransportError(error)
+        }
         if let http = response as? HTTPURLResponse,
            http.statusCode == 401, authenticated, !isRetry {
             do {
@@ -255,7 +283,7 @@ class JinBonAPIClient {
                 throw JinBonError.notAuthenticated
             }
         }
-        try checkHTTPResponse(response)
+        try checkHTTPResponse(response, data: data)
         return data
     }
 
@@ -293,10 +321,31 @@ class JinBonAPIClient {
         }
     }
 
-    private func checkHTTPResponse(_ response: URLResponse) throws {
-        guard let http = response as? HTTPURLResponse else { return }
-        if http.statusCode < 200 || http.statusCode >= 300 {
-            throw JinBonError.httpError(http.statusCode)
+    private func checkHTTPResponse(_ response: URLResponse, data: Data) throws {
+        guard let http = response as? HTTPURLResponse else {
+            throw JinBonError.invalidResponse
+        }
+        guard !(200..<300).contains(http.statusCode) else { return }
+
+        if let payload = try? decoder.decode(APIErrorPayload.self, from: data),
+           let message = payload.message, !message.isEmpty {
+            throw JinBonError.serverError(message)
+        }
+        throw JinBonError.httpError(http.statusCode)
+    }
+
+    private func mapTransportError(_ error: Error) -> JinBonError {
+        guard let urlError = error as? URLError else {
+            return .serverError(error.localizedDescription)
+        }
+        switch urlError.code {
+        case .notConnectedToInternet, .networkConnectionLost, .cannotConnectToHost,
+             .cannotFindHost, .dnsLookupFailed:
+            return .networkUnavailable
+        case .timedOut:
+            return .timedOut
+        default:
+            return .serverError(urlError.localizedDescription)
         }
     }
 
@@ -318,14 +367,37 @@ enum JinBonError: LocalizedError {
     case serverError(String)
     case httpError(Int)
     case notAuthenticated
+    case networkUnavailable
+    case timedOut
+    case invalidRequest
+    case invalidResponse
 
     var errorDescription: String? {
         switch self {
         case .serverError(let msg): return msg
-        case .httpError(let code): return "HTTP Error \(code)"
-        case .notAuthenticated: return "Not authenticated"
+        case .httpError(let code):
+            switch code {
+            case 400: return "요청 정보를 확인해주세요."
+            case 403: return "이 작업을 수행할 권한이 없습니다."
+            case 404: return "요청한 정보를 찾을 수 없습니다."
+            case 409: return "이미 처리된 요청이거나 현재 상태와 맞지 않습니다."
+            case 413: return "파일 용량이 너무 큽니다."
+            case 500...599: return "서버 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요."
+            default: return "요청을 완료하지 못했습니다. (\(code))"
+            }
+        case .notAuthenticated: return "로그인이 만료되었습니다. 다시 로그인해주세요."
+        case .networkUnavailable: return "네트워크 연결을 확인한 후 다시 시도해주세요."
+        case .timedOut: return "응답 시간이 오래 걸리고 있습니다. 잠시 후 다시 시도해주세요."
+        case .invalidRequest: return "서버 주소 설정을 확인해주세요."
+        case .invalidResponse: return "서버 응답을 확인할 수 없습니다."
         }
     }
+}
+
+private struct APIErrorPayload: Decodable {
+    let status: Int?
+    let message: String?
+    let code: String?
 }
 
 // MARK: - AnyEncodable

@@ -1,6 +1,7 @@
 //
 /*
- * Copyright 2025 JinBon.
+ * Copyright 2024 OmniOne.
+ * Modifications Copyright 2025-2026 JinBon contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +21,7 @@ import UIKit
 
 class RoundedLabel: UILabel {
 
-    static let defaultRadius: CGFloat = 10
+    static let defaultRadius: CGFloat = 12
     
     @IBInspectable var cornerRadius: CGFloat = defaultRadius {
         didSet {
@@ -40,6 +41,12 @@ class RoundedLabel: UILabel {
             layer.borderColor = borderColor.cgColor
             layer.masksToBounds = true
         }
+    }
+
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        layer.cornerCurve = .continuous
+        adjustsFontForContentSizeCategory = true
     }
 
 }

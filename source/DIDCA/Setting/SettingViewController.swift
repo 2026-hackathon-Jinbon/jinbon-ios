@@ -1,5 +1,6 @@
 /*
- * Copyright 2025 JinBon.
+ * Copyright 2024 OmniOne.
+ * Modifications Copyright 2025-2026 JinBon contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -100,7 +101,8 @@ class SettingViewController: UITableViewController {
             case .verifierURL:
                 cell.content2.text = URLs.VERIFIER_URL
             case .did:
-                cell.content2.text = try! WalletAPI.shared.getDidDocument(type: .HolderDidDocumnet).id
+                cell.content2.text = (try? WalletAPI.shared
+                    .getDidDocument(type: .HolderDidDocumnet).id) ?? "DID를 확인할 수 없습니다"
             case .userAuthentication:
                 cell.content2.text = "Provides management of authentication methods."
             default:
@@ -133,9 +135,14 @@ class SettingViewController: UITableViewController {
         switch option
         {
         case .did:
-            let textToCopy = try! WalletAPI.shared.getDidDocument(type: .HolderDidDocumnet).id
+            guard let textToCopy = try? WalletAPI.shared
+                .getDidDocument(type: .HolderDidDocumnet).id else {
+                PopupUtils.showAlertPopup(
+                    title: "알림", content: "DID를 확인할 수 없습니다.", VC: self)
+                return
+            }
             UIPasteboard.general.string = textToCopy
-            PopupUtils.showDialogPopup(title: "DID text was copied.", content: "\(textToCopy)", VC: self)
+            PopupUtils.showDialogPopup(title: "DID가 복사되었습니다.", content: textToCopy, VC: self)
         case .userAuthentication:
             callSettings(options: [.pinSettings, .biometricsSettings])
         case .pinSettings, .biometricsSettings:
@@ -176,15 +183,19 @@ class SettingViewController: UITableViewController {
                 }
             }
             pinVC.cancelButtonCompleteClosure = {
-                PopupUtils.showAlertPopup(title: "Notification", content: "canceled by user", VC: self)
+                PopupUtils.showAlertPopup(title: "알림", content: "사용자가 취소했습니다.", VC: self)
             }
             DispatchQueue.main.async { self.present(pinVC, animated: false, completion: nil) }
         case .changePIN4Unlock:
             
-            if try! !WalletAPI.shared.isLock()
-            {
-                PopupUtils.showAlertPopup(title: "Notification",
-                                          content: "Unlock PIN has not been registered",
+            guard let isLocked = try? WalletAPI.shared.isLock() else {
+                PopupUtils.showAlertPopup(
+                    title: "알림", content: "Wallet 잠금 상태를 확인할 수 없습니다.", VC: self)
+                return
+            }
+            if !isLocked {
+                PopupUtils.showAlertPopup(title: "알림",
+                                          content: "잠금 해제 PIN이 등록되지 않았습니다.",
                                           VC: self)
                 return
             }
@@ -209,20 +220,24 @@ class SettingViewController: UITableViewController {
                 }
             }
             pinVC.cancelButtonCompleteClosure = {
-                PopupUtils.showAlertPopup(title: "Notification", content: "canceled by user", VC: self)
+                PopupUtils.showAlertPopup(title: "알림", content: "사용자가 취소했습니다.", VC: self)
             }
             DispatchQueue.main.async { self.present(pinVC, animated: false, completion: nil) }
         case .settingBiometrics:
-            if try! WalletAPI.shared.isSavedKey(keyId: KeyIds.bio)
-            {
-                PopupUtils.showAlertPopup(title: "Notification",
-                                          content: "Biometrics has already been added",
+            guard let hasBiometricKey = try? WalletAPI.shared.isSavedKey(keyId: KeyIds.bio) else {
+                PopupUtils.showAlertPopup(
+                    title: "알림", content: "생체인증 상태를 확인할 수 없습니다.", VC: self)
+                return
+            }
+            if hasBiometricKey {
+                PopupUtils.showAlertPopup(title: "알림",
+                                          content: "생체인증이 이미 등록되어 있습니다.",
                                           VC: self)
                 return
             }
             
             ActivityUtil.show(vc: self){
-                let did = try! WalletAPI.shared.getDidDocument(type: .HolderDidDocumnet).id
+                let did = try WalletAPI.shared.getDidDocument(type: .HolderDidDocumnet).id
                 
                 try await UpdateUserProtocol.shared.preProcess(did: did)
             } completeClosure: {
@@ -256,8 +271,10 @@ class SettingViewController: UITableViewController {
                         }
                     }
                     pinVC.cancelButtonCompleteClosure = {
-                        try! WalletAPI.shared.deleteKeyPair(hWalletToken: UpdateUserProtocol.shared.hWalletToken, keyId: KeyIds.bio)
-                        PopupUtils.showAlertPopup(title: "Notification", content: "canceled by user", VC: self)
+                        try? WalletAPI.shared.deleteKeyPair(
+                            hWalletToken: UpdateUserProtocol.shared.hWalletToken,
+                            keyId: KeyIds.bio)
+                        PopupUtils.showAlertPopup(title: "알림", content: "사용자가 취소했습니다.", VC: self)
                     }
                     DispatchQueue.main.async { self.present(pinVC, animated: false, completion: nil) }
                 }
@@ -298,7 +315,9 @@ extension SettingViewController
             
             
         } failureCloseClosure: { title, message in
-            try! WalletAPI.shared.deleteKeyPair(hWalletToken: UpdateUserProtocol.shared.hWalletToken, keyId: KeyIds.bio)
+            try? WalletAPI.shared.deleteKeyPair(
+                hWalletToken: UpdateUserProtocol.shared.hWalletToken,
+                keyId: KeyIds.bio)
             PopupUtils.showAlertPopup(title: title,
                                       content: message,
                                       VC: self)
@@ -318,4 +337,3 @@ extension SettingViewController
     }
     
 }
-
