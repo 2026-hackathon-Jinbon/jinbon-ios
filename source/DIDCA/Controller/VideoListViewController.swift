@@ -389,7 +389,7 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
             })
         }
         if video.active != false, video.vcIssuanceStatus != "ISSUED" {
-            detail.addAction(UIAlertAction(title: "Wallet 인증서 발급", style: .default) { [weak self] _ in
+            detail.addAction(UIAlertAction(title: "디지털 증명서 발급", style: .default) { [weak self] _ in
                 self?.prepareVcIssuance(for: video)
             })
         }
@@ -404,7 +404,7 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
 
     private func prepareVcIssuance(for video: VideoDetailData) {
         let progress = UIAlertController(
-            title: "인증서 발급 준비 중",
+            title: "디지털 증명서 발급 준비 중",
             message: "안전한 발급 정보를 확인하고 있어요.",
             preferredStyle: .alert
         )
@@ -425,7 +425,7 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
             } catch {
                 progress?.dismiss(animated: true) { [weak self] in
                     let alert = UIAlertController(
-                        title: "인증서 발급을 준비하지 못했습니다",
+                        title: "디지털 증명서 발급을 준비하지 못했습니다",
                         message: error.localizedDescription,
                         preferredStyle: .alert
                     )
@@ -617,10 +617,6 @@ class VideoTableViewCell: UITableViewCell {
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(dateLabel)
 
-        let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
-        chevron.tintColor = .tertiaryLabel
-        chevron.translatesAutoresizingMaskIntoConstraints = false
-        cardView.addSubview(chevron)
 
         NSLayoutConstraint.activate([
             iconContainer.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 14),
@@ -635,16 +631,12 @@ class VideoTableViewCell: UITableViewCell {
 
             titleLabel.leadingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: 12),
             titleLabel.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 15),
-            titleLabel.trailingAnchor.constraint(equalTo: chevron.leadingAnchor, constant: -8),
+            titleLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
 
             dateLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
             dateLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
             dateLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
 
-            chevron.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
-            chevron.centerYAnchor.constraint(equalTo: cardView.centerYAnchor),
-            chevron.widthAnchor.constraint(equalToConstant: 12),
-            chevron.heightAnchor.constraint(equalToConstant: 16)
         ])
     }
 

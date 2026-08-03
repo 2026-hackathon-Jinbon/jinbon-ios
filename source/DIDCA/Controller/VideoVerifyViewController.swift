@@ -251,13 +251,19 @@ class VideoVerifyViewController: UIViewController {
         resultCard.subviews.forEach { $0.removeFromSuperview() }
 
         let presentation = resultPresentation(for: data.effectiveVerdict)
-        resultCard.backgroundColor = presentation.color.withAlphaComponent(0.1)
+        resultCard.backgroundColor = ColorPalette.card
+        resultCard.layer.borderWidth = 1
+        resultCard.layer.borderColor = presentation.color.withAlphaComponent(0.28).cgColor
+        resultCard.layer.shadowColor = ColorPalette.elevatedShadow.cgColor
+        resultCard.layer.shadowOpacity = 0.08
+        resultCard.layer.shadowRadius = 14
+        resultCard.layer.shadowOffset = CGSize(width: 0, height: 6)
         resultCard.isAccessibilityElement = true
         resultCard.accessibilityLabel = "검증 결과, \(presentation.title)"
 
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 12
+        stack.spacing = 16
         stack.translatesAutoresizingMaskIntoConstraints = false
 
         // 결과 아이콘 + 텍스트
@@ -275,7 +281,7 @@ class VideoVerifyViewController: UIViewController {
         let titleLabel = UILabel()
         titleLabel.text = presentation.title
         titleLabel.font = .jinBonFont(ofSize: 18, weight: .bold)
-        titleLabel.textColor = presentation.color
+        titleLabel.textColor = ColorPalette.ink
         titleLabel.numberOfLines = 0
 
         headerStack.addArrangedSubview(icon)
@@ -285,13 +291,21 @@ class VideoVerifyViewController: UIViewController {
         // 상세 정보
         let details: [(String, String)] = [
             ("블록체인 검증", data.blockchainVerified ? "통과" : "확인되지 않음"),
-            ("VC 검증", data.vcVerified ? "통과" : "확인되지 않음"),
-            ("메시지", data.message ?? "-")
+            ("VC 검증", data.vcVerified ? "통과" : "확인되지 않음")
         ]
 
         for (label, value) in details {
             let row = makeDetailRow(label: label, value: value)
             stack.addArrangedSubview(row)
+        }
+
+        if let message = data.message, !message.isEmpty {
+            stack.addArrangedSubview(makeCallout(
+                text: message,
+                textColor: ColorPalette.ink,
+                backgroundColor: presentation.color.withAlphaComponent(0.08),
+                font: .jinBonFont(ofSize: 15, weight: .semibold)
+            ))
         }
 
         if let registeredAt = data.registeredAt {
@@ -306,17 +320,12 @@ class VideoVerifyViewController: UIViewController {
         }
 
         if let notice = data.notice, !notice.isEmpty {
-            let noticeLabel = UILabel()
-            noticeLabel.text = notice
-            noticeLabel.font = .jinBonFont(ofSize: 13, weight: .medium)
-            noticeLabel.textColor = ColorPalette.secondaryText
-            noticeLabel.numberOfLines = 0
-            noticeLabel.backgroundColor = UIColor.secondarySystemBackground
-            noticeLabel.layer.cornerRadius = 10
-            noticeLabel.clipsToBounds = true
-            noticeLabel.textAlignment = .center
-            noticeLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
-            stack.addArrangedSubview(noticeLabel)
+            stack.addArrangedSubview(makeCallout(
+                text: notice,
+                textColor: ColorPalette.secondaryText,
+                backgroundColor: ColorPalette.canvas,
+                font: .jinBonFont(ofSize: 13, weight: .medium)
+            ))
         }
 
         resultCard.addSubview(stack)
@@ -341,6 +350,8 @@ class VideoVerifyViewController: UIViewController {
         switch verdict {
         case .exactMatch:
             return ("등록된 원본과 정확히 일치합니다", "checkmark.seal.fill", .systemGreen)
+        case .sameContent:
+            return ("등록된 영상과 내용이 일치합니다", "checkmark.circle.fill", ColorPalette.primary)
         case .similarMatch:
             return ("등록 영상과 유사합니다", "equal.circle.fill", .systemBlue)
         case .registeredButRevoked:
@@ -352,16 +363,47 @@ class VideoVerifyViewController: UIViewController {
         }
     }
 
+    private func makeCallout(
+        text: String,
+        textColor: UIColor,
+        backgroundColor: UIColor,
+        font: UIFont
+    ) -> UIView {
+        let container = UIView()
+        container.backgroundColor = backgroundColor
+        container.layer.cornerRadius = 12
+
+        let label = UILabel()
+        label.text = text
+        label.font = font
+        label.textColor = textColor
+        label.numberOfLines = 0
+        label.textAlignment = .left
+        label.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(label)
+
+        NSLayoutConstraint.activate([
+            label.topAnchor.constraint(equalTo: container.topAnchor, constant: 12),
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 14),
+            label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -14),
+            label.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -12)
+        ])
+        return container
+    }
+
     private func makeDetailRow(label: String, value: String) -> UIStackView {
         let row = UIStackView()
         row.axis = .horizontal
         row.distribution = .fill
+        row.alignment = .top
+        row.spacing = 16
 
         let labelView = UILabel()
         labelView.text = label
         labelView.font = .jinBonFont(ofSize: 14)
         labelView.textColor = ColorPalette.secondaryText
         labelView.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        labelView.setContentCompressionResistancePriority(.required, for: .horizontal)
 
         let valueView = UILabel()
         valueView.text = value

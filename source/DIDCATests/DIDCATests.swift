@@ -38,7 +38,7 @@ final class VideoVerifyDataTests: XCTestCase {
             {
               "verdict": "\(verdict.rawValue)",
               "similarityDistance": 3.5,
-              "authentic": \(verdict == .exactMatch || verdict == .similarMatch),
+              "authentic": \(verdict == .exactMatch || verdict == .sameContent || verdict == .similarMatch),
               "videoId": 1,
               "issuerDid": "did:omn:issuer",
               "registeredAt": "2026-07-31T12:00:00",

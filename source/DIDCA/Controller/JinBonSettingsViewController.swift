@@ -122,6 +122,7 @@ final class JinBonSettingsViewController: UIViewController {
         card.layer.masksToBounds = true
         for (index, item) in items.enumerated() {
             let button = UIButton(type: .system)
+            button.accessibilityIdentifier = "settings.menu.\(item.1)"
             button.contentHorizontalAlignment = .fill
             button.addTarget(self, action: item.3, for: .touchUpInside)
             let icon = UIImageView(image: UIImage(systemName: item.0))
@@ -131,8 +132,7 @@ final class JinBonSettingsViewController: UIViewController {
             title.textColor = destructive ? ColorPalette.danger : ColorPalette.ink
             let detail = UILabel(); detail.text = item.2; detail.font = .jinBonFont(ofSize: 13); detail.textColor = ColorPalette.secondaryText
             let labels = UIStackView(arrangedSubviews: [title, detail]); labels.axis = .vertical; labels.spacing = 3
-            let chevron = UIImageView(image: UIImage(systemName: "chevron.right")); chevron.tintColor = ColorPalette.secondaryText
-            let row = UIStackView(arrangedSubviews: [icon, labels, chevron]); row.axis = .horizontal; row.alignment = .center; row.spacing = 13
+            let row = UIStackView(arrangedSubviews: [icon, labels]); row.axis = .horizontal; row.alignment = .center; row.spacing = 13
             row.isUserInteractionEnabled = false
             row.translatesAutoresizingMaskIntoConstraints = false
             button.addSubview(row)
@@ -460,9 +460,7 @@ private final class OpenSourceLicensesViewController: UIViewController {
         let labels = UIStackView(arrangedSubviews: [titleLabel, detailLabel])
         labels.axis = .vertical
         labels.spacing = 3
-        let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
-        chevron.tintColor = ColorPalette.secondaryText
-        let row = UIStackView(arrangedSubviews: [icon, labels, chevron])
+        let row = UIStackView(arrangedSubviews: [icon, labels])
         row.axis = .horizontal
         row.alignment = .center
         row.spacing = 12

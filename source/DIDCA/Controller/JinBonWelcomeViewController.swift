@@ -52,6 +52,7 @@ final class JinBonWelcomeViewController: UIViewController {
 
         let verify = UIButton(type: .system)
         verify.setTitle("로그인 없이 영상 검증하기  →", for: .normal)
+        verify.accessibilityIdentifier = "welcome.verify"
         verify.setTitleColor(ColorPalette.primary, for: .normal)
         verify.titleLabel?.font = .jinBonFont(ofSize: 15, weight: .semibold)
         verify.addTarget(self, action: #selector(verifyTapped), for: .touchUpInside)
@@ -102,6 +103,7 @@ final class JinBonWelcomeViewController: UIViewController {
 
         let button = UIButton(type: .system)
         button.setTitle(buttonTitle, for: .normal)
+        button.accessibilityIdentifier = primary ? "welcome.signup" : "welcome.login"
         button.titleLabel?.font = .jinBonFont(ofSize: 16, weight: .bold)
         button.layer.cornerRadius = 13
         button.backgroundColor = primary ? ColorPalette.primary : ColorPalette.primary.withAlphaComponent(0.09)

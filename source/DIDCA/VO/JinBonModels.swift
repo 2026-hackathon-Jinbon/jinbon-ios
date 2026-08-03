@@ -100,6 +100,7 @@ public struct PendingVideoVcData: Codable, Equatable {
 
 enum VideoVerificationVerdict: String, Codable, CaseIterable {
     case exactMatch = "EXACT_MATCH"
+    case sameContent = "SAME_CONTENT"
     case similarMatch = "SIMILAR_MATCH"
     case registeredButRevoked = "REGISTERED_BUT_REVOKED"
     case notRegistered = "NOT_REGISTERED"

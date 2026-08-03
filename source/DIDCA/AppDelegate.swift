@@ -113,15 +113,15 @@ extension AppDelegate {
         
         UNUserNotificationCenter.current().delegate = self
 
-        let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-        UNUserNotificationCenter.current().requestAuthorization(
-          options: authOptions,
-          completionHandler: { _, _ in
-            print("noti authorization completion")
-          }
-        )
-
-        application.registerForRemoteNotifications()
+        // 첫 실행 시 맥락 없는 권한 팝업을 띄우지 않는다. 이미 알림을 허용한
+        // 사용자만 원격 알림 등록을 복원하고, 신규 권한 요청은 기능 진입 시 한다.
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            guard settings.authorizationStatus == .authorized ||
+                    settings.authorizationStatus == .provisional else { return }
+            DispatchQueue.main.async {
+                application.registerForRemoteNotifications()
+            }
+        }
         
         Messaging.messaging().delegate = self
     }

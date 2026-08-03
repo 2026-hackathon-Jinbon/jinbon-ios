@@ -197,9 +197,7 @@ final class JinBonHomeViewController: UIViewController {
         labels.axis = .vertical
         labels.spacing = 4
 
-        let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
-        chevron.tintColor = ColorPalette.secondaryText
-        let row = UIStackView(arrangedSubviews: [icon, labels, chevron])
+        let row = UIStackView(arrangedSubviews: [icon, labels])
         row.axis = .horizontal
         row.alignment = .center
         row.spacing = 12

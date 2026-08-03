@@ -32,11 +32,18 @@ final class DIDCAUITests: XCTestCase {
     }
 
     func testExample() throws {
-        // UI tests must launch the application that they test.
         let app = XCUIApplication()
+        addUIInterruptionMonitor(withDescription: "System permissions") { alert in
+            let allow = alert.buttons["허용"]
+            if allow.exists { allow.tap(); return true }
+            return false
+        }
         app.launch()
+        app.tap()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        XCTAssertTrue(app.buttons["welcome.signup"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.buttons["welcome.login"].exists)
+        XCTAssertTrue(app.buttons["welcome.verify"].exists)
     }
 
     func testLaunchPerformance() throws {
