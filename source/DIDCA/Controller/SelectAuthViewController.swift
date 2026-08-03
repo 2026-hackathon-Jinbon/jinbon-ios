@@ -30,10 +30,6 @@ class SelectAuthViewController: UIViewController, UITableViewDelegate, UITableVi
     var confirmButtonCompleteClosure:((_ passcode: String?) -> Void)!
     var cancelButtonCompleteClosure:(()->Void)!
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-    }
-    
     @IBAction func cancelBtnAction(_ sender: Any) {
         DispatchQueue.main.async {
             self.dismiss(animated: false, completion: nil)

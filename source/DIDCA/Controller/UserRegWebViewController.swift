@@ -270,8 +270,8 @@ class UserRegWebViewController: UIViewController {
 
 extension UserRegWebViewController : WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
     
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-    }
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {}
+
     
     func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
         
@@ -293,8 +293,6 @@ extension UserRegWebViewController : WKNavigationDelegate, WKUIDelegate, WKScrip
     }
     
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-        
-//        print("webview didStartProvisionalNavigation")
     }
     
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {

@@ -62,9 +62,6 @@ class StepViewController: UIViewController {
     }
     
     private func showUI() {
-        
-//        self.stopLoading()
-        
         let numOneTitle = "01"
         let numOneTitleAttributedString = NSMutableAttributedString(string: numOneTitle)
         let numTwoTitle = "02"
@@ -85,7 +82,6 @@ class StepViewController: UIViewController {
             numImg3.setBackgroundImage(UIImage(named: "property-default"), for: UIControl.State.normal)
             lineImg1.setImage(UIImage(named: "line_gray"), for: UIControl.State.normal)
             lineImg2.setImage(UIImage(named: "line_gray"), for: UIControl.State.normal)
-            break
         case .STEP_TYPE_2:
             step1Lbl.textColor = UIColor.black
             step2Lbl.textColor = UIColor(hexCode: "FF8400")
@@ -102,7 +98,6 @@ class StepViewController: UIViewController {
             numImg3.setBackgroundImage(UIImage(named: "property-default"), for: UIControl.State.normal)
             lineImg1.setImage(UIImage(named: "line_blue"), for: UIControl.State.normal)
             lineImg2.setImage(UIImage(named: "line_gray"), for: UIControl.State.normal)
-            break
         case .STEP_TYPE_3:
             step1Lbl.textColor = UIColor.black
             step2Lbl.textColor = UIColor.black
@@ -121,7 +116,6 @@ class StepViewController: UIViewController {
             numImg3.setBackgroundImage(UIImage(named: "property-active"), for: UIControl.State.normal)
             lineImg1.setImage(UIImage(named: "line_blue"), for: UIControl.State.normal)
             lineImg2.setImage(UIImage(named: "line_blue"), for: UIControl.State.normal)
-            break
         }
     }
     
@@ -404,17 +398,10 @@ class StepViewController: UIViewController {
          */
         case .STEP_TYPE_1:
             showUserRegWebView()
-            break
-        /**
-            1. Register a pin to create a signature key
-            2. Register a user DID Document
-         */
         case .STEP_TYPE_2:
             nextForStep2()
-            break
         case .STEP_TYPE_3:
             nextForStep3()
-            break
         }
     }
     
@@ -449,8 +436,8 @@ class StepViewController: UIViewController {
             
         }
         DispatchQueue.main.async {
-//            self.stopLoading()
-            self.present(popupVC, animated: false, completion: nil) }
+            self.present(popupVC, animated: false, completion: nil)
+        }
     }
     
     private func presentSubmitViewController() {

@@ -260,7 +260,6 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let lay = collectionViewLayout as! UICollectionViewFlowLayout
-//        let widthPerItem = collectionView.frame.width / 2 - lay.minimumInteritemSpacing
         let widthPerItem = collectionView.frame.width - lay.minimumInteritemSpacing
         
         return CGSize(width: widthPerItem - 20, height: 120)
@@ -275,7 +274,6 @@ extension MainViewController
         print("vpOffer JSON: \(try vpOffer.toJson())")
         
         let verifyProfileVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.verifyProfile.rawValue) as! VerifyProfileViewController
-//        verifyProfileVC.modalPresentationStyle = .fullScreen
         verifyProfileVC.setVpOffer(vpOffer: vpOffer)
         
         let navi = UINavigationController(rootViewController: verifyProfileVC)
@@ -301,9 +299,6 @@ extension MainViewController
         DispatchQueue.main.async {
             self.present(navi, animated: true)
         }
-//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-//            self.present(issueProfileVC, animated: false, completion: nil)
-//        }
     }
     
     private func moveToDetailView(vc: VerifiableCredential,

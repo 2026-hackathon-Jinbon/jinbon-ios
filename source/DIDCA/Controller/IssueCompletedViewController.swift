@@ -38,11 +38,7 @@ class IssueCompletedViewController: UIViewController {
     }
     
     public var titleString: String = ""
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-    }
-    
+
     @IBAction func confirmBtnAction(_ sender: Any)
     {
         self.dismiss(animated: true)

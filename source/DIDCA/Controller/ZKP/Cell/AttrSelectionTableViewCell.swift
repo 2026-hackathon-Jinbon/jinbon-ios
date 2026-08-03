@@ -25,17 +25,6 @@ class AttrSelectionTableViewCell: UITableViewCell {
     @IBOutlet weak var nameLabel: UILabel!
     @IBOutlet weak var valueLabel: UILabel!
     
-    override func awakeFromNib() {
-        super.awakeFromNib()
-        // Initialization code
-    }
-
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-
-        // Configure the view for the selected state
-    }
-    
     func changeBorderColor(isSelected : Bool) {
         bgView.layer.borderColor = isSelected ? ColorPalette.primary.cgColor: UIColor.black.cgColor
     }

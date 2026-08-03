@@ -118,11 +118,7 @@ class IssueVCWebViewController: UIViewController {
 
 extension IssueVCWebViewController : WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
     
-    // progress 바 구현시 사용
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        
-//        print("observeValue keyPath: \(String(describing: keyPath))")
-//        print("wkWebView.estimatedProgress == \(Float((self.webView!.estimatedProgress)))")
     }
     
     func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
@@ -144,8 +140,6 @@ extension IssueVCWebViewController : WKNavigationDelegate, WKUIDelegate, WKScrip
     }
     
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-        
-//        print("webview didStartProvisionalNavigation")
     }
     
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
@@ -186,10 +180,6 @@ extension IssueVCWebViewController : WKNavigationDelegate, WKUIDelegate, WKScrip
         if message.name == "onCompletedAddVcUpload" {
             print(message.body)
             issueVC()
-        } else if( message.name == "onFailedAddVcUpload"){
-            
-        } else {
-            
         }
     }
 }

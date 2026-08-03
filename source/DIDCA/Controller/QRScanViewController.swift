@@ -108,7 +108,6 @@ class QRScanViewController: UIViewController, AVCaptureMetadataOutputObjectsDele
         
         if let metadataObject = metadataObjects.first {
             guard let readableObject = metadataObject as? AVMetadataMachineReadableCodeObject else { return }
-//            guard let stringValue = readableObject.stringValue else { return }
             AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
             if readableObject.type == AVMetadataObject.ObjectType.qr {
                 DispatchQueue.main.async { [weak self] in
@@ -116,37 +115,20 @@ class QRScanViewController: UIViewController, AVCaptureMetadataOutputObjectsDele
                 }
             }
         }
-
     }
-    
+
     internal func processQRCode(metadataObj: AVMetadataMachineReadableCodeObject!) {
-        
-        if isScanning {
-            
-            if metadataObj.stringValue != nil {
-                
-                captureSession?.stopRunning()
-                isScanning = false
-                
-                self.performSelector(onMainThread: #selector(stopScanning), with: nil, waitUntilDone: false)
-                
-                self.dismiss(animated: true) { [weak self] in
-                    guard let self else { return }
-                    self.delegate?.extractStringfromQRCode(qrString: metadataObj.stringValue ?? "")
-                }
-            }
+        guard isScanning, metadataObj.stringValue != nil else { return }
+
+        captureSession?.stopRunning()
+        isScanning = false
+
+        self.performSelector(onMainThread: #selector(stopScanning), with: nil, waitUntilDone: false)
+
+        self.dismiss(animated: true) { [weak self] in
+            guard let self else { return }
+            self.delegate?.extractStringfromQRCode(qrString: metadataObj.stringValue ?? "")
         }
     }
-    
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }
 

@@ -32,18 +32,7 @@ class ZKPSubmissionTableViewCell: UITableViewCell {
     @IBOutlet weak var eyeBtn: UIButton!
 
     public var delegate : EyeSelectionDelegate?
-    
-    override func awakeFromNib() {
-        super.awakeFromNib()
-        // Initialization code
-    }
 
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-
-        // Configure the view for the selected state
-    }
-    
     @IBAction func changeStatus(_ sender: UIButton) {
         sender.isSelected.toggle()
         

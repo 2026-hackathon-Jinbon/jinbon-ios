@@ -19,12 +19,7 @@ import Foundation
 import UIKit
 
 class VerifyCompletedViewController: UIViewController {
- 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-    }
-    
+
     @IBAction func confirmBtnAction(_ sender: Any)
     {
         self.dismiss(animated: true)

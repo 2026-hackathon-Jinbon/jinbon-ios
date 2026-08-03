@@ -56,10 +56,6 @@ class VerifyProfileViewController: UIViewController {
         }
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-    }
-    
     @IBAction func submitBtnAction(_ sender: Any)
     {
         
@@ -99,11 +95,10 @@ extension VerifyProfileViewController
                 
                 self.subjectLbl.text = verifyProfile.title
                 
-//                let attributedString = NSMutableAttributedString()
                 var textString = "Required information\n\n"
-                
+
                 let schemas = verifyProfile.profile.filter.credentialSchemas
-                
+
                 for index in 0 ..< schemas.count {
                     let schema = schemas[index]
                     print("schema: \(try schema.toJson())")
@@ -152,39 +147,31 @@ extension VerifyProfileViewController
                     
                     
                     var claimInfos:[ClaimInfo] = .init()
-                    
-                    loop : for schema in schemas {
+
+                    for schema in schemas {
                         print("schema: \(try schema.toJson())")
-                        
+
                         let filtered = vcs.filter { vc in
                             let isEqShema = vc.credentialSchema.id == schema.id
                             let isAllowedIssuer = schema.allowedIssuers?.contains(vc.issuer.id) ?? true
-                            
                             return isEqShema && isAllowedIssuer
-                        }.compactMap { vc in
+                        }.compactMap { vc -> ClaimInfo? in
                             if schema.presentAll ?? false {
                                 let claims = vc.credentialSubject.claims.map { $0.code }
                                 return ClaimInfo(credentialId: vc.id, claimCodes: claims)
-                            }
-                            else{
-                                if let required = schema.requiredClaims{
-                                    let claims = Set(vc.credentialSubject.claims.map { $0.code })
-                                    if Set(required).isSubset(of: claims){
-                                        return ClaimInfo(credentialId: vc.id, claimCodes: required)
-                                    }
-                                    else{
-                                        return nil
-                                    }
-                                }
-                                else{
-                                    let claim = vc.credentialSubject.claims.first!.code
-                                    return ClaimInfo(credentialId: vc.id, claimCodes: [claim])
-                                }
+                            } else if let required = schema.requiredClaims {
+                                let claims = Set(vc.credentialSubject.claims.map { $0.code })
+                                return Set(required).isSubset(of: claims)
+                                    ? ClaimInfo(credentialId: vc.id, claimCodes: required)
+                                    : nil
+                            } else {
+                                let claim = vc.credentialSubject.claims.first!.code
+                                return ClaimInfo(credentialId: vc.id, claimCodes: [claim])
                             }
                         }
-                        if !filtered.isEmpty{
-                            claimInfos.append(filtered.first!)
-                            break loop
+                        if let first = filtered.first {
+                            claimInfos.append(first)
+                            break
                         }
                     }
                     
@@ -292,19 +279,14 @@ extension VerifyProfileViewController
                 let attributeNames = proofRequest.requestedAttributes.map { $0.values.map { $0.name } } ?? []
                 let predicatesNames = proofRequest.requestedPredicates.map { $0.values.map { $0.name } } ?? []
                 
-//                let attributedString = NSMutableAttributedString()
                 var textString = "Required information\n\n"
-                
-//                attributedString.append(NSAttributedString(string: "Required information\n\n"))
+
                 for name in Array(attributeNames + predicatesNames)
                 {
                     let referentName = self.referentNameMap[name] ?? name
                     textString.append(referentName)
                     textString.append("\n")
-//                    attributedString.append(NSAttributedString(string: referentName))
-//                    attributedString.append(NSAttributedString(string: "\n"))
                 }
-//                self.contentsTxtView.attributedText = attributedString
                 self.contentsTxtView.text = textString
             }
         } failureCloseClosure: { title, message in
@@ -386,8 +368,6 @@ extension VerifyProfileViewController
         submissionZKP.zkpSchemas = self.zkpSchemas
         submissionZKP.referentNameMap = self.referentNameMap
         submissionZKP.vcStatus = self.vcStatus
-//        submissionZKP.modalPresentationStyle = .fullScreen
-        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1)
         {
             self.navigationController?.pushViewController(submissionZKP, animated: false)

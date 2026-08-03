@@ -82,11 +82,6 @@ class VCDetailViewController: UIViewController {
         }
     }
     
-    override func viewDidLoad()
-    {
-        super.viewDidLoad()
-    }
-    
     public func setVcInfo(vc: VerifiableCredential,
                           zkpVC : ZKPCredential?,
                           zkpSchema : ZKPCredentialSchema?)

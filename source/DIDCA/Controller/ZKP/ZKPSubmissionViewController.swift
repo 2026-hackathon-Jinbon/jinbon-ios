@@ -120,11 +120,9 @@ class ZKPSubmissionViewController: UIViewController {
     func moveToCompltedView()
     {
         let verifyCompletedVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.verifyCompleted.rawValue) as! VerifyCompletedViewController
-//        verifyCompletedVC.modalPresentationStyle = .fullScreen
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1)
         {
             self.navigationController?.pushViewController(verifyCompletedVC, animated: false)
-//            self.present(verifyCompletedVC, animated: false, completion: nil)
         }
     }
     
@@ -363,12 +361,7 @@ extension ZKPSubmissionViewController
         vc.delegate = self
         vc.zkpSchemas = zkpSchemas
         vc.vcStatus = vcStatus
-        
-//        if let value = selectedIndexMap[indexPath]
-//        {
-//            vc.selectedIndex = value
-//        }
-        
+
         DispatchQueue.main.async
         {
             self.present(vc, animated: true, completion: nil)

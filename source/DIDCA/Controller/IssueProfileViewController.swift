@@ -34,16 +34,15 @@ class IssueProfileViewController: UIViewController
     
     @IBOutlet weak var IssueInfoDescLbl: UILabel!
     
-    private var isWebView: Bool? = nil
+    private var isWebView: Bool = false
     
     private var vcOfferPayload: IssueOfferPayload? = nil
     
     public var vcSchemaId : String!
     
-    public func setVcOffer(vcOfferPayload: IssueOfferPayload, isWebView: Bool? = false) {
+    public func setVcOffer(vcOfferPayload: IssueOfferPayload, isWebView: Bool = false) {
         self.vcOfferPayload = vcOfferPayload
         self.isWebView = isWebView
-        print("setVcOffer isWebView: \(String(describing: self.isWebView))")
     }
     
     override func viewDidLoad() {
@@ -73,11 +72,6 @@ class IssueProfileViewController: UIViewController
         
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        
-    }
     
     @IBAction func cancelBtnAction(_ sender: Any) {
         DispatchQueue.main.async {
@@ -94,7 +88,7 @@ class IssueProfileViewController: UIViewController
     
     
     @IBAction func issuanceBtnAction(_ sender: Any) {
-        if self.isWebView == true {
+        if self.isWebView {
             let issueVcWeb = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.issueVCWeb.rawValue) as! IssueVCWebViewController
             issueVcWeb.delegate = self
             issueVcWeb.vcSchemaId = self.vcSchemaId

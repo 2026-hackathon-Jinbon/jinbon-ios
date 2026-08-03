@@ -47,12 +47,10 @@ class SplashViewController: UIViewController {
                     } else {
                         
                         // 유저등록 유무
-                        if Properties.getSubmitCompleted() == true {
+                        if Properties.isLoggedIn() && Properties.getSubmitCompleted() == true {
                             let tabBarVC = JinBonTabBarController()
-                            tabBarVC.modalPresentationStyle = .fullScreen
-                            DispatchQueue.main.async {
-                                self.present(tabBarVC, animated: false, completion: nil)
-                            }
+                            (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?
+                                .changeRootVC(tabBarVC, animated: false)
                         } else {
                             self.navigateToNextViewController()
                         }
@@ -63,7 +61,6 @@ class SplashViewController: UIViewController {
                     PopupUtils.showAlertPopup(title: "Notification", content: "PIN authentication is required to use this app.", VC: self)
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                    //                DispatchQueue.main.async {
                     self.present(pinVC, animated: false, completion: nil)
                 }
             } else {
@@ -202,15 +199,15 @@ class SplashViewController: UIViewController {
             return
         }
         
-        if Properties.getUserId() == nil {
+        if !Properties.isLoggedIn() {
             let welcome = JinBonWelcomeViewController()
             (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?
                 .changeRootVC(welcome, animated: true)
         } else {
             if Properties.getRegDidDocCompleted() == true {
                 let tabBarVC = JinBonTabBarController()
-                tabBarVC.modalPresentationStyle = .fullScreen
-                DispatchQueue.main.async { self.present(tabBarVC, animated: false, completion: nil) }
+                (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?
+                    .changeRootVC(tabBarVC, animated: false)
             } else {
                 
                 Task { @MainActor in

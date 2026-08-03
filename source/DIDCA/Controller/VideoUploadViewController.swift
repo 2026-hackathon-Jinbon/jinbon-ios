@@ -16,6 +16,7 @@
 
 import UIKit
 import PhotosUI
+import AVFoundation
 
 class VideoUploadViewController: UIViewController {
 
@@ -40,6 +41,7 @@ class VideoUploadViewController: UIViewController {
     private var isUploadComplete = false
     private var issuedVcId: String?
     private var resumedVcResult: VideoRegisterData?
+    private weak var completionViewController: VideoRegistrationCompletionViewController?
 
     // MARK: - Lifecycle
 
@@ -429,7 +431,8 @@ class VideoUploadViewController: UIViewController {
         uploadButton.isEnabled = false
         var progressConfiguration = uploadButton.configuration
         progressConfiguration?.title = "블록체인에 등록 중..."
-        progressConfiguration?.image = UIImage(systemName: "arrow.triangle.2.circlepath")
+        progressConfiguration?.image = nil
+        progressConfiguration?.showsActivityIndicator = true
         uploadButton.configuration = progressConfiguration
 
         Task {
@@ -437,7 +440,6 @@ class VideoUploadViewController: UIViewController {
                 let result = try await JinBonAPIClient.shared.uploadVideo(fileURL: videoURL, title: title)
                 DispatchQueue.main.async { [weak self] in
                     self?.showResult(result)
-                    self?.offerVcIssuanceIfNeeded(result)
                 }
             } catch {
                 DispatchQueue.main.async { [weak self] in
@@ -446,6 +448,7 @@ class VideoUploadViewController: UIViewController {
                     var configuration = self?.uploadButton.configuration
                     configuration?.title = "원본 영상 등록하기"
                     configuration?.image = UIImage(systemName: "checkmark.shield.fill")
+                    configuration?.showsActivityIndicator = false
                     self?.uploadButton.configuration = configuration
                 }
             }
@@ -459,33 +462,11 @@ class VideoUploadViewController: UIViewController {
             self.selectedVideoURL = nil
         }
         isUploadComplete = true
-        uploadButton.isEnabled = true
-        var configuration = uploadButton.configuration
-        let wasAlreadyRegistered = data.alreadyRegistered == true
-        configuration?.title = wasAlreadyRegistered ? "기존 등록 확인" : "등록 완료"
-        configuration?.image = UIImage(systemName: wasAlreadyRegistered ? "info.circle.fill" : "checkmark.circle.fill")
-        configuration?.baseBackgroundColor = ColorPalette.success
-        uploadButton.configuration = configuration
-
-        resultView.isHidden = false
-        resultTitleLabel.text = wasAlreadyRegistered ? "기존 등록을 확인했어요" : "블록체인 등록 완료"
-        resultMessageLabel.setJinBonText(
-            data.vcId == nil
-                ? "영상 원본 증적이 안전하게 기록됐어요. 이제 Wallet 인증서를 발급할 수 있어요."
-                : "영상 증적과 Wallet 인증서가 모두 준비됐어요.",
-            lineSpacing: 4
-        )
-        resultDetailLabel.text = """
-        TX HASH  \(data.txHash ?? "확인 중")
-        BLOCK    \(data.blockNumber ?? "확인 중")
-        MERKLE   \(data.merkleRoot ?? "확인 중")
-        """
-        updateVcStatus(vcId: data.vcId)
-
-        scrollView.setContentOffset(
-            CGPoint(x: 0, y: max(0, scrollView.contentSize.height - scrollView.bounds.height)),
-            animated: true
-        )
+        let completion = VideoRegistrationCompletionViewController(data: data)
+        completion.onClose = { [weak self] in self?.dismiss(animated: true) }
+        completion.onIssue = { [weak self] in self?.offerVcIssuanceIfNeeded(data) }
+        completionViewController = completion
+        navigationController?.pushViewController(completion, animated: true)
     }
 
     private func offerVcIssuanceIfNeeded(_ data: VideoRegisterData) {
@@ -508,20 +489,21 @@ class VideoUploadViewController: UIViewController {
         }
         alert.modalPresentationStyle = .overFullScreen
         alert.modalTransitionStyle = .crossDissolve
-        present(alert, animated: true)
+        (navigationController?.topViewController ?? self).present(alert, animated: true)
     }
 
     private func prepareVcIssuance(videoId: Int, vcPlanId: String, issuerDid: String, offerId: String) {
-        ActivityUtil.show(vc: self) {
+        let presenter = navigationController?.topViewController ?? self
+        ActivityUtil.show(vc: presenter) {
             try await IssueVcProtocol.shared.preProcess(
                 vcPlanId: vcPlanId, issuer: issuerDid, offerId: offerId)
         } completeClosure: { [weak self] in
             guard let self else { return }
-            SelectAuthHelper.showPreferredBiometric(on: self) { [weak self] passcode in
+            SelectAuthHelper.showPreferredBiometric(on: presenter) { [weak self] passcode in
                 self?.issueVc(videoId: videoId, offerId: offerId, passcode: passcode)
             } cancelClosure: { [weak self] in
                 IssueVcProtocol.shared.cancelIssuance()
-                self?.showAlert("인증서 발급이 취소됐어요. Wallet 발급 버튼에서 다시 시도할 수 있어요.")
+                self?.showAlert("디지털 증명서 발급이 취소됐어요. 발급 버튼에서 다시 시도할 수 있어요.")
             }
         } failureCloseClosure: { [weak self] title, message in
             guard let self else { return }
@@ -530,7 +512,8 @@ class VideoUploadViewController: UIViewController {
     }
 
     private func issueVc(videoId: Int, offerId: String, passcode: String?) {
-        ActivityUtil.show(vc: self) {
+        let presenter = navigationController?.topViewController ?? self
+        ActivityUtil.show(vc: presenter) {
             let vcId = try await IssueVcProtocol.shared.process(passcode: passcode)
             self.issuedVcId = vcId
             Properties.setPendingVideoVc(
@@ -543,9 +526,10 @@ class VideoUploadViewController: UIViewController {
         } completeClosure: { [weak self] in
             guard let self else { return }
             self.updateVcStatus(vcId: self.issuedVcId)
+            self.completionViewController?.markVcIssued(vcId: self.issuedVcId)
             self.resultMessageLabel.setJinBonText(
-                "영상 증적과 Wallet 인증서가 모두 준비됐어요.", lineSpacing: 4)
-            self.showAlert("진본 인증서가 Wallet에 안전하게 저장됐어요.")
+                "영상 증적과 디지털 증명서가 모두 준비됐어요.", lineSpacing: 4)
+            self.showAlert("디지털 증명서가 기기 Wallet에 안전하게 저장됐어요.")
         } failureCloseClosure: { [weak self] title, message in
             guard let self else { return }
             PopupUtils.showAlertPopup(title: title, content: message, VC: self)
@@ -553,7 +537,8 @@ class VideoUploadViewController: UIViewController {
     }
 
     private func reconnectIssuedVc(videoId: Int, pending: PendingVideoVcData) {
-        ActivityUtil.show(vc: self) {
+        let presenter = navigationController?.topViewController ?? self
+        ActivityUtil.show(vc: presenter) {
             try await JinBonAPIClient.shared.completeVideoVc(
                 videoId: videoId, vcId: pending.vcId, offerId: pending.offerId)
             Properties.clearPendingVideoVc(videoId: videoId)
@@ -561,14 +546,15 @@ class VideoUploadViewController: UIViewController {
         } completeClosure: { [weak self] in
             guard let self else { return }
             self.updateVcStatus(vcId: pending.vcId)
+            self.completionViewController?.markVcIssued(vcId: pending.vcId)
             self.resultMessageLabel.setJinBonText(
-                "기존 Wallet 인증서를 영상에 다시 연결했어요.", lineSpacing: 4)
-            self.showAlert("Wallet에 이미 저장된 인증서를 안전하게 다시 연결했어요.")
+                "기존 디지털 증명서를 영상에 다시 연결했어요.", lineSpacing: 4)
+            self.showAlert("기기 Wallet에 저장된 디지털 증명서를 안전하게 다시 연결했어요.")
         } failureCloseClosure: { [weak self] title, message in
             guard let self else { return }
             PopupUtils.showAlertPopup(
                 title: title,
-                content: "Wallet 인증서는 보존되어 있습니다. 네트워크 연결 후 다시 시도해주세요.\n\n\(message)",
+                content: "디지털 증명서는 기기 Wallet에 보존되어 있습니다. 네트워크 연결 후 다시 시도해주세요.\n\n\(message)",
                 VC: self
             )
         }
@@ -634,16 +620,189 @@ class VideoUploadViewController: UIViewController {
 
     private func updateVcStatus(vcId: String?) {
         if let vcId, !vcId.isEmpty {
-            vcStatusLabel.text = "  Wallet 인증서 발급 완료  "
+            vcStatusLabel.text = "  디지털 증명서 발급 완료  "
             vcStatusLabel.textColor = ColorPalette.success
             vcStatusLabel.backgroundColor = ColorPalette.success.withAlphaComponent(0.10)
             resultDetailLabel.text = (resultDetailLabel.text ?? "") + "\nVC ID     \(vcId)"
         } else {
-            vcStatusLabel.text = "  Wallet 인증서 발급 대기  "
+            vcStatusLabel.text = "  디지털 증명서 발급 대기  "
             vcStatusLabel.textColor = ColorPalette.primary
             vcStatusLabel.backgroundColor = ColorPalette.softBlue
         }
     }
+}
+
+private final class VideoRegistrationCompletionViewController: UIViewController {
+
+    var onClose: (() -> Void)?
+    var onIssue: (() -> Void)?
+
+    private let data: VideoRegisterData
+    private let statusIcon = UIImageView()
+    private let statusLabel = UILabel()
+    private let issueButton = UIButton(type: .system)
+
+    init(data: VideoRegisterData) {
+        self.data = data
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { nil }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = ColorPalette.canvas
+        title = "등록 완료"
+        navigationItem.hidesBackButton = true
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: "닫기", style: .done, target: self, action: #selector(closeTapped)
+        )
+
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 18
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        let iconBackground = UIView()
+        iconBackground.backgroundColor = ColorPalette.success.withAlphaComponent(0.12)
+        iconBackground.layer.cornerRadius = 38
+        iconBackground.translatesAutoresizingMaskIntoConstraints = false
+        let icon = UIImageView(image: UIImage(systemName: "checkmark.shield.fill"))
+        icon.tintColor = ColorPalette.success
+        icon.contentMode = .scaleAspectFit
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        iconBackground.addSubview(icon)
+
+        let heading = UILabel()
+        heading.text = data.alreadyRegistered == true ? "기존 등록을 확인했어요" : "블록체인 등록 완료"
+        heading.font = .jinBonFont(ofSize: 26, weight: .bold)
+        heading.textColor = ColorPalette.ink
+        heading.textAlignment = .center
+        heading.numberOfLines = 0
+
+        let message = UILabel()
+        message.font = .jinBonFont(ofSize: 15, weight: .regular)
+        message.textColor = ColorPalette.secondaryText
+        message.textAlignment = .center
+        message.numberOfLines = 0
+        message.setJinBonText("영상 원본의 증적이 안전하게 기록됐어요.", lineSpacing: 5)
+
+        let registeredDate = data.registeredAt.map { String($0.prefix(10)) } ?? "방금"
+        let details = UIStackView(arrangedSubviews: [
+            detailRow(title: "영상", value: data.title ?? "제목 없음"),
+            detailRow(title: "등록일", value: registeredDate)
+        ])
+        details.axis = .vertical
+        details.spacing = 16
+        details.isLayoutMarginsRelativeArrangement = true
+        details.layoutMargins = UIEdgeInsets(top: 20, left: 20, bottom: 20, right: 20)
+        details.backgroundColor = .white
+        details.layer.cornerRadius = 20
+
+        let certificateTitle = UILabel()
+        certificateTitle.text = "디지털 증명서"
+        certificateTitle.font = .jinBonFont(ofSize: 15, weight: .bold)
+        certificateTitle.textColor = ColorPalette.ink
+
+        statusIcon.contentMode = .scaleAspectFit
+        statusIcon.translatesAutoresizingMaskIntoConstraints = false
+        statusIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
+        statusIcon.heightAnchor.constraint(equalToConstant: 20).isActive = true
+
+        statusLabel.font = .jinBonFont(ofSize: 14, weight: .regular)
+        statusLabel.textColor = ColorPalette.secondaryText
+        statusLabel.numberOfLines = 0
+
+        let statusRow = UIStackView(arrangedSubviews: [statusIcon, statusLabel])
+        statusRow.axis = .horizontal
+        statusRow.alignment = .top
+        statusRow.spacing = 10
+
+        let certificateSection = UIStackView(arrangedSubviews: [certificateTitle, statusRow])
+        certificateSection.axis = .vertical
+        certificateSection.spacing = 10
+        certificateSection.isLayoutMarginsRelativeArrangement = true
+        certificateSection.layoutMargins = UIEdgeInsets(top: 18, left: 20, bottom: 18, right: 20)
+        certificateSection.backgroundColor = .white
+        certificateSection.layer.cornerRadius = 20
+
+        configureButton(issueButton, title: "디지털 증명서 발급하기", filled: true)
+        issueButton.addTarget(self, action: #selector(issueTapped), for: .touchUpInside)
+        issueButton.heightAnchor.constraint(equalToConstant: 56).isActive = true
+
+        let closeButton = UIButton(type: .system)
+        configureButton(closeButton, title: "내 영상으로 돌아가기", filled: false)
+        closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
+        closeButton.heightAnchor.constraint(equalToConstant: 54).isActive = true
+
+        [iconBackground, heading, message, details, certificateSection, issueButton, closeButton].forEach(stack.addArrangedSubview)
+        stack.alignment = .fill
+        stack.setCustomSpacing(24, after: message)
+        stack.setCustomSpacing(22, after: certificateSection)
+
+        view.addSubview(scrollView)
+        scrollView.addSubview(stack)
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            stack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 30),
+            stack.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor, constant: -20),
+            stack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -36),
+            iconBackground.widthAnchor.constraint(equalToConstant: 76),
+            iconBackground.heightAnchor.constraint(equalToConstant: 76),
+            iconBackground.centerXAnchor.constraint(equalTo: stack.centerXAnchor),
+            icon.centerXAnchor.constraint(equalTo: iconBackground.centerXAnchor),
+            icon.centerYAnchor.constraint(equalTo: iconBackground.centerYAnchor),
+            icon.widthAnchor.constraint(equalToConstant: 38),
+            icon.heightAnchor.constraint(equalToConstant: 38)
+        ])
+        markVcIssued(vcId: data.vcId)
+    }
+
+    func markVcIssued(vcId: String?) {
+        let isIssued = !(vcId ?? "").isEmpty
+        statusIcon.image = UIImage(systemName: isIssued ? "checkmark.circle.fill" : "circle.dashed")
+        statusIcon.tintColor = isIssued ? ColorPalette.success : ColorPalette.secondaryText
+        statusLabel.text = isIssued
+            ? "발급이 완료되어 이 기기의 Wallet에 보관 중입니다."
+            : "아직 발급하지 않았습니다. 원하면 아래에서 발급할 수 있습니다."
+        statusLabel.textColor = isIssued ? ColorPalette.ink : ColorPalette.secondaryText
+        issueButton.isHidden = isIssued
+    }
+
+    private func detailRow(title: String, value: String) -> UIView {
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = .jinBonFont(ofSize: 12, weight: .bold)
+        titleLabel.textColor = ColorPalette.secondaryText
+        let valueLabel = UILabel()
+        valueLabel.text = value
+        valueLabel.font = .jinBonFont(ofSize: 15, weight: .semibold)
+        valueLabel.textColor = ColorPalette.ink
+        valueLabel.numberOfLines = 0
+        valueLabel.lineBreakMode = .byWordWrapping
+        let row = UIStackView(arrangedSubviews: [titleLabel, valueLabel])
+        row.axis = .vertical
+        row.spacing = 6
+        return row
+    }
+
+    private func configureButton(_ button: UIButton, title: String, filled: Bool) {
+        button.setTitle(title, for: .normal)
+        button.titleLabel?.font = .jinBonFont(ofSize: 16, weight: .bold)
+        button.layer.cornerRadius = 16
+        button.backgroundColor = filled ? ColorPalette.primary : .white
+        button.setTitleColor(filled ? .white : ColorPalette.primary, for: .normal)
+    }
+
+    @objc private func issueTapped() { onIssue?() }
+    @objc private func closeTapped() { onClose?() }
 }
 
 private final class JinBonVcOfferViewController: UIViewController {
@@ -677,7 +836,7 @@ private final class JinBonVcOfferViewController: UIViewController {
         brand.textAlignment = .center
 
         let title = UILabel()
-        title.text = "진본 인증서를 받을까요?"
+        title.text = "디지털 증명서를 발급할까요?"
         title.font = .jinBonFont(ofSize: 22, weight: .bold)
         title.textColor = ColorPalette.ink
         title.textAlignment = .center
@@ -689,13 +848,13 @@ private final class JinBonVcOfferViewController: UIViewController {
         message.textAlignment = .center
         message.numberOfLines = 0
         message.setJinBonText(
-            "등록 사실을 증명하는 인증서를 이 기기의 Wallet에 안전하게 저장합니다.",
+            "영상 등록 사실을 증명하는 디지털 증명서를 이 기기의 Wallet에 안전하게 저장합니다.",
             lineSpacing: 5
         )
 
         let laterButton = makeButton(title: "나중에", filled: false)
         laterButton.addTarget(self, action: #selector(close), for: .touchUpInside)
-        let issueButton = makeButton(title: "인증서 발급하기", filled: true)
+        let issueButton = makeButton(title: "디지털 증명서 발급하기", filled: true)
         issueButton.addTarget(self, action: #selector(issue), for: .touchUpInside)
 
         let buttons = UIStackView(arrangedSubviews: [laterButton, issueButton])
@@ -842,8 +1001,6 @@ extension VideoUploadViewController: PHPickerViewControllerDelegate {
         try? FileManager.default.removeItem(at: url)
     }
 }
-
-import AVFoundation
 
 enum JinBonVideoStore {
     private static var directory: URL {

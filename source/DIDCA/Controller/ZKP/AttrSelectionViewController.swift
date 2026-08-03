@@ -37,35 +37,10 @@ class AttrSelectionViewController: UIViewController {
     
     public var zkpSchemas : [String : ZKPCredentialSchema] = [:]
     public var vcStatus: [String : VCStatusEnum]!
-    
-//    public var selectedIndex : Int = -1
+
     public var attrReferent : AttrReferent!
     public var indexPath : IndexPath!
     public var delegate : AttrSelectionDelegate?
-    
-    override func viewDidLoad()
-    {
-        super.viewDidLoad()
-    }
-    
-//    @IBAction func cancelAction()
-//    {
-//        self.dismiss(animated: true)
-//    }
-    
-//    @IBAction func okAction()
-//    {
-////        if selectedIndex == -1 { return }
-//        
-//        self.dismiss(animated: true)
-//        {
-//            DispatchQueue.main.async {
-//                self.delegate?.selectedAttribute(selectedIndex: self.selectedIndex,
-//                                                 indexPath: self.indexPath)
-//            }
-//        }
-//    }
-    
 }
 
 extension AttrSelectionViewController: UITableViewDelegate, UITableViewDataSource
@@ -90,9 +65,6 @@ extension AttrSelectionViewController: UITableViewDelegate, UITableViewDataSourc
         }
         
         let cell = tableView.dequeueReusableCell(withIdentifier: CellID.attrSelectionCell.rawValue) as! AttrSelectionTableViewCell
-//        cell.changeBorderColor(isSelected: selectedIndex == indexPath.row)
-        
-        
         cell.nameLabel.text = zkpSchemas[subReferent.schemaId]?.name ?? "Unknown name"
         cell.valueLabel.text = subReferent.raw
         
@@ -102,9 +74,6 @@ extension AttrSelectionViewController: UITableViewDelegate, UITableViewDataSourc
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: false)
-//        selectedIndex = indexPath.row
-        
-//        tableView.reloadData()
         self.dismiss(animated: true)
         {
             DispatchQueue.main.async {
