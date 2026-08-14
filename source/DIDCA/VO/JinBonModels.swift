@@ -62,6 +62,8 @@ struct VideoDetailData: Codable {
     let txHash: String?
     let blockNumber: String?
     let vcId: String?
+    let vcIssuerDid: String?
+    let vcAssuranceType: String?
     let vcIssuanceStatus: String?
     let active: Bool?
     let registeredAt: String?
@@ -81,6 +83,7 @@ struct VideoRegisterData: Codable {
     let alreadyRegistered: Bool?
     let vcPlanId: String?
     let vcIssuerDid: String?
+    let vcAssuranceType: String?
     let vcOfferId: String?
 }
 
@@ -103,6 +106,7 @@ enum VideoVerificationVerdict: String, Codable, CaseIterable {
     case sameContent = "SAME_CONTENT"
     case similarMatch = "SIMILAR_MATCH"
     case registeredButRevoked = "REGISTERED_BUT_REVOKED"
+    case certificateInvalid = "CERTIFICATE_INVALID"
     case notRegistered = "NOT_REGISTERED"
     case verificationUnavailable = "VERIFICATION_UNAVAILABLE"
 

@@ -13,7 +13,7 @@ final class JinBonCertificateViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "인증서"
+        title = "등록 보증서"
         view.backgroundColor = ColorPalette.canvas
         configureNavigationBar()
         configureTable()
@@ -107,7 +107,7 @@ final class JinBonCertificateViewController: UIViewController {
             tableView.backgroundView?.isHidden = false
             stateIcon.image = UIImage(systemName: "person.crop.circle.badge.exclamationmark")
             stateTitle.text = "로그인이 필요합니다"
-            stateDetail.setJinBonText("로그인하면 발급된 인증서를\n이 Wallet에서 확인할 수 있어요.", lineSpacing: 5)
+            stateDetail.setJinBonText("로그인하면 진본이 발급한 등록 보증서를\n이 Wallet에서 확인할 수 있어요.", lineSpacing: 5)
             retryButton.isHidden = true
             tableView.refreshControl?.endRefreshing()
             return
@@ -129,7 +129,7 @@ final class JinBonCertificateViewController: UIViewController {
                     self.credentials = []
                     self.tableView.backgroundView?.isHidden = false
                     self.stateIcon.image = UIImage(systemName: "exclamationmark.arrow.triangle.2.circlepath")
-                    self.stateTitle.text = "인증서를 불러오지 못했습니다"
+                    self.stateTitle.text = "보증서를 불러오지 못했습니다"
                     self.stateDetail.setJinBonText(
                         "Wallet 상태를 확인한 뒤\n다시 시도해주세요.", lineSpacing: 5)
                     self.retryButton.isHidden = false
@@ -142,8 +142,8 @@ final class JinBonCertificateViewController: UIViewController {
 
     private func showEmptyState() {
         stateIcon.image = UIImage(systemName: "checkmark.seal")
-        stateTitle.text = "아직 발급된 인증서가 없습니다"
-        stateDetail.setJinBonText("영상을 등록하면 인증서가\n이 Wallet에 저장돼요.", lineSpacing: 5)
+        stateTitle.text = "아직 발급된 등록 보증서가 없습니다"
+        stateDetail.setJinBonText("영상의 디지털 지문을 등록하면\n온체인 등록 보증서를 Wallet에 받을 수 있어요.", lineSpacing: 5)
         retryButton.isHidden = true
     }
 
@@ -201,7 +201,7 @@ private final class JinBonCertificateDetailViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "인증서 상세"
+        title = "등록 보증서 상세"
         view.backgroundColor = ColorPalette.canvas
         buildUI()
         loadStatus()
@@ -232,7 +232,7 @@ private final class JinBonCertificateDetailViewController: UIViewController {
         stack.addArrangedSubview(makeHero())
 
         let sectionTitle = UILabel()
-        sectionTitle.text = "인증 내용"
+        sectionTitle.text = "진본이 보증하는 내용"
         sectionTitle.font = .jinBonFont(ofSize: 18, weight: .bold)
         sectionTitle.textColor = ColorPalette.ink
         stack.addArrangedSubview(sectionTitle)
@@ -262,6 +262,9 @@ private final class JinBonCertificateDetailViewController: UIViewController {
         metadata.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
         metadata.textColor = ColorPalette.secondaryText
         metadata.setJinBonText("""
+        발급기관
+        \(credential.issuer.name ?? "진본") · \(credential.issuer.id)
+
         VC ID
         \(credential.id)
 
@@ -286,7 +289,7 @@ private final class JinBonCertificateDetailViewController: UIViewController {
         notice.font = .jinBonFont(ofSize: 13, weight: .regular)
         notice.textColor = ColorPalette.secondaryText
         notice.setJinBonText(
-            "이 인증서는 영상의 내용이 사실임을 보증하는 문서가 아니라, 해당 파일을 진본에 등록한 사실과 등록 시점의 무결성을 증명합니다.",
+            "이 보증서는 영상 디지털 지문의 블록체인 등록 사실과 등록 주체를 진본이 확인했다는 뜻입니다. 영상 내용의 사실성이나 법적 저작권은 보증하지 않습니다.",
             lineSpacing: 5
         )
         stack.addArrangedSubview(notice)
@@ -303,7 +306,7 @@ private final class JinBonCertificateDetailViewController: UIViewController {
         icon.contentMode = .scaleAspectFit
         icon.translatesAutoresizingMaskIntoConstraints = false
         let title = UILabel()
-        title.text = "영상 등록 인증서"
+        title.text = "영상 블록체인 등록 보증서"
         title.font = .jinBonFont(ofSize: 22, weight: .bold)
         title.textColor = .white
         let description = UILabel()
@@ -360,11 +363,18 @@ private final class JinBonCertificateDetailViewController: UIViewController {
 
     private func localizedCaption(_ caption: String) -> String {
         let trimmed = caption.trimmingCharacters(in: .whitespacesAndNewlines)
+        let claimId = trimmed.split(separator: ".").last.map(String.init) ?? trimmed
         let aliases = [
             "videoHash": "영상 해시", "uploaderDid": "등록자 DID",
-            "uploadTimestamp": "등록 시각", "videoTitle": "영상 제목"
+            "uploadTimestamp": "등록 시각", "videoTitle": "영상 제목",
+            "credentialType": "보증서 종류", "assuranceType": "보증 범위",
+            "videoCommitment": "영상 디지털 지문", "registrantDid": "등록자 DID",
+            "blockchainNetwork": "블록체인 네트워크", "chainId": "체인 ID",
+            "contractAddress": "컨트랙트 주소", "transactionHash": "트랜잭션 해시",
+            "blockNumber": "블록 번호", "registeredAt": "온체인 등록 시각",
+            "schemaVersion": "보증서 스키마 버전"
         ]
-        return aliases[trimmed] ?? trimmed
+        return aliases[claimId] ?? trimmed
     }
 
     private func loadStatus() {
@@ -373,10 +383,10 @@ private final class JinBonCertificateDetailViewController: UIViewController {
                 let status = try await VCStatusGetter.getStatus(vcId: credential.id)
                 switch status {
                 case .ACTIVE:
-                    statusLabel.text = "  유효한 인증서  "
+                    statusLabel.text = "  유효한 보증서  "
                     statusLabel.backgroundColor = ColorPalette.success.withAlphaComponent(0.75)
                 case .INACTIVE:
-                    statusLabel.text = "  비활성 인증서  "
+                    statusLabel.text = "  비활성 보증서  "
                     statusLabel.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.8)
                 case .REVOKED:
                     statusLabel.text = "  폐기됨  "
@@ -459,12 +469,12 @@ private final class JinBonCertificateCell: UITableViewCell {
     }
 
     func configure(_ credential: VerifiableCredential) {
-        titleLabel.text = "진본 디지털 인증서"
+        titleLabel.text = "영상 블록체인 등록 보증서"
         idLabel.text = credential.id
         dateLabel.text = "발급일  \(SDKUtils.convertDateFormat(dateString: credential.issuanceDate) ?? credential.issuanceDate)"
         isAccessibilityElement = true
         accessibilityLabel = "\(titleLabel.text ?? ""), \(dateLabel.text ?? "")"
-        accessibilityHint = "인증서 상세 내용을 엽니다"
+        accessibilityHint = "등록 보증서 상세 내용을 엽니다"
         accessibilityTraits = .button
     }
 }

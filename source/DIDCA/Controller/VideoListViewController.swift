@@ -156,7 +156,7 @@ class VideoListViewController: UIViewController {
         emptyLabel.textColor = ColorPalette.secondaryText
         emptyLabel.font = .jinBonFont(ofSize: 15)
         emptyLabel.textAlignment = .center
-        emptyLabel.setJinBonText("아직 등록한 영상이 없습니다\n홈에서 첫 원본 영상을 등록해 보세요.", lineSpacing: 5)
+        emptyLabel.setJinBonText("아직 등록한 영상이 없습니다\n홈에서 첫 영상의 디지털 지문을 등록해 보세요.", lineSpacing: 5)
 
         var retryConfiguration = UIButton.Configuration.filled()
         retryConfiguration.title = "다시 시도"
@@ -261,7 +261,7 @@ class VideoListViewController: UIViewController {
                 action: #selector(uploadTapped)
             )
             navigationItem.rightBarButtonItems = [uploadItem]
-            uploadItem.accessibilityLabel = "새 원본 영상 등록"
+            uploadItem.accessibilityLabel = "새 영상 온체인 등록"
 
             loadVideos()
         } else {
@@ -338,7 +338,7 @@ class VideoListViewController: UIViewController {
         case .empty:
             stateIcon.image = UIImage(systemName: "video.slash")
             emptyLabel.setJinBonText(
-                "아직 등록한 영상이 없습니다\n홈에서 첫 원본 영상을 등록해 보세요.",
+                "아직 등록한 영상이 없습니다\n홈에서 첫 영상의 디지털 지문을 등록해 보세요.",
                 lineSpacing: 5
             )
         case .error(let message):
@@ -374,13 +374,22 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
         tableView.deselectRow(at: indexPath, animated: true)
         let video = videos[indexPath.row]
 
-        let status = video.active == false ? "비활성" : "인증 유효"
+        let isActive = video.active != false
+        let status = isActive ? "온체인 등록 유효" : "비활성화됨"
+        let certificateStatus = video.vcIssuanceStatus == "ISSUED" ? "발급 완료" : "미발급"
+        let deactivationInfo = !isActive
+            ? "\n비활성화 일시: \(video.deactivatedAt ?? "-")\n\n등록 이력은 보존되지만 더 이상 유효한 진본 영상으로 검증되지 않습니다."
+            : ""
         let detail = UIAlertController(title: video.title, message: """
         상태: \(status)
         Tx Hash: \(video.txHash ?? "-")
         Block: \(video.blockNumber ?? "-")
+        VC 발급기관: \(video.vcIssuerDid ?? "-")
+        보증 범위: \(video.vcAssuranceType == "BLOCKCHAIN_REGISTRATION" ? "블록체인 등록 사실" : (video.vcAssuranceType ?? "-"))
+        보증서 상태: \(certificateStatus)
         VC ID: \(video.vcId ?? "-")
         등록일: \(video.registeredAt ?? "-")
+        \(deactivationInfo)
         """, preferredStyle: .alert)
 
         if video.active != false {
@@ -389,7 +398,7 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
             })
         }
         if video.active != false, video.vcIssuanceStatus != "ISSUED" {
-            detail.addAction(UIAlertAction(title: "디지털 증명서 발급", style: .default) { [weak self] _ in
+            detail.addAction(UIAlertAction(title: "등록 보증서 발급", style: .default) { [weak self] _ in
                 self?.prepareVcIssuance(for: video)
             })
         }
@@ -404,7 +413,7 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
 
     private func prepareVcIssuance(for video: VideoDetailData) {
         let progress = UIAlertController(
-            title: "디지털 증명서 발급 준비 중",
+            title: "등록 보증서 발급 준비 중",
             message: "안전한 발급 정보를 확인하고 있어요.",
             preferredStyle: .alert
         )
@@ -425,7 +434,7 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
             } catch {
                 progress?.dismiss(animated: true) { [weak self] in
                     let alert = UIAlertController(
-                        title: "디지털 증명서 발급을 준비하지 못했습니다",
+                        title: "등록 보증서 발급을 준비하지 못했습니다",
                         message: error.localizedDescription,
                         preferredStyle: .alert
                     )
@@ -513,7 +522,7 @@ extension VideoListViewController: AuthWebViewDelegate {
     func authDidCancel() {}
 
     func signupIdentityDidComplete(data: SignupIdentityData) {
-        if WalletAPI.shared.isExistWallet() {
+        if WalletAccountValidator.hasHolderDid() {
             let alert = UIAlertController(
                 title: "기존 Wallet을 연결할까요?",
                 message: "본인의 Wallet이 맞을 때만 새 진본 계정에 연결해주세요.",
@@ -569,6 +578,8 @@ class VideoTableViewCell: UITableViewCell {
     private let titleLabel = UILabel()
     private let dateLabel = UILabel()
     private let statusIcon = UIImageView()
+    private let iconContainer = UIView()
+    private let statusBadge = UILabel()
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -597,7 +608,6 @@ class VideoTableViewCell: UITableViewCell {
             cardView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -5)
         ])
 
-        let iconContainer = UIView()
         iconContainer.backgroundColor = ColorPalette.primary.withAlphaComponent(0.1)
         iconContainer.layer.cornerRadius = 22
         iconContainer.translatesAutoresizingMaskIntoConstraints = false
@@ -611,6 +621,13 @@ class VideoTableViewCell: UITableViewCell {
         titleLabel.font = .jinBonFont(ofSize: 16, weight: .medium)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         cardView.addSubview(titleLabel)
+
+        statusBadge.font = .jinBonFont(ofSize: 11, weight: .semibold)
+        statusBadge.textAlignment = .center
+        statusBadge.layer.cornerRadius = 10
+        statusBadge.layer.masksToBounds = true
+        statusBadge.translatesAutoresizingMaskIntoConstraints = false
+        cardView.addSubview(statusBadge)
 
         dateLabel.font = .jinBonFont(ofSize: 13)
         dateLabel.textColor = ColorPalette.secondaryText
@@ -631,7 +648,12 @@ class VideoTableViewCell: UITableViewCell {
 
             titleLabel.leadingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: 12),
             titleLabel.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 15),
-            titleLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
+            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: statusBadge.leadingAnchor, constant: -8),
+
+            statusBadge.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -14),
+            statusBadge.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
+            statusBadge.widthAnchor.constraint(equalToConstant: 68),
+            statusBadge.heightAnchor.constraint(equalToConstant: 20),
 
             dateLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
             dateLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
@@ -643,24 +665,37 @@ class VideoTableViewCell: UITableViewCell {
     func configure(with video: VideoDetailData) {
         titleLabel.text = video.title
         let isActive = video.active != false
+        cardView.backgroundColor = isActive ? ColorPalette.card : UIColor(hexCode: "F2F4F7")
+        cardView.layer.borderWidth = isActive ? 0 : 1
+        cardView.layer.borderColor = isActive ? UIColor.clear.cgColor : ColorPalette.disabled.cgColor
+        iconContainer.backgroundColor = isActive
+            ? ColorPalette.primary.withAlphaComponent(0.1)
+            : ColorPalette.disabled.withAlphaComponent(0.45)
+        statusBadge.text = isActive ? "✓ 등록 유효" : "! 비활성"
+        statusBadge.textColor = isActive ? ColorPalette.success : ColorPalette.warning
+        statusBadge.backgroundColor = (isActive ? ColorPalette.success : ColorPalette.warning)
+            .withAlphaComponent(0.12)
         if let thumbnail = JinBonVideoStore.thumbnail(videoId: video.videoId) {
             statusIcon.image = thumbnail
             statusIcon.contentMode = .scaleAspectFill
             statusIcon.clipsToBounds = true
             statusIcon.layer.cornerRadius = 8
             statusIcon.tintColor = nil
+            statusIcon.alpha = isActive ? 1 : 0.42
         } else {
             statusIcon.image = UIImage(systemName: isActive ? "film.fill" : "xmark.circle.fill")
             statusIcon.contentMode = .scaleAspectFit
             statusIcon.clipsToBounds = false
             statusIcon.layer.cornerRadius = 0
             statusIcon.tintColor = isActive ? ColorPalette.primary : ColorPalette.secondaryText
+            statusIcon.alpha = 1
         }
         titleLabel.textColor = isActive ? ColorPalette.ink : ColorPalette.secondaryText
+        dateLabel.textColor = isActive ? ColorPalette.secondaryText : UIColor(hexCode: "667085")
         if let dateStr = video.registeredAt {
-            dateLabel.text = "\(String(dateStr.prefix(10))) · \(isActive ? "인증 유효" : "비활성")"
+            dateLabel.text = "\(String(dateStr.prefix(10))) · \(isActive ? "등록됨" : "비활성화됨")"
         } else {
-            dateLabel.text = isActive ? "인증 유효" : "비활성"
+            dateLabel.text = isActive ? "등록됨" : "비활성화됨"
         }
         isAccessibilityElement = true
         accessibilityLabel = "\(video.title), \(dateLabel.text ?? "")"

@@ -80,7 +80,7 @@ final class JinBonHomeViewController: UIViewController {
         detail.numberOfLines = 0
         detail.font = .jinBonFont(ofSize: 15)
         detail.textColor = ColorPalette.secondaryText
-        detail.setJinBonText("원본 영상과 인증서를 관리하세요.")
+        detail.setJinBonText("영상의 온체인 등록과 VC 보증서를 관리하세요.")
 
         let stack = UIStackView(arrangedSubviews: [eyebrow, title, detail])
         stack.axis = .vertical
@@ -120,7 +120,7 @@ final class JinBonHomeViewController: UIViewController {
     private func makeRegisterCard() -> UIView {
         let card = baseCard(background: ColorPalette.primary)
         let title = UILabel()
-        title.text = "새 원본 영상 등록"
+        title.text = "새 영상 온체인 등록"
         title.font = .jinBonFont(ofSize: 22, weight: .bold)
         title.textColor = .white
 
@@ -128,7 +128,7 @@ final class JinBonHomeViewController: UIViewController {
         body.numberOfLines = 0
         body.font = .jinBonFont(ofSize: 14)
         body.textColor = UIColor.white.withAlphaComponent(0.9)
-        body.setJinBonText("영상 해시를 블록체인에 기록해요.")
+        body.setJinBonText("영상 디지털 지문을 블록체인에 기록하고 등록 보증서를 발급받아요.")
 
         let button = UIButton(type: .system)
         var config = UIButton.Configuration.filled()
@@ -139,7 +139,7 @@ final class JinBonHomeViewController: UIViewController {
         config.baseForegroundColor = ColorPalette.primary
         config.cornerStyle = .large
         button.configuration = config
-        button.accessibilityHint = "갤러리에서 원본 영상을 선택하고 등록합니다"
+        button.accessibilityHint = "갤러리에서 영상을 선택해 디지털 지문을 등록합니다"
         button.addTarget(self, action: #selector(registerTapped), for: .touchUpInside)
         button.heightAnchor.constraint(equalToConstant: 50).isActive = true
 
@@ -188,7 +188,7 @@ final class JinBonHomeViewController: UIViewController {
         title.textColor = ColorPalette.ink
 
         let detail = UILabel()
-        detail.text = "영상이 진본으로 등록됐는지 확인"
+        detail.text = "영상 일치·온체인 등록·VC 보증서 확인"
         detail.font = .jinBonFont(ofSize: 14)
         detail.textColor = ColorPalette.secondaryText
         detail.numberOfLines = 0
@@ -205,7 +205,7 @@ final class JinBonHomeViewController: UIViewController {
         card.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(verifyTapped)))
         card.isAccessibilityElement = true
         card.accessibilityLabel = "영상 검증 도구"
-        card.accessibilityHint = "영상이 진본으로 등록되었는지 확인합니다"
+        card.accessibilityHint = "영상의 등록 기록과 VC 보증서 상태를 확인합니다"
         card.accessibilityTraits = .button
         return card
     }

@@ -42,7 +42,7 @@ class JinBonTabBarController: UITabBarController {
 
         let certificateNav = UINavigationController(rootViewController: JinBonCertificateViewController())
         certificateNav.tabBarItem = UITabBarItem(
-            title: "인증서",
+            title: "보증서",
             image: UIImage(systemName: "checkmark.seal"),
             selectedImage: UIImage(systemName: "checkmark.seal.fill")
         )
