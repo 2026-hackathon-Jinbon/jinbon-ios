@@ -292,7 +292,8 @@ class VideoVerifyViewController: UIViewController {
         let details: [(String, String)] = [
             ("영상 디지털 지문", contentMatchText(for: data.effectiveVerdict)),
             ("블록체인 등록", data.blockchainVerified ? "확인됨" : "확인되지 않음"),
-            ("진본 VC 보증서", certificateText(for: data))
+            ("진본 VC 보증서", certificateText(for: data)),
+            ("등록 정보 결속", data.vcClaimsBound ? "일치" : "확인되지 않음")
         ]
 
         for (label, value) in details {
@@ -357,6 +358,8 @@ class VideoVerifyViewController: UIViewController {
             return ("등록 영상과 유사합니다", "equal.circle.fill", .systemBlue)
         case .registeredButRevoked:
             return ("비활성화된 등록 영상입니다", "exclamationmark.shield.fill", .systemOrange)
+        case .certificateMissing:
+            return ("등록 기록만 확인됐습니다", "exclamationmark.shield.fill", .systemOrange)
         case .certificateInvalid:
             return ("등록은 확인됐지만 보증서가 유효하지 않습니다", "xmark.shield.fill", .systemOrange)
         case .notRegistered:
@@ -371,7 +374,7 @@ class VideoVerifyViewController: UIViewController {
         case .exactMatch: return "정확히 일치"
         case .sameContent: return "동일 콘텐츠"
         case .similarMatch: return "유사 콘텐츠"
-        case .registeredButRevoked, .certificateInvalid: return "등록 영상과 일치"
+        case .registeredButRevoked, .certificateMissing, .certificateInvalid: return "등록 영상과 일치"
         case .notRegistered: return "등록 기록 없음"
         case .verificationUnavailable: return "확인 불가"
         }
@@ -379,6 +382,7 @@ class VideoVerifyViewController: UIViewController {
 
     private func certificateText(for data: VideoVerifyData) -> String {
         if data.vcVerified { return "유효" }
+        if data.effectiveVerdict == .certificateMissing { return "미발급" }
         if data.effectiveVerdict == .certificateInvalid { return "유효하지 않음" }
         return data.videoId == nil ? "해당 없음" : "미발급 또는 미확인"
     }

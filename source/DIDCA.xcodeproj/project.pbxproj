@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AA1000012F100001000B0001 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = AA1000012F100001000A0001 /* LICENSE */; };
-		AA1000012F100002000B0001 /* THIRD_PARTY_NOTICES.md in Resources */ = {isa = PBXBuildFile; fileRef = AA1000012F100002000A0001 /* THIRD_PARTY_NOTICES.md */; };
 		7C285E532C53393400136B91 /* SUIT-Light.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7C285E4A2C53393400136B91 /* SUIT-Light.otf */; };
 		7C285E542C53393400136B91 /* SUIT-ExtraBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7C285E4B2C53393400136B91 /* SUIT-ExtraBold.otf */; };
 		7C285E552C53393400136B91 /* SUIT-ExtraLight.otf in Resources */ = {isa = PBXBuildFile; fileRef = 7C285E4C2C53393400136B91 /* SUIT-ExtraLight.otf */; };
@@ -21,7 +19,6 @@
 		7C537DA82CE31D7100C7E2F3 /* AuthSettingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C537DA72CE31D7100C7E2F3 /* AuthSettingViewController.swift */; };
 		7C5835DC2C87EE7700365849 /* SettingCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C5835DB2C87EE7700365849 /* SettingCell.swift */; };
 		7C5835DE2C87F5EE00365849 /* ErrorDialogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C5835DD2C87F5EE00365849 /* ErrorDialogViewController.swift */; };
-		BB00000100000001000B0001 /* StoryboardID.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00000200000001000B0001 /* StoryboardID.swift */; };
 		7CA9822B2C85CBEE00EDF367 /* SDKUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CA981F72C85CBEE00EDF367 /* SDKUtils.swift */; };
 		7CA9822C2C85CBEE00EDF367 /* UIImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CA981F82C85CBEE00EDF367 /* UIImage.swift */; };
 		7CA9822D2C85CBEE00EDF367 /* AddVCCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CA981FA2C85CBEE00EDF367 /* AddVCCell.swift */; };
@@ -66,6 +63,21 @@
 		7CB772C22C871FA200E05B5D /* UserVO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CB772C12C871FA200E05B5D /* UserVO.swift */; };
 		7CFA77EC2CBDFDCB00893B70 /* UpdatePushTokenVO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CFA77EB2CBDFDCB00893B70 /* UpdatePushTokenVO.swift */; };
 		7CFA77F02CBE06DB00893B70 /* UpdateUserProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CFA77EF2CBE06DB00893B70 /* UpdateUserProtocol.swift */; };
+		AA0001012F000001000B0001 /* JinBonAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000001000A0001 /* JinBonAPIClient.swift */; };
+		AA0001012F000002000B0001 /* JinBonModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000002000A0001 /* JinBonModels.swift */; };
+		AA0001012F000003000B0001 /* AuthWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000003000A0001 /* AuthWebViewController.swift */; };
+		AA0001012F000004000B0001 /* VideoListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000004000A0001 /* VideoListViewController.swift */; };
+		AA0001012F000005000B0001 /* VideoUploadViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000005000A0001 /* VideoUploadViewController.swift */; };
+		AA0001012F000006000B0001 /* VideoVerifyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000006000A0001 /* VideoVerifyViewController.swift */; };
+		AA0001012F000007000B0001 /* JinBonTabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000007000A0001 /* JinBonTabBarController.swift */; };
+		AA0001012F000008000B0001 /* JinBonWelcomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000008000A0001 /* JinBonWelcomeViewController.swift */; };
+		AA0001012F000009000B0001 /* JinBonHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000009000A0001 /* JinBonHomeViewController.swift */; };
+		AA0001012F000010000B0001 /* JinBonCertificateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000010000A0001 /* JinBonCertificateViewController.swift */; };
+		AA0001012F000011000B0001 /* JinBonSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000011000A0001 /* JinBonSettingsViewController.swift */; };
+		AA0001012F000012000B0001 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000012000A0001 /* KeychainHelper.swift */; };
+		AA1000012F100001000B0001 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = AA1000012F100001000A0001 /* LICENSE */; };
+		AA1000012F100002000B0001 /* THIRD_PARTY_NOTICES.md in Resources */ = {isa = PBXBuildFile; fileRef = AA1000012F100002000A0001 /* THIRD_PARTY_NOTICES.md */; };
+		BB00000100000001000B0001 /* StoryboardID.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00000200000001000B0001 /* StoryboardID.swift */; };
 		C91179332DD1B6F000F3B573 /* RoundedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C91179322DD1B6EC00F3B573 /* RoundedView.swift */; };
 		C911793C2DD1C07400F3B573 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = C911793B2DD1C07400F3B573 /* OrderedCollections */; };
 		C911793E2DD1C89F00F3B573 /* ZKP.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C911793D2DD1C89F00F3B573 /* ZKP.storyboard */; };
@@ -97,18 +109,6 @@
 		C9D519452DED3CE200FD2E62 /* ActivityUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D519442DED3CE000FD2E62 /* ActivityUtil.swift */; };
 		C9D519492DED8BA600FD2E62 /* ErrorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D519482DED8BA100FD2E62 /* ErrorHandler.swift */; };
 		C9E1D6962E016306005A3ACE /* VCStatusGetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9E1D6952E0162FC005A3ACE /* VCStatusGetter.swift */; };
-		AA0001012F000001000B0001 /* JinBonAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000001000A0001 /* JinBonAPIClient.swift */; };
-		AA0001012F000002000B0001 /* JinBonModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000002000A0001 /* JinBonModels.swift */; };
-		AA0001012F000003000B0001 /* AuthWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000003000A0001 /* AuthWebViewController.swift */; };
-		AA0001012F000004000B0001 /* VideoListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000004000A0001 /* VideoListViewController.swift */; };
-		AA0001012F000005000B0001 /* VideoUploadViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000005000A0001 /* VideoUploadViewController.swift */; };
-		AA0001012F000006000B0001 /* VideoVerifyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000006000A0001 /* VideoVerifyViewController.swift */; };
-		AA0001012F000007000B0001 /* JinBonTabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000007000A0001 /* JinBonTabBarController.swift */; };
-		AA0001012F000008000B0001 /* JinBonWelcomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000008000A0001 /* JinBonWelcomeViewController.swift */; };
-		AA0001012F000009000B0001 /* JinBonHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000009000A0001 /* JinBonHomeViewController.swift */; };
-		AA0001012F000010000B0001 /* JinBonCertificateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000010000A0001 /* JinBonCertificateViewController.swift */; };
-		AA0001012F000011000B0001 /* JinBonSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000011000A0001 /* JinBonSettingsViewController.swift */; };
-		AA0001012F000012000B0001 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001012F000012000A0001 /* KeychainHelper.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -143,8 +143,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		AA1000012F100001000A0001 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = SOURCE_ROOT; };
-		AA1000012F100002000A0001 /* THIRD_PARTY_NOTICES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = THIRD_PARTY_NOTICES.md; path = ../THIRD_PARTY_NOTICES.md; sourceTree = SOURCE_ROOT; };
 		7C285E4A2C53393400136B91 /* SUIT-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SUIT-Light.otf"; sourceTree = "<group>"; };
 		7C285E4B2C53393400136B91 /* SUIT-ExtraBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SUIT-ExtraBold.otf"; sourceTree = "<group>"; };
 		7C285E4C2C53393400136B91 /* SUIT-ExtraLight.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SUIT-ExtraLight.otf"; sourceTree = "<group>"; };
@@ -158,7 +156,6 @@
 		7C5835DB2C87EE7700365849 /* SettingCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingCell.swift; sourceTree = "<group>"; };
 		7C5835DD2C87F5EE00365849 /* ErrorDialogViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ErrorDialogViewController.swift; sourceTree = "<group>"; };
 		7C985EA82BC9292A00AF788F /* DIDCA.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DIDCA.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		BB00000200000001000B0001 /* StoryboardID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryboardID.swift; sourceTree = "<group>"; };
 		7CA981F72C85CBEE00EDF367 /* SDKUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SDKUtils.swift; sourceTree = "<group>"; };
 		7CA981F82C85CBEE00EDF367 /* UIImage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIImage.swift; sourceTree = "<group>"; };
 		7CA981FA2C85CBEE00EDF367 /* AddVCCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddVCCell.swift; sourceTree = "<group>"; };
@@ -206,6 +203,21 @@
 		7CB772C12C871FA200E05B5D /* UserVO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserVO.swift; sourceTree = "<group>"; };
 		7CFA77EB2CBDFDCB00893B70 /* UpdatePushTokenVO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdatePushTokenVO.swift; sourceTree = "<group>"; };
 		7CFA77EF2CBE06DB00893B70 /* UpdateUserProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateUserProtocol.swift; sourceTree = "<group>"; };
+		AA0001012F000001000A0001 /* JinBonAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonAPIClient.swift; sourceTree = "<group>"; };
+		AA0001012F000002000A0001 /* JinBonModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonModels.swift; sourceTree = "<group>"; };
+		AA0001012F000003000A0001 /* AuthWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthWebViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000004000A0001 /* VideoListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoListViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000005000A0001 /* VideoUploadViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoUploadViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000006000A0001 /* VideoVerifyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoVerifyViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000007000A0001 /* JinBonTabBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonTabBarController.swift; sourceTree = "<group>"; };
+		AA0001012F000008000A0001 /* JinBonWelcomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonWelcomeViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000009000A0001 /* JinBonHomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonHomeViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000010000A0001 /* JinBonCertificateViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonCertificateViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000011000A0001 /* JinBonSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonSettingsViewController.swift; sourceTree = "<group>"; };
+		AA0001012F000012000A0001 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+		AA1000012F100001000A0001 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = SOURCE_ROOT; };
+		AA1000012F100002000A0001 /* THIRD_PARTY_NOTICES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = THIRD_PARTY_NOTICES.md; path = ../THIRD_PARTY_NOTICES.md; sourceTree = SOURCE_ROOT; };
+		BB00000200000001000B0001 /* StoryboardID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryboardID.swift; sourceTree = "<group>"; };
 		C91179322DD1B6EC00F3B573 /* RoundedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundedView.swift; sourceTree = "<group>"; };
 		C91179342DD1B8B800F3B573 /* DIDWalletSDK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = DIDWalletSDK.xcframework; path = "Framework/did-wallet-sdk-ios-2.0.0/DIDWalletSDK.xcframework"; sourceTree = "<group>"; };
 		C911793D2DD1C89F00F3B573 /* ZKP.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = ZKP.storyboard; sourceTree = "<group>"; };
@@ -234,18 +246,6 @@
 		C9D519442DED3CE000FD2E62 /* ActivityUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityUtil.swift; sourceTree = "<group>"; };
 		C9D519482DED8BA100FD2E62 /* ErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandler.swift; sourceTree = "<group>"; };
 		C9E1D6952E0162FC005A3ACE /* VCStatusGetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VCStatusGetter.swift; sourceTree = "<group>"; };
-		AA0001012F000001000A0001 /* JinBonAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonAPIClient.swift; sourceTree = "<group>"; };
-		AA0001012F000002000A0001 /* JinBonModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonModels.swift; sourceTree = "<group>"; };
-		AA0001012F000003000A0001 /* AuthWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthWebViewController.swift; sourceTree = "<group>"; };
-		AA0001012F000004000A0001 /* VideoListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoListViewController.swift; sourceTree = "<group>"; };
-		AA0001012F000005000A0001 /* VideoUploadViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoUploadViewController.swift; sourceTree = "<group>"; };
-		AA0001012F000006000A0001 /* VideoVerifyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoVerifyViewController.swift; sourceTree = "<group>"; };
-		AA0001012F000007000A0001 /* JinBonTabBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonTabBarController.swift; sourceTree = "<group>"; };
-		AA0001012F000008000A0001 /* JinBonWelcomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonWelcomeViewController.swift; sourceTree = "<group>"; };
-		AA0001012F000009000A0001 /* JinBonHomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonHomeViewController.swift; sourceTree = "<group>"; };
-		AA0001012F000010000A0001 /* JinBonCertificateViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonCertificateViewController.swift; sourceTree = "<group>"; };
-		AA0001012F000011000A0001 /* JinBonSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JinBonSettingsViewController.swift; sourceTree = "<group>"; };
-		AA0001012F000012000A0001 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */

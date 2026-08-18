@@ -43,6 +43,11 @@ class ActivityIndicatorViewController: UIViewController {
             }
             catch
             {
+#if DEBUG
+                print("[ActivityError] type=\(String(reflecting: type(of: error)))")
+                print("[ActivityError] raw=\(String(reflecting: error))")
+                print("[ActivityError] localized=\(error.localizedDescription)")
+#endif
                 let (title, message) = ErrorHandler.handle(error)
                 
                 self.dismiss(animated: false) {

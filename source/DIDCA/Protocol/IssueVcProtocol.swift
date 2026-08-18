@@ -109,7 +109,7 @@ class IssueVcProtocol : CommonProtocol {
         return vcId
     }
     
-    public func preProcess(vcPlanId: String, issuer: String, offerId: String? = nil) async throws /*-> (String, String, String, _M210_RequestIssueProfile)*/ {
+    public func preProcess(vcPlanId: String, issuer: String, offerId: String? = nil, videoId: Int? = nil) async throws /*-> (String, String, String, _M210_RequestIssueProfile)*/ {
         try beginIssuance()
         do {
             self.reset()
@@ -118,6 +118,11 @@ class IssueVcProtocol : CommonProtocol {
             let attestedAppInfo: AttestedAppInfo = try await super.requestAttestedAppInfo()
             try await requestWalletTokenData(purpose: WalletTokenPurposeEnum.ISSUE_VC)
             try await requestCreateToken(attestedAppInfo: attestedAppInfo, ecdh: ecdh, purpose: WalletTokenPurposeEnum.ISSUE_VC)
+            if let videoId {
+                try await JinBonAPIClient.shared.syncVideoVcHolder(
+                    videoId: videoId
+                )
+            }
             try await requestIssueProfile()
         } catch {
             finishIssuance()

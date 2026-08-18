@@ -126,7 +126,13 @@ class StepViewController: UIViewController {
     }
 
     private func buildModernUI() {
-        view.subviews.forEach { $0.isHidden = true }
+        func hideLegacyLayout(_ legacyView: UIView) {
+            NSLayoutConstraint.deactivate(legacyView.constraints)
+            legacyView.subviews.forEach(hideLegacyLayout)
+            legacyView.isHidden = true
+        }
+        NSLayoutConstraint.deactivate(view.constraints)
+        view.subviews.forEach(hideLegacyLayout)
         view.backgroundColor = ColorPalette.canvas
 
         let content = UIView()
@@ -154,6 +160,10 @@ class StepViewController: UIViewController {
         modernIconView.contentMode = .scaleAspectFit
         modernIconView.translatesAutoresizingMaskIntoConstraints = false
         iconBox.addSubview(modernIconView)
+
+        let iconRow = UIView()
+        iconRow.translatesAutoresizingMaskIntoConstraints = false
+        iconRow.addSubview(iconBox)
 
         modernTitleLabel.font = .jinBonFont(ofSize: 29, weight: .bold)
         modernTitleLabel.textColor = ColorPalette.ink
@@ -183,11 +193,11 @@ class StepViewController: UIViewController {
         modernActionButton.heightAnchor.constraint(equalToConstant: 56).isActive = true
 
         let spacer = UIView()
-        let stack = UIStackView(arrangedSubviews: [header, iconBox, modernTitleLabel, modernDetailLabel, reassurance, spacer, modernActionButton])
+        let stack = UIStackView(arrangedSubviews: [header, iconRow, modernTitleLabel, modernDetailLabel, reassurance, spacer, modernActionButton])
         stack.axis = .vertical
         stack.spacing = 18
         stack.setCustomSpacing(28, after: header)
-        stack.setCustomSpacing(22, after: iconBox)
+        stack.setCustomSpacing(22, after: iconRow)
         stack.translatesAutoresizingMaskIntoConstraints = false
         content.addSubview(stack)
         view.bringSubviewToFront(content)
@@ -201,6 +211,9 @@ class StepViewController: UIViewController {
             stack.leadingAnchor.constraint(equalTo: content.leadingAnchor),
             stack.trailingAnchor.constraint(equalTo: content.trailingAnchor),
             stack.bottomAnchor.constraint(equalTo: content.bottomAnchor),
+            iconBox.topAnchor.constraint(equalTo: iconRow.topAnchor),
+            iconBox.bottomAnchor.constraint(equalTo: iconRow.bottomAnchor),
+            iconBox.centerXAnchor.constraint(equalTo: iconRow.centerXAnchor),
             iconBox.widthAnchor.constraint(equalToConstant: 64),
             iconBox.heightAnchor.constraint(equalToConstant: 64),
             modernIconView.centerXAnchor.constraint(equalTo: iconBox.centerXAnchor),

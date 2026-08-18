@@ -41,6 +41,13 @@ struct ErrorHandler
             message = "\((error))"
         }
         
-        return (title, message)
+        let normalizedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedMessage = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        return (
+            normalizedTitle.isEmpty ? "Wallet 설정에 실패했습니다" : normalizedTitle,
+            normalizedMessage.isEmpty
+                ? "오류 정보를 확인할 수 없습니다. 다시 시도해주세요."
+                : normalizedMessage
+        )
     }
 }

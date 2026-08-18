@@ -19,7 +19,6 @@ import UIKit
 import CryptoKit
 import DIDWalletSDK
 
-
 /// for CA SDK
 public class SDKUtils {
     

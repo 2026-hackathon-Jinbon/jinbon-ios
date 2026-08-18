@@ -71,6 +71,15 @@ class JinBonAPIClient {
         return data
     }
 
+    func syncVideoVcHolder(videoId: Int) async throws {
+        _ = try await request(
+            path: "/api/videos/\(videoId)/vc/holder",
+            method: "PUT",
+            authenticated: true,
+            responseType: String.self
+        )
+    }
+
     func completeSignup(signupToken: String, did: String) async throws -> AuthTokenData {
         let body = ["signupToken": signupToken, "did": did]
         guard let data = try await request(path: "/api/signup/did/complete", method: "POST",

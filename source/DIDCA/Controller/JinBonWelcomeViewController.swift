@@ -172,12 +172,13 @@ extension JinBonWelcomeViewController: AuthWebViewDelegate {
             }
             Properties.setDidRebindToken(rebindToken)
             showDidRecovery()
-        case .mismatch:
-            JinBonAPIClient.shared.clearLocalSession()
-            showRecoveryError("이 기기의 Wallet DID가 로그인한 진본 계정의 DID와 다릅니다. 다른 계정의 Wallet을 연결할 수 없습니다.")
-        case .accountDidMissing:
-            JinBonAPIClient.shared.clearLocalSession()
-            showRecoveryError("진본 계정에 연결된 DID가 없습니다. 디지털 신원 재연결이 필요합니다.")
+        case .mismatch, .accountDidMissing:
+            guard let rebindToken = tokenData.didRebindToken else {
+                JinBonAPIClient.shared.clearLocalSession()
+                showRecoveryError("DID 재연결 토큰을 발급받지 못했습니다. 모바일 신분증으로 다시 로그인해주세요.")
+                return
+            }
+            confirmWalletRebind(rebindToken: rebindToken)
         }
     }
     func authDidCancel() {}
@@ -241,9 +242,53 @@ extension JinBonWelcomeViewController: AuthWebViewDelegate {
         present(alert, animated: true)
     }
 
+    private func confirmWalletRebind(rebindToken: String) {
+        let popup = Storyboard.popup.instance
+            .instantiateViewController(withIdentifier: ViewControllerID.twoButtonDialog.rawValue) as! TwoButtonDialogViewController
+        popup.modalPresentationStyle = .overCurrentContext
+        popup.configure(
+            title: "디지털 신원 다시 연결",
+            message: "계정에 저장된 정보와 현재 기기의 디지털 신원이 달라요. 본인의 Wallet이 맞다면 다시 연결해 주세요.",
+            cancelTitle: "취소",
+            confirmTitle: "다시 연결"
+        )
+        popup.cancelButtonCompleteClosure = {
+            JinBonAPIClient.shared.clearLocalSession()
+        }
+        popup.confirmButtonCompleteClosure = { [weak self] in
+            self?.rebindCurrentWallet(using: rebindToken)
+        }
+        present(popup, animated: false)
+    }
+
+    private func rebindCurrentWallet(using rebindToken: String) {
+        Task { @MainActor in
+            guard let didDoc = try? WalletAPI.shared.getDidDocument(type: .HolderDidDocumnet),
+                  !didDoc.id.isEmpty else {
+                JinBonAPIClient.shared.clearLocalSession()
+                showRecoveryError("현재 Wallet의 디지털 신원을 확인할 수 없습니다.")
+                return
+            }
+            do {
+                _ = try await JinBonAPIClient.shared.rebindDid(
+                    didRebindToken: rebindToken,
+                    did: didDoc.id
+                )
+                Properties.setRegDidDocCompleted(status: true)
+                Properties.clearDidRebindToken()
+                switchToMain()
+            } catch {
+                JinBonAPIClient.shared.clearLocalSession()
+                showRecoveryError(error.localizedDescription)
+            }
+        }
+    }
+
     private func showRecoveryError(_ message: String) {
-        let alert = UIAlertController(title: "디지털 신원 연결 실패", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
+        PopupUtils.showAlertPopup(
+            title: "디지털 신원 연결 실패",
+            content: message,
+            VC: self
+        )
     }
 }

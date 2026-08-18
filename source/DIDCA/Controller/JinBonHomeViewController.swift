@@ -300,9 +300,11 @@ final class JinBonHomeViewController: UIViewController {
         labels.axis = .vertical
         labels.spacing = 4
         let badge = UILabel()
-        badge.text = video.active == false ? "취소" : "인증 유효"
+        let isComplete = video.registrationStatus == "COMPLETED"
+        badge.text = video.active == false ? "비활성" : (isComplete ? "등록 완료" : "발급 필요")
         badge.font = .jinBonFont(ofSize: 13, weight: .bold)
-        badge.textColor = video.active == false ? ColorPalette.danger : ColorPalette.success
+        badge.textColor = video.active == false
+            ? ColorPalette.danger : (isComplete ? ColorPalette.success : ColorPalette.warning)
         let row = UIStackView(arrangedSubviews: [icon, labels, badge])
         row.axis = .horizontal
         row.alignment = .center

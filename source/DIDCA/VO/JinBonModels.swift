@@ -65,6 +65,7 @@ struct VideoDetailData: Codable {
     let vcIssuerDid: String?
     let vcAssuranceType: String?
     let vcIssuanceStatus: String?
+    let registrationStatus: String?
     let active: Bool?
     let registeredAt: String?
     let deactivatedAt: String?
@@ -106,6 +107,7 @@ enum VideoVerificationVerdict: String, Codable, CaseIterable {
     case sameContent = "SAME_CONTENT"
     case similarMatch = "SIMILAR_MATCH"
     case registeredButRevoked = "REGISTERED_BUT_REVOKED"
+    case certificateMissing = "CERTIFICATE_MISSING"
     case certificateInvalid = "CERTIFICATE_INVALID"
     case notRegistered = "NOT_REGISTERED"
     case verificationUnavailable = "VERIFICATION_UNAVAILABLE"
@@ -130,6 +132,7 @@ struct VideoVerifyData: Codable {
     let registeredAt: String?
     let blockchainVerified: Bool
     let vcVerified: Bool
+    let vcClaimsBound: Bool
     let active: Bool
     let message: String?
     let notice: String?

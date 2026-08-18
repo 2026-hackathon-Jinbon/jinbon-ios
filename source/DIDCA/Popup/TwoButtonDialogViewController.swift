@@ -26,7 +26,9 @@ class TwoButtonDialogViewController: UIViewController {
     @IBOutlet weak var contentsLbl: UILabel!
     
     private var contentsMessage = ""
-    private var titleMessage = "Confirm"
+    private var titleMessage: String?
+    private var cancelButtonTitle = "아니요"
+    private var confirmButtonTitle = "설정하기"
     
     var confirmButtonCompleteClosure:(()->Void)?
     var cancelButtonCompleteClosure:(()->Void)?
@@ -38,20 +40,18 @@ class TwoButtonDialogViewController: UIViewController {
         mainView.layer.cornerRadius = 22
         mainView.layer.cornerCurve = .continuous
 
-        contentsLbl.attributedText = nil
-        contentsLbl.text = contentsMessage
+        contentsLbl.attributedText = dialogText()
         contentsLbl.textColor = ColorPalette.ink
-        contentsLbl.font = .jinBonFont(ofSize: 17, weight: .semibold)
         contentsLbl.textAlignment = .center
         contentsLbl.numberOfLines = 0
 
-        cancelButton.setTitle("아니요", for: .normal)
+        cancelButton.setTitle(cancelButtonTitle, for: .normal)
         cancelButton.setTitleColor(ColorPalette.primary, for: .normal)
         cancelButton.titleLabel?.font = .jinBonFont(ofSize: 16, weight: .bold)
         cancelButton.layer.borderWidth = 1
         cancelButton.layer.borderColor = ColorPalette.primary.cgColor
 
-        confirmButton.setTitle("설정하기", for: .normal)
+        confirmButton.setTitle(confirmButtonTitle, for: .normal)
         confirmButton.setTitleColor(.white, for: .normal)
         confirmButton.titleLabel?.font = .jinBonFont(ofSize: 16, weight: .bold)
         confirmButton.backgroundColor = ColorPalette.primary
@@ -59,6 +59,39 @@ class TwoButtonDialogViewController: UIViewController {
     
     public func setContentsMessage(message: String) {
         self.contentsMessage = message
+    }
+
+    public func configure(title: String, message: String,
+                          cancelTitle: String, confirmTitle: String) {
+        titleMessage = title
+        contentsMessage = message
+        cancelButtonTitle = cancelTitle
+        confirmButtonTitle = confirmTitle
+    }
+
+    private func dialogText() -> NSAttributedString {
+        guard let titleMessage else {
+            return NSAttributedString(
+                string: contentsMessage,
+                attributes: [.font: UIFont.jinBonFont(ofSize: 17, weight: .semibold)]
+            )
+        }
+
+        let text = NSMutableAttributedString(
+            string: titleMessage,
+            attributes: [
+                .font: UIFont.jinBonFont(ofSize: 20, weight: .bold),
+                .foregroundColor: ColorPalette.ink
+            ]
+        )
+        text.append(NSAttributedString(
+            string: "\n\n\(contentsMessage)",
+            attributes: [
+                .font: UIFont.jinBonFont(ofSize: 14, weight: .regular),
+                .foregroundColor: ColorPalette.secondaryText
+            ]
+        ))
+        return text
     }
     
     @IBAction func cancelButtonAction(_ sender: Any) {

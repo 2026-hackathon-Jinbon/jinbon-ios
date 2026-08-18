@@ -211,6 +211,17 @@ class SplashViewController: UIViewController {
             } else {
                 
                 Task { @MainActor in
+                    let stepVC = Storyboard.main.instance.instantiateViewController(
+                        withIdentifier: ViewControllerID.stepVC.rawValue
+                    ) as! StepViewController
+
+                    guard let userId = Properties.getUserId(), !userId.isEmpty else {
+                        stepVC.setStepType(stepType: .STEP_TYPE_1)
+                        stepVC.modalPresentationStyle = .fullScreen
+                        present(stepVC, animated: false)
+                        return
+                    }
+
                     guard let isAnyKey = try? WalletAPI.shared.isAnyKeysSaved() else {
                         let welcome = JinBonWelcomeViewController()
                         (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?
@@ -218,7 +229,6 @@ class SplashViewController: UIViewController {
                         return
                     }
                     
-                    let stepVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.stepVC.rawValue) as! StepViewController
                     if isAnyKey {
                         
                         try await RegUserProtocol.shared.preProcess()

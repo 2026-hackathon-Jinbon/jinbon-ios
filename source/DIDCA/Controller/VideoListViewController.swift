@@ -373,51 +373,26 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let video = videos[indexPath.row]
-
-        let isActive = video.active != false
-        let status = isActive ? "온체인 등록 유효" : "비활성화됨"
-        let certificateStatus = video.vcIssuanceStatus == "ISSUED" ? "발급 완료" : "미발급"
-        let deactivationInfo = !isActive
-            ? "\n비활성화 일시: \(video.deactivatedAt ?? "-")\n\n등록 이력은 보존되지만 더 이상 유효한 진본 영상으로 검증되지 않습니다."
-            : ""
-        let detail = UIAlertController(title: video.title, message: """
-        상태: \(status)
-        Tx Hash: \(video.txHash ?? "-")
-        Block: \(video.blockNumber ?? "-")
-        VC 발급기관: \(video.vcIssuerDid ?? "-")
-        보증 범위: \(video.vcAssuranceType == "BLOCKCHAIN_REGISTRATION" ? "블록체인 등록 사실" : (video.vcAssuranceType ?? "-"))
-        보증서 상태: \(certificateStatus)
-        VC ID: \(video.vcId ?? "-")
-        등록일: \(video.registeredAt ?? "-")
-        \(deactivationInfo)
-        """, preferredStyle: .alert)
-
-        if video.active != false {
-            detail.addAction(UIAlertAction(title: "영상 비활성화", style: .destructive) { [weak self] _ in
-                self?.confirmDeactivation(video)
-            })
+        let detail = VideoRegistrationDetailViewController(video: video)
+        detail.onPrepareCertificate = { [weak self, weak detail] in
+            self?.prepareVcIssuance(for: video, detail: detail)
         }
-        if video.active != false, video.vcIssuanceStatus != "ISSUED" {
-            detail.addAction(UIAlertAction(title: "등록 보증서 발급", style: .default) { [weak self] _ in
-                self?.prepareVcIssuance(for: video)
-            })
-        }
-        if let videoURL = JinBonVideoStore.videoURL(videoId: video.videoId) {
-            detail.addAction(UIAlertAction(title: "영상 재생", style: .default) { [weak self] _ in
-                self?.playVideo(at: videoURL)
-            })
-        }
-        detail.addAction(UIAlertAction(title: "확인", style: .default))
-        present(detail, animated: true)
+        detail.onPlayVideo = { [weak self] url in self?.playVideo(at: url) }
+        detail.onDeactivate = { [weak self] in self?.confirmDeactivation(video) }
+        navigationController?.pushViewController(detail, animated: true)
     }
 
-    private func prepareVcIssuance(for video: VideoDetailData) {
+    private func prepareVcIssuance(
+        for video: VideoDetailData,
+        detail: VideoRegistrationDetailViewController?
+    ) {
         let progress = UIAlertController(
             title: "등록 보증서 발급 준비 중",
             message: "안전한 발급 정보를 확인하고 있어요.",
             preferredStyle: .alert
         )
-        present(progress, animated: true)
+        let presenter = navigationController?.topViewController ?? self
+        presenter.present(progress, animated: true)
 
         Task { @MainActor [weak self, weak progress] in
             guard let self else { return }
@@ -427,20 +402,41 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
                     guard let self else { return }
                     let upload = VideoUploadViewController()
                     upload.resumeVcIssuance(with: result)
+                    upload.onVcIssuanceCompleted = { [weak self, weak detail] videoId, _ in
+                        self?.refreshVideo(videoId: videoId, detail: detail)
+                    }
                     let navigation = UINavigationController(rootViewController: upload)
                     navigation.modalPresentationStyle = .fullScreen
-                    self.present(navigation, animated: true)
+                    (self.navigationController?.topViewController ?? self).present(navigation, animated: true)
                 }
             } catch {
                 progress?.dismiss(animated: true) { [weak self] in
-                    let alert = UIAlertController(
+                    guard let self else { return }
+                    PopupUtils.showAlertPopup(
                         title: "등록 보증서 발급을 준비하지 못했습니다",
-                        message: error.localizedDescription,
-                        preferredStyle: .alert
+                        content: error.localizedDescription,
+                        VC: self.navigationController?.topViewController ?? self
                     )
-                    alert.addAction(UIAlertAction(title: "확인", style: .default))
-                    self?.present(alert, animated: true)
                 }
+            }
+        }
+    }
+
+    private func refreshVideo(
+        videoId: Int,
+        detail: VideoRegistrationDetailViewController?
+    ) {
+        Task { @MainActor [weak self, weak detail] in
+            guard let self else { return }
+            do {
+                let result = try await JinBonAPIClient.shared.getMyVideos()
+                self.videos = result
+                self.tableView.reloadData()
+                if let refreshed = result.first(where: { $0.videoId == videoId }) {
+                    detail?.refresh(with: refreshed)
+                }
+            } catch {
+                // 발급은 완료됐으므로 목록의 다음 갱신 시 서버 상태가 반영된다.
             }
         }
     }
@@ -449,7 +445,7 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
         let player = AVPlayer(url: url)
         let playerViewController = AVPlayerViewController()
         playerViewController.player = player
-        present(playerViewController, animated: true) {
+        (navigationController?.topViewController ?? self).present(playerViewController, animated: true) {
             player.play()
         }
     }
@@ -464,7 +460,7 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
         alert.addAction(UIAlertAction(title: "비활성화", style: .destructive) { [weak self] _ in
             self?.deactivate(video)
         })
-        present(alert, animated: true)
+        (navigationController?.topViewController ?? self).present(alert, animated: true)
     }
 
     private func deactivate(_ video: VideoDetailData) {
@@ -481,6 +477,9 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
                 try await JinBonAPIClient.shared.deactivateVideo(videoId: video.videoId)
                 progress?.dismiss(animated: true) { [weak self] in
                     guard let self else { return }
+                    if self.navigationController?.topViewController is VideoRegistrationDetailViewController {
+                        self.navigationController?.popViewController(animated: true)
+                    }
                     let done = UIAlertController(
                         title: "비활성화 완료",
                         message: "이 영상은 이제 비활성 상태로 표시됩니다.",
@@ -522,7 +521,7 @@ extension VideoListViewController: AuthWebViewDelegate {
     func authDidCancel() {}
 
     func signupIdentityDidComplete(data: SignupIdentityData) {
-        if WalletAccountValidator.hasHolderDid() {
+        if WalletAPI.shared.isExistWallet() {
             let alert = UIAlertController(
                 title: "기존 Wallet을 연결할까요?",
                 message: "본인의 Wallet이 맞을 때만 새 진본 계정에 연결해주세요.",
@@ -564,9 +563,366 @@ extension VideoListViewController: AuthWebViewDelegate {
     }
 
     private func showSignupError(_ message: String) {
-        let alert = UIAlertController(title: "회원가입 연결 실패", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
+        PopupUtils.showAlertPopup(
+            title: "회원가입 연결 실패",
+            content: message,
+            VC: self
+        )
+    }
+}
+
+// MARK: - VideoRegistrationDetailViewController
+
+final class VideoRegistrationDetailViewController: UIViewController {
+
+    private var video: VideoDetailData
+    var onPrepareCertificate: (() -> Void)?
+    var onPlayVideo: ((URL) -> Void)?
+    var onDeactivate: (() -> Void)?
+
+    init(video: VideoDetailData) {
+        self.video = video
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = ColorPalette.canvas
+        title = "등록 영상 상세"
+        setupNavigationBar()
+        setupContent()
+    }
+
+    func refresh(with video: VideoDetailData) {
+        self.video = video
+        guard isViewLoaded else { return }
+        view.subviews.forEach { $0.removeFromSuperview() }
+        setupContent()
+    }
+
+    private func setupNavigationBar() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = ColorPalette.canvas
+        appearance.shadowColor = .clear
+        appearance.titleTextAttributes = [.foregroundColor: ColorPalette.ink]
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.tintColor = ColorPalette.primary
+    }
+
+    private func setupContent() {
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
+
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 16
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(stack)
+
+        stack.addArrangedSubview(makeStatusCard())
+        stack.addArrangedSubview(makeSection(
+            title: "등록 정보",
+            rows: [
+                ("영상 제목", video.title, false),
+                ("등록 일시", displayDate(video.registeredAt), false),
+                ("등록 상태", video.active == false ? "비활성화" : "활성", false)
+            ]
+        ))
+        stack.addArrangedSubview(makeSection(
+            title: "블록체인 기록",
+            rows: [
+                ("블록 번호", video.blockNumber ?? "-", true),
+                ("트랜잭션 해시", video.txHash ?? "-", true),
+                ("영상 지문", video.merkleRoot ?? "-", true)
+            ]
+        ))
+
+        if let videoURL = JinBonVideoStore.videoURL(videoId: video.videoId) {
+            stack.addArrangedSubview(makeSecondaryButton(
+                title: "등록 영상 재생",
+                symbol: "play.fill"
+            ) { [weak self] in
+                self?.onPlayVideo?(videoURL)
+            })
+        }
+
+        stack.addArrangedSubview(makeSection(
+            title: "VC 보증서",
+            rows: [
+                ("발급 상태", certificateStatus, false),
+                ("보증 범위", assuranceDescription, false),
+                ("VC ID", video.vcId ?? "-", true),
+                ("발급 기관", video.vcIssuerDid ?? "-", true)
+            ]
+        ))
+
+        if video.active != false, video.registrationStatus != "COMPLETED" {
+            stack.addArrangedSubview(makePrimaryButton(
+                title: "등록 보증서 발급받기",
+                symbol: "checkmark.seal.fill"
+            ) { [weak self] in
+                self?.onPrepareCertificate?()
+            })
+        }
+
+        if video.active != false {
+            let deactivateButton = UIButton(type: .system)
+            deactivateButton.setTitle("영상 등록 비활성화", for: .normal)
+            deactivateButton.setTitleColor(ColorPalette.danger, for: .normal)
+            deactivateButton.titleLabel?.font = .jinBonFont(ofSize: 15, weight: .semibold)
+            deactivateButton.heightAnchor.constraint(equalToConstant: 48).isActive = true
+            deactivateButton.addAction(UIAction { [weak self] _ in
+                self?.onDeactivate?()
+            }, for: .touchUpInside)
+            stack.addArrangedSubview(deactivateButton)
+        }
+
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            stack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 16),
+            stack.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor, constant: -20),
+            stack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -32)
+        ])
+    }
+
+    private func makeStatusCard() -> UIView {
+        let status = video.registrationStatus ?? (video.active == false ? "DEACTIVATED" : "PENDING_VC")
+        let isComplete = status == "COMPLETED"
+        let isDeactivated = status == "DEACTIVATED"
+        let color = isComplete ? ColorPalette.success : (isDeactivated ? ColorPalette.secondaryText : ColorPalette.warning)
+        let symbol = isComplete ? "checkmark.shield.fill" : (isDeactivated ? "xmark.shield.fill" : "exclamationmark.shield.fill")
+        let icon = UIImageView(image: UIImage(systemName: symbol))
+        icon.tintColor = color
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            icon.widthAnchor.constraint(equalToConstant: 34),
+            icon.heightAnchor.constraint(equalToConstant: 34)
+        ])
+
+        let titleLabel = UILabel()
+        titleLabel.text = isComplete ? "등록 완료" : (isDeactivated ? "등록 비활성화" : "보증서 발급 필요")
+        titleLabel.font = .jinBonFont(ofSize: 20, weight: .bold)
+        titleLabel.textColor = ColorPalette.ink
+
+        let detailLabel = UILabel()
+        detailLabel.text = isComplete
+            ? "블록체인 기록과 신원 기반 VC 보증서가 모두 확인됐어요."
+            : (isDeactivated
+               ? "등록 이력은 보존되지만 더 이상 유효한 진본으로 표시되지 않아요."
+               : "블록체인 등록은 완료됐지만 진본 인증을 위해 VC 보증서를 발급해야 해요.")
+        detailLabel.font = .jinBonFont(ofSize: 14)
+        detailLabel.textColor = ColorPalette.secondaryText
+        detailLabel.numberOfLines = 0
+
+        let labels = UIStackView(arrangedSubviews: [titleLabel, detailLabel])
+        labels.axis = .vertical
+        labels.spacing = 5
+
+        let row = UIStackView(arrangedSubviews: [icon, labels])
+        row.axis = .horizontal
+        row.alignment = .center
+        row.spacing = 14
+
+        let card = baseCard()
+        pin(row, to: card, top: 22, horizontal: 20, bottom: 22)
+        return card
+    }
+
+    private func makeSection(title: String, rows: [(String, String, Bool)]) -> UIView {
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = .jinBonFont(ofSize: 17, weight: .bold)
+        titleLabel.textColor = ColorPalette.ink
+
+        let stack = UIStackView(arrangedSubviews: [titleLabel])
+        stack.axis = .vertical
+        stack.spacing = 0
+
+        for (index, row) in rows.enumerated() {
+            let rowView = makeInfoRow(label: row.0, value: row.1, copyable: row.2)
+            if index == 0 { stack.setCustomSpacing(12, after: titleLabel) }
+            stack.addArrangedSubview(rowView)
+            if index < rows.count - 1 {
+                stack.addArrangedSubview(makeDivider())
+            }
+        }
+
+        let card = baseCard()
+        pin(stack, to: card, top: 20, horizontal: 18, bottom: 8)
+        return card
+    }
+
+    private func makeInfoRow(label: String, value: String, copyable: Bool) -> UIView {
+        let labelView = UILabel()
+        labelView.text = label
+        labelView.font = .jinBonFont(ofSize: 13, weight: .semibold)
+        labelView.textColor = ColorPalette.secondaryText
+        labelView.setContentHuggingPriority(.required, for: .horizontal)
+
+        let valueLabel = UILabel()
+        valueLabel.text = copyable ? shortened(value) : value
+        valueLabel.font = .jinBonFont(ofSize: 14, weight: .semibold)
+        valueLabel.textColor = ColorPalette.ink
+        valueLabel.textAlignment = .right
+        valueLabel.numberOfLines = 2
+
+        let row = UIStackView(arrangedSubviews: [labelView, valueLabel])
+        row.axis = .horizontal
+        row.alignment = .center
+        row.spacing = 16
+        row.isLayoutMarginsRelativeArrangement = true
+        row.layoutMargins = UIEdgeInsets(top: 13, left: 0, bottom: 13, right: 0)
+
+        if copyable, value != "-" {
+            let copyButton = UIButton(type: .system)
+            copyButton.setImage(UIImage(systemName: "doc.on.doc"), for: .normal)
+            copyButton.tintColor = ColorPalette.primary
+            copyButton.accessibilityLabel = "\(label) 복사"
+            copyButton.addAction(UIAction { _ in
+                UIPasteboard.general.string = value
+            }, for: .touchUpInside)
+            copyButton.widthAnchor.constraint(equalToConstant: 28).isActive = true
+            row.addArrangedSubview(copyButton)
+        }
+        return row
+    }
+
+    private func makePrimaryButton(title: String, symbol: String,
+                                   action: @escaping () -> Void) -> UIButton {
+        var configuration = UIButton.Configuration.filled()
+        configuration.title = title
+        configuration.image = UIImage(systemName: symbol)
+        configuration.imagePadding = 8
+        configuration.baseBackgroundColor = ColorPalette.primary
+        configuration.baseForegroundColor = .white
+        configuration.cornerStyle = .large
+        let button = UIButton(configuration: configuration)
+        button.titleLabel?.font = .jinBonFont(ofSize: 16, weight: .bold)
+        button.heightAnchor.constraint(equalToConstant: 54).isActive = true
+        configureInteractionFeedback(
+            for: button,
+            backgroundColor: ColorPalette.primary,
+            foregroundColor: .white,
+            strokeColor: .clear
+        )
+        button.addAction(UIAction { _ in action() }, for: .touchUpInside)
+        return button
+    }
+
+    private func makeSecondaryButton(title: String, symbol: String,
+                                     action: @escaping () -> Void) -> UIButton {
+        var configuration = UIButton.Configuration.plain()
+        configuration.title = title
+        configuration.image = UIImage(systemName: symbol)
+        configuration.imagePadding = 8
+        configuration.baseForegroundColor = ColorPalette.primary
+        configuration.background.backgroundColor = .white
+        configuration.background.cornerRadius = 16
+        configuration.background.strokeColor = ColorPalette.primary
+        configuration.background.strokeWidth = 1
+        let button = UIButton(configuration: configuration)
+        button.titleLabel?.font = .jinBonFont(ofSize: 16, weight: .semibold)
+        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        configureInteractionFeedback(
+            for: button,
+            backgroundColor: .white,
+            foregroundColor: ColorPalette.primary,
+            strokeColor: ColorPalette.primary
+        )
+        button.addAction(UIAction { _ in action() }, for: .touchUpInside)
+        return button
+    }
+
+    private func configureInteractionFeedback(
+        for button: UIButton,
+        backgroundColor: UIColor,
+        foregroundColor: UIColor,
+        strokeColor: UIColor
+    ) {
+        button.configurationUpdateHandler = { button in
+            var configuration = button.configuration
+            configuration?.baseBackgroundColor = backgroundColor
+            configuration?.baseForegroundColor = foregroundColor
+            configuration?.background.backgroundColor = backgroundColor
+            configuration?.background.strokeColor = strokeColor
+            button.configuration = configuration
+
+            UIView.animate(
+                withDuration: 0.14,
+                delay: 0,
+                options: [.allowUserInteraction, .beginFromCurrentState]
+            ) {
+                button.transform = button.isHighlighted
+                    ? CGAffineTransform(scaleX: 0.98, y: 0.98)
+                    : .identity
+                button.alpha = button.isHighlighted ? 0.88 : (button.isEnabled ? 1 : 0.65)
+            }
+        }
+    }
+
+    private func baseCard() -> UIView {
+        let card = UIView()
+        card.backgroundColor = ColorPalette.card
+        card.layer.cornerRadius = 18
+        card.layer.cornerCurve = .continuous
+        card.layer.borderWidth = 1
+        card.layer.borderColor = ColorPalette.divider.cgColor
+        return card
+    }
+
+    private func pin(_ child: UIView, to parent: UIView,
+                     top: CGFloat, horizontal: CGFloat, bottom: CGFloat) {
+        child.translatesAutoresizingMaskIntoConstraints = false
+        parent.addSubview(child)
+        NSLayoutConstraint.activate([
+            child.topAnchor.constraint(equalTo: parent.topAnchor, constant: top),
+            child.leadingAnchor.constraint(equalTo: parent.leadingAnchor, constant: horizontal),
+            child.trailingAnchor.constraint(equalTo: parent.trailingAnchor, constant: -horizontal),
+            child.bottomAnchor.constraint(equalTo: parent.bottomAnchor, constant: -bottom)
+        ])
+    }
+
+    private func makeDivider() -> UIView {
+        let divider = UIView()
+        divider.backgroundColor = ColorPalette.divider
+        divider.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        return divider
+    }
+
+    private func shortened(_ value: String) -> String {
+        guard value.count > 20 else { return value }
+        return "\(value.prefix(10))…\(value.suffix(8))"
+    }
+
+    private func displayDate(_ value: String?) -> String {
+        guard let value else { return "-" }
+        return value.replacingOccurrences(of: "T", with: " ").prefix(16).description
+    }
+
+    private var certificateStatus: String {
+        switch video.vcIssuanceStatus {
+        case "ISSUED": return "발급 완료"
+        case "PENDING_WALLET": return "발급 대기"
+        default: return "미발급"
+        }
+    }
+
+    private var assuranceDescription: String {
+        video.vcAssuranceType == "BLOCKCHAIN_REGISTRATION"
+            ? "블록체인 등록 사실"
+            : (video.vcAssuranceType ?? "-")
     }
 }
 
@@ -665,15 +1021,18 @@ class VideoTableViewCell: UITableViewCell {
     func configure(with video: VideoDetailData) {
         titleLabel.text = video.title
         let isActive = video.active != false
+        let registrationStatus = video.registrationStatus
+            ?? (isActive && video.vcIssuanceStatus == "ISSUED" ? "COMPLETED" : (isActive ? "PENDING_VC" : "DEACTIVATED"))
         cardView.backgroundColor = isActive ? ColorPalette.card : UIColor(hexCode: "F2F4F7")
         cardView.layer.borderWidth = isActive ? 0 : 1
         cardView.layer.borderColor = isActive ? UIColor.clear.cgColor : ColorPalette.disabled.cgColor
         iconContainer.backgroundColor = isActive
             ? ColorPalette.primary.withAlphaComponent(0.1)
             : ColorPalette.disabled.withAlphaComponent(0.45)
-        statusBadge.text = isActive ? "✓ 등록 유효" : "! 비활성"
-        statusBadge.textColor = isActive ? ColorPalette.success : ColorPalette.warning
-        statusBadge.backgroundColor = (isActive ? ColorPalette.success : ColorPalette.warning)
+        let isComplete = registrationStatus == "COMPLETED"
+        statusBadge.text = isComplete ? "✓ 등록 완료" : (isActive ? "! 발급 필요" : "! 비활성")
+        statusBadge.textColor = isComplete ? ColorPalette.success : ColorPalette.warning
+        statusBadge.backgroundColor = (isComplete ? ColorPalette.success : ColorPalette.warning)
             .withAlphaComponent(0.12)
         if let thumbnail = JinBonVideoStore.thumbnail(videoId: video.videoId) {
             statusIcon.image = thumbnail
@@ -693,9 +1052,10 @@ class VideoTableViewCell: UITableViewCell {
         titleLabel.textColor = isActive ? ColorPalette.ink : ColorPalette.secondaryText
         dateLabel.textColor = isActive ? ColorPalette.secondaryText : UIColor(hexCode: "667085")
         if let dateStr = video.registeredAt {
-            dateLabel.text = "\(String(dateStr.prefix(10))) · \(isActive ? "등록됨" : "비활성화됨")"
+            let stateText = isComplete ? "등록 완료" : (isActive ? "보증서 발급 필요" : "비활성화됨")
+            dateLabel.text = "\(String(dateStr.prefix(10))) · \(stateText)"
         } else {
-            dateLabel.text = isActive ? "등록됨" : "비활성화됨"
+            dateLabel.text = isComplete ? "등록 완료" : (isActive ? "보증서 발급 필요" : "비활성화됨")
         }
         isAccessibilityElement = true
         accessibilityLabel = "\(video.title), \(dateLabel.text ?? "")"

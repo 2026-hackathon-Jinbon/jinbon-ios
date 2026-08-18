@@ -27,7 +27,7 @@ struct URLs {
         "WALLET_URL":   "http://192.168.219.101:8095",
         "API_URL":      "http://192.168.219.101:8093",
         "DEMO_URL":     "http://192.168.219.101:8099",
-        "JINBON_URL":   "http://192.168.219.101:8080",
+        "JINBON_URL":   "http://192.168.219.101:8070",
     ]
 
     private static func resolve(_ key: String) -> String {

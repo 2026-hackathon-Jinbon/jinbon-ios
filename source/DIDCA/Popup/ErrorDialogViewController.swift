@@ -36,9 +36,15 @@ class ErrorDialogViewController: UIViewController {
         
         if self.titleLbl != nil {
             self.titleLbl.text = titleMessage
+            self.titleLbl.textColor = ColorPalette.ink
+            self.titleLbl.font = .jinBonFont(ofSize: 17, weight: .bold)
+            self.titleLbl.textAlignment = .center
         }
         if self.contentsLbl != nil {
             self.contentsLbl.text = contentsMessage
+            self.contentsLbl.textColor = ColorPalette.secondaryText
+            self.contentsLbl.font = .jinBonFont(ofSize: 14, weight: .regular)
+            self.contentsLbl.textAlignment = .center
         }
     }
     
