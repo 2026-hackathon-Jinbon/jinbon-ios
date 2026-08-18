@@ -378,6 +378,7 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
             self?.prepareVcIssuance(for: video, detail: detail)
         }
         detail.onPlayVideo = { [weak self] url in self?.playVideo(at: url) }
+        detail.onViewCertificate = { [weak self] vcId in self?.showCertificate(vcId: vcId) }
         detail.onDeactivate = { [weak self] in self?.confirmDeactivation(video) }
         navigationController?.pushViewController(detail, animated: true)
     }
@@ -447,6 +448,29 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
         playerViewController.player = player
         (navigationController?.topViewController ?? self).present(playerViewController, animated: true) {
             player.play()
+        }
+    }
+
+    private func showCertificate(vcId: String) {
+        guard let userId = Properties.getUserId() else { return }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                let token = try await SDKUtils.createWalletToken(purpose: .LIST_VC, userId: userId)
+                guard let credential = try WalletAPI.shared
+                    .getCredentials(hWalletToken: token, ids: [vcId])
+                    .first else {
+                    throw JinBonError.serverError("기기 Wallet에서 등록 보증서를 찾을 수 없습니다.")
+                }
+                let detail = JinBonCertificateDetailViewController(credential: credential)
+                self.navigationController?.pushViewController(detail, animated: true)
+            } catch {
+                PopupUtils.showAlertPopup(
+                    title: "등록 보증서를 열지 못했습니다",
+                    content: error.localizedDescription,
+                    VC: self.navigationController?.topViewController ?? self
+                )
+            }
         }
     }
 
@@ -578,6 +602,7 @@ final class VideoRegistrationDetailViewController: UIViewController {
     private var video: VideoDetailData
     var onPrepareCertificate: (() -> Void)?
     var onPlayVideo: ((URL) -> Void)?
+    var onViewCertificate: ((String) -> Void)?
     var onDeactivate: (() -> Void)?
 
     init(video: VideoDetailData) {
@@ -662,6 +687,15 @@ final class VideoRegistrationDetailViewController: UIViewController {
                 ("발급 기관", video.vcIssuerDid ?? "-", true)
             ]
         ))
+
+        if let vcId = video.vcId, !vcId.isEmpty {
+            stack.addArrangedSubview(makePrimaryButton(
+                title: "등록 보증서 보기",
+                symbol: "doc.text.magnifyingglass"
+            ) { [weak self] in
+                self?.onViewCertificate?(vcId)
+            })
+        }
 
         if video.active != false, video.registrationStatus != "COMPLETED" {
             stack.addArrangedSubview(makePrimaryButton(

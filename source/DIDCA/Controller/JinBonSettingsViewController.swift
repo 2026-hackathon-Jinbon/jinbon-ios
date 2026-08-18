@@ -45,8 +45,7 @@ final class JinBonSettingsViewController: UIViewController {
             stack.addArrangedSubview(sectionTitle("디지털 신원 및 보안"))
             stack.addArrangedSubview(menuCard([
                 ("person.text.rectangle", "내 디지털 신원", "DID와 연결 상태 확인", #selector(showDid)),
-                ("lock.shield", "Wallet 보안", "PIN 및 생체인증 관리", #selector(showWalletSecurity)),
-                ("checkmark.seal", "인증서 관리", "발급·폐기 상태 확인", #selector(showCertificates))
+                ("lock.shield", "Wallet 보안", "PIN 및 생체인증 관리", #selector(showWalletSecurity))
             ]))
             stack.addArrangedSubview(sectionTitle("계정"))
             stack.addArrangedSubview(menuCard([
@@ -175,8 +174,6 @@ final class JinBonSettingsViewController: UIViewController {
         let settings = storyboard.instantiateViewController(withIdentifier: ViewControllerID.authSetting.rawValue)
         navigationController?.pushViewController(settings, animated: true)
     }
-
-    @objc private func showCertificates() { tabBarController?.selectedIndex = 2 }
 
     @objc private func openGuestVerification() {
         let verify = VideoVerifyViewController()

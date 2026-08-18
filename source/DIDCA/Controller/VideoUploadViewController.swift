@@ -634,13 +634,19 @@ private final class VideoRegistrationCompletionViewController: UIViewController 
     var onIssue: (() -> Void)?
 
     private let data: VideoRegisterData
-    private let statusIcon = UIImageView()
-    private let statusLabel = UILabel()
     private let issueButton = UIButton(type: .system)
     private let completionIcon = UIImageView()
     private let completionIconBackground = UIView()
     private let headingLabel = UILabel()
     private let messageLabel = UILabel()
+    private let progressLabel = UILabel()
+    private let firstProgressBar = UIView()
+    private let secondProgressBar = UIView()
+    private let certificateStepIcon = UIImageView()
+    private let certificateStepTitle = UILabel()
+    private let certificateStepDetail = UILabel()
+    private let laterButton = UIButton(type: .system)
+    private var isIssued = false
 
     init(data: VideoRegisterData) {
         self.data = data
@@ -655,32 +661,60 @@ private final class VideoRegistrationCompletionViewController: UIViewController 
         view.backgroundColor = ColorPalette.canvas
         title = data.vcId == nil ? "등록 마무리" : "등록 완료"
         navigationItem.hidesBackButton = true
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "닫기", style: .done, target: self, action: #selector(closeTapped)
-        )
 
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 18
+        stack.spacing = 16
         stack.translatesAutoresizingMaskIntoConstraints = false
 
-        completionIconBackground.layer.cornerRadius = 38
+        let eyebrow = UILabel()
+        eyebrow.text = "JINBON REGISTRATION"
+        eyebrow.font = .jinBonFont(ofSize: 12, weight: .bold)
+        eyebrow.textColor = ColorPalette.primary
+
+        progressLabel.font = .jinBonFont(ofSize: 13, weight: .bold)
+        progressLabel.textColor = ColorPalette.secondaryText
+        progressLabel.textAlignment = .right
+
+        let progressHeader = UIStackView(arrangedSubviews: [eyebrow, progressLabel])
+        progressHeader.axis = .horizontal
+        progressHeader.alignment = .center
+
+        firstProgressBar.backgroundColor = ColorPalette.primary
+        secondProgressBar.backgroundColor = ColorPalette.divider
+        [firstProgressBar, secondProgressBar].forEach {
+            $0.layer.cornerRadius = 3
+            $0.heightAnchor.constraint(equalToConstant: 6).isActive = true
+        }
+        let progressBars = UIStackView(arrangedSubviews: [firstProgressBar, secondProgressBar])
+        progressBars.axis = .horizontal
+        progressBars.spacing = 6
+        progressBars.distribution = .fillEqually
+
+        completionIconBackground.layer.cornerRadius = 28
         completionIconBackground.translatesAutoresizingMaskIntoConstraints = false
         completionIcon.contentMode = .scaleAspectFit
         completionIcon.translatesAutoresizingMaskIntoConstraints = false
         completionIconBackground.addSubview(completionIcon)
 
-        headingLabel.font = .jinBonFont(ofSize: 26, weight: .bold)
+        headingLabel.font = .jinBonFont(ofSize: 24, weight: .bold)
         headingLabel.textColor = ColorPalette.ink
-        headingLabel.textAlignment = .center
         headingLabel.numberOfLines = 0
 
         messageLabel.font = .jinBonFont(ofSize: 15, weight: .regular)
         messageLabel.textColor = ColorPalette.secondaryText
-        messageLabel.textAlignment = .center
         messageLabel.numberOfLines = 0
+
+        let heroLabels = UIStackView(arrangedSubviews: [headingLabel, messageLabel])
+        heroLabels.axis = .vertical
+        heroLabels.spacing = 7
+        let heroRow = UIStackView(arrangedSubviews: [completionIconBackground, heroLabels])
+        heroRow.axis = .horizontal
+        heroRow.alignment = .center
+        heroRow.spacing = 16
+        let heroCard = card(containing: heroRow, inset: 20)
 
         let registeredDate = data.registeredAt.map { String($0.prefix(10)) } ?? "방금"
         let details = UIStackView(arrangedSubviews: [
@@ -688,52 +722,57 @@ private final class VideoRegistrationCompletionViewController: UIViewController 
             detailRow(title: "등록일", value: registeredDate)
         ])
         details.axis = .vertical
-        details.spacing = 16
-        details.isLayoutMarginsRelativeArrangement = true
-        details.layoutMargins = UIEdgeInsets(top: 20, left: 20, bottom: 20, right: 20)
-        details.backgroundColor = .white
-        details.layer.cornerRadius = 20
+        details.spacing = 14
+        let detailsCard = card(containing: details, inset: 18)
 
-        let certificateTitle = UILabel()
-        certificateTitle.text = "영상 블록체인 등록 보증서"
-        certificateTitle.font = .jinBonFont(ofSize: 15, weight: .bold)
-        certificateTitle.textColor = ColorPalette.ink
+        let stepsTitle = UILabel()
+        stepsTitle.text = "진본 등록 과정"
+        stepsTitle.font = .jinBonFont(ofSize: 17, weight: .bold)
+        stepsTitle.textColor = ColorPalette.ink
+        let blockchainStep = stepRow(
+            icon: "checkmark.circle.fill",
+            color: ColorPalette.success,
+            title: "블록체인 등록",
+            detail: "영상 지문과 등록 시점을 안전하게 기록했어요."
+        )
+        certificateStepIcon.contentMode = .scaleAspectFit
+        certificateStepIcon.translatesAutoresizingMaskIntoConstraints = false
+        certificateStepIcon.widthAnchor.constraint(equalToConstant: 25).isActive = true
+        certificateStepIcon.heightAnchor.constraint(equalToConstant: 25).isActive = true
+        certificateStepTitle.font = .jinBonFont(ofSize: 15, weight: .bold)
+        certificateStepTitle.textColor = ColorPalette.ink
+        certificateStepDetail.font = .jinBonFont(ofSize: 13)
+        certificateStepDetail.textColor = ColorPalette.secondaryText
+        certificateStepDetail.numberOfLines = 0
+        let certificateLabels = UIStackView(arrangedSubviews: [certificateStepTitle, certificateStepDetail])
+        certificateLabels.axis = .vertical
+        certificateLabels.spacing = 4
+        let certificateStep = UIStackView(arrangedSubviews: [certificateStepIcon, certificateLabels])
+        certificateStep.axis = .horizontal
+        certificateStep.alignment = .top
+        certificateStep.spacing = 12
 
-        statusIcon.contentMode = .scaleAspectFit
-        statusIcon.translatesAutoresizingMaskIntoConstraints = false
-        statusIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
-        statusIcon.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        let divider = UIView()
+        divider.backgroundColor = ColorPalette.divider
+        divider.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        let steps = UIStackView(arrangedSubviews: [stepsTitle, blockchainStep, divider, certificateStep])
+        steps.axis = .vertical
+        steps.spacing = 15
+        let stepsCard = card(containing: steps, inset: 20)
 
-        statusLabel.font = .jinBonFont(ofSize: 14, weight: .regular)
-        statusLabel.textColor = ColorPalette.secondaryText
-        statusLabel.numberOfLines = 0
-
-        let statusRow = UIStackView(arrangedSubviews: [statusIcon, statusLabel])
-        statusRow.axis = .horizontal
-        statusRow.alignment = .top
-        statusRow.spacing = 10
-
-        let certificateSection = UIStackView(arrangedSubviews: [certificateTitle, statusRow])
-        certificateSection.axis = .vertical
-        certificateSection.spacing = 10
-        certificateSection.isLayoutMarginsRelativeArrangement = true
-        certificateSection.layoutMargins = UIEdgeInsets(top: 18, left: 20, bottom: 18, right: 20)
-        certificateSection.backgroundColor = .white
-        certificateSection.layer.cornerRadius = 20
-
-        configureButton(issueButton, title: "등록 보증서 발급하기", filled: true)
+        configureButton(issueButton, title: "등록 보증서 발급하고 완료하기", filled: true)
         issueButton.addTarget(self, action: #selector(issueTapped), for: .touchUpInside)
         issueButton.heightAnchor.constraint(equalToConstant: 56).isActive = true
 
-        let closeButton = UIButton(type: .system)
-        configureButton(closeButton, title: "내 영상으로 돌아가기", filled: false)
-        closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
-        closeButton.heightAnchor.constraint(equalToConstant: 54).isActive = true
+        configureButton(laterButton, title: "나중에 하기", filled: false)
+        laterButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
+        laterButton.heightAnchor.constraint(equalToConstant: 48).isActive = true
 
-        [completionIconBackground, headingLabel, messageLabel, details, certificateSection, issueButton, closeButton].forEach(stack.addArrangedSubview)
+        [progressHeader, progressBars, heroCard, detailsCard, stepsCard, issueButton, laterButton]
+            .forEach(stack.addArrangedSubview)
         stack.alignment = .fill
-        stack.setCustomSpacing(24, after: messageLabel)
-        stack.setCustomSpacing(22, after: certificateSection)
+        stack.setCustomSpacing(24, after: progressBars)
+        stack.setCustomSpacing(22, after: stepsCard)
 
         view.addSubview(scrollView)
         scrollView.addSubview(stack)
@@ -742,43 +781,45 @@ private final class VideoRegistrationCompletionViewController: UIViewController 
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            stack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 30),
+            stack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 22),
             stack.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor, constant: 20),
             stack.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor, constant: -20),
             stack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -36),
-            completionIconBackground.widthAnchor.constraint(equalToConstant: 76),
-            completionIconBackground.heightAnchor.constraint(equalToConstant: 76),
-            completionIconBackground.centerXAnchor.constraint(equalTo: stack.centerXAnchor),
+            completionIconBackground.widthAnchor.constraint(equalToConstant: 56),
+            completionIconBackground.heightAnchor.constraint(equalToConstant: 56),
             completionIcon.centerXAnchor.constraint(equalTo: completionIconBackground.centerXAnchor),
             completionIcon.centerYAnchor.constraint(equalTo: completionIconBackground.centerYAnchor),
-            completionIcon.widthAnchor.constraint(equalToConstant: 38),
-            completionIcon.heightAnchor.constraint(equalToConstant: 38)
+            completionIcon.widthAnchor.constraint(equalToConstant: 28),
+            completionIcon.heightAnchor.constraint(equalToConstant: 28)
         ])
         markVcIssued(vcId: data.vcId)
     }
 
     func markVcIssued(vcId: String?) {
-        let isIssued = !(vcId ?? "").isEmpty
+        isIssued = !(vcId ?? "").isEmpty
         title = isIssued ? "등록 완료" : "등록 마무리"
-        completionIcon.image = UIImage(systemName: isIssued ? "checkmark.shield.fill" : "exclamationmark.shield.fill")
-        completionIcon.tintColor = isIssued ? ColorPalette.success : ColorPalette.warning
-        completionIconBackground.backgroundColor = (isIssued ? ColorPalette.success : ColorPalette.warning).withAlphaComponent(0.12)
+        progressLabel.text = isIssued ? "2 / 2 완료" : "1 / 2 완료"
+        secondProgressBar.backgroundColor = isIssued ? ColorPalette.primary : ColorPalette.divider
+        completionIcon.image = UIImage(systemName: isIssued ? "checkmark.shield.fill" : "checkmark")
+        completionIcon.tintColor = isIssued ? ColorPalette.success : ColorPalette.primary
+        completionIconBackground.backgroundColor = (isIssued ? ColorPalette.success : ColorPalette.primary).withAlphaComponent(0.12)
         headingLabel.text = isIssued
             ? "진본 등록이 완료됐어요"
-            : (data.alreadyRegistered == true ? "보증서 발급이 필요해요" : "블록체인 등록을 완료했어요")
+            : "블록체인 등록을 완료했어요"
         messageLabel.setJinBonText(
             isIssued
                 ? "블록체인 기록과 신원 기반 VC 보증서가 모두 확인됐어요."
-                : "블록체인 기록은 완료됐어요. VC 보증서를 발급해야 진본 등록이 완료됩니다.",
+                : "이제 등록자와 등록 기록을 확인할 수 있는 보증서를 발급하면 끝나요.",
             lineSpacing: 5
         )
-        statusIcon.image = UIImage(systemName: isIssued ? "checkmark.circle.fill" : "circle.dashed")
-        statusIcon.tintColor = isIssued ? ColorPalette.success : ColorPalette.secondaryText
-        statusLabel.text = isIssued
-            ? "진본 Issuer가 발급했으며 이 기기의 Wallet에 보관 중입니다."
-            : "진본 인증 완료를 위해 신원 기반 VC 보증서를 발급해 주세요."
-        statusLabel.textColor = isIssued ? ColorPalette.ink : ColorPalette.secondaryText
-        issueButton.isHidden = isIssued
+        certificateStepIcon.image = UIImage(systemName: isIssued ? "checkmark.circle.fill" : "circle.dashed")
+        certificateStepIcon.tintColor = isIssued ? ColorPalette.success : ColorPalette.primary
+        certificateStepTitle.text = isIssued ? "등록 보증서 발급 완료" : "등록 보증서 발급"
+        certificateStepDetail.text = isIssued
+            ? "등록자 정보와 블록체인 기록을 묶은 VC가 Wallet에 저장됐어요."
+            : "모바일 신분증으로 확인한 등록자 정보와 블록체인 기록을 하나의 VC로 묶어요."
+        issueButton.setTitle(isIssued ? "내 영상에서 확인하기" : "등록 보증서 발급하고 완료하기", for: .normal)
+        laterButton.isHidden = isIssued
     }
 
     private func detailRow(title: String, value: String) -> UIView {
@@ -798,6 +839,47 @@ private final class VideoRegistrationCompletionViewController: UIViewController 
         return row
     }
 
+    private func card(containing content: UIView, inset: CGFloat) -> UIView {
+        let card = UIView()
+        card.backgroundColor = .white
+        card.layer.cornerRadius = 20
+        content.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(content)
+        NSLayoutConstraint.activate([
+            content.topAnchor.constraint(equalTo: card.topAnchor, constant: inset),
+            content.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: inset),
+            content.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -inset),
+            content.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -inset)
+        ])
+        return card
+    }
+
+    private func stepRow(icon: String, color: UIColor, title: String, detail: String) -> UIView {
+        let iconView = UIImageView(image: UIImage(systemName: icon))
+        iconView.tintColor = color
+        iconView.contentMode = .scaleAspectFit
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        iconView.widthAnchor.constraint(equalToConstant: 25).isActive = true
+        iconView.heightAnchor.constraint(equalToConstant: 25).isActive = true
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = .jinBonFont(ofSize: 15, weight: .bold)
+        titleLabel.textColor = ColorPalette.ink
+        let detailLabel = UILabel()
+        detailLabel.text = detail
+        detailLabel.font = .jinBonFont(ofSize: 13)
+        detailLabel.textColor = ColorPalette.secondaryText
+        detailLabel.numberOfLines = 0
+        let labels = UIStackView(arrangedSubviews: [titleLabel, detailLabel])
+        labels.axis = .vertical
+        labels.spacing = 4
+        let row = UIStackView(arrangedSubviews: [iconView, labels])
+        row.axis = .horizontal
+        row.alignment = .top
+        row.spacing = 12
+        return row
+    }
+
     private func configureButton(_ button: UIButton, title: String, filled: Bool) {
         button.setTitle(title, for: .normal)
         button.titleLabel?.font = .jinBonFont(ofSize: 16, weight: .bold)
@@ -806,7 +888,7 @@ private final class VideoRegistrationCompletionViewController: UIViewController 
         button.setTitleColor(filled ? .white : ColorPalette.primary, for: .normal)
     }
 
-    @objc private func issueTapped() { onIssue?() }
+    @objc private func issueTapped() { isIssued ? onClose?() : onIssue?() }
     @objc private func closeTapped() { onClose?() }
 }
 

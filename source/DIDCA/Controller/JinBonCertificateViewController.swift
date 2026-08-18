@@ -188,7 +188,7 @@ extension JinBonCertificateViewController: UITableViewDataSource, UITableViewDel
     }
 }
 
-private final class JinBonCertificateDetailViewController: UIViewController {
+final class JinBonCertificateDetailViewController: UIViewController {
     private let credential: VerifiableCredential
     private let statusLabel = UILabel()
 

@@ -40,11 +40,13 @@ class JinBonTabBarController: UITabBarController {
             selectedImage: UIImage(systemName: "play.rectangle.on.rectangle.fill")
         )
 
-        let certificateNav = UINavigationController(rootViewController: JinBonCertificateViewController())
-        certificateNav.tabBarItem = UITabBarItem(
-            title: "보증서",
-            image: UIImage(systemName: "checkmark.seal"),
-            selectedImage: UIImage(systemName: "checkmark.seal.fill")
+        let verifyViewController = VideoVerifyViewController()
+        verifyViewController.showsCloseButton = false
+        let verifyNav = UINavigationController(rootViewController: verifyViewController)
+        verifyNav.tabBarItem = UITabBarItem(
+            title: "영상 검증",
+            image: UIImage(systemName: "checkmark.shield"),
+            selectedImage: UIImage(systemName: "checkmark.shield.fill")
         )
 
         let settingsNav = UINavigationController(rootViewController: JinBonSettingsViewController())
@@ -54,7 +56,7 @@ class JinBonTabBarController: UITabBarController {
             selectedImage: UIImage(systemName: "gearshape.fill")
         )
 
-        viewControllers = [homeNav, videosNav, certificateNav, settingsNav]
+        viewControllers = [homeNav, videosNav, verifyNav, settingsNav]
     }
 
     private func setupAppearance() {
