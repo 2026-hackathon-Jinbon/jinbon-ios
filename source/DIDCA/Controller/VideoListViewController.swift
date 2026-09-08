@@ -17,6 +17,7 @@
 import UIKit
 import DIDWalletSDK
 import AVKit
+import AVFoundation
 
 class VideoListViewController: UIViewController {
 
@@ -443,6 +444,14 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
     }
 
     private func playVideo(at url: URL) {
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playback, mode: .moviePlayback)
+            try audioSession.setActive(true)
+        } catch {
+            WalletLogger.shared.error("Video audio session setup failed: \(error.localizedDescription)")
+        }
+
         let player = AVPlayer(url: url)
         let playerViewController = AVPlayerViewController()
         playerViewController.player = player
