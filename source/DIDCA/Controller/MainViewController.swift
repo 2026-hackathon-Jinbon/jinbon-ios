@@ -43,7 +43,6 @@ class MainViewController: UIViewController, DismissDelegate {
     @IBOutlet var emptyView: UIView!
     
     private var vcs = [VerifiableCredential]()
-    private var zkpIncludedStates : [String : Bool] = [:]
     
     private var vcSchemas : [String : VCSchema] = [:]
     private var zkpSchemas : [String : ZKPCredentialSchema] = [:]
@@ -60,13 +59,8 @@ class MainViewController: UIViewController, DismissDelegate {
         
         ActivityUtil.show(vc: self){
             let hWalletToken = try await SDKUtils.createWalletToken(purpose: WalletTokenPurposeEnum.LIST_VC, userId: Properties.getUserId()!)
-            
-            if let zkpCredentials = try WalletAPI.shared.getAllZKPCredentials(hWalletToken: hWalletToken)
-            {
-                self.zkpIncludedStates = zkpCredentials.reduce(into: [String:Bool](), { $0[$1.credentialId] = true })
-            }
-            else{
-                self.zkpIncludedStates = [:]
+
+            if try WalletAPI.shared.getAllZKPCredentials(hWalletToken: hWalletToken) == nil {
                 self.zkpSchemas = [:]
             }
             
@@ -195,7 +189,6 @@ extension MainViewController: UICollectionViewDataSource {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CellID.mainVCCell.rawValue, for: indexPath) as! MainVCCollectionViewCell
 
         let vc = vcs[indexPath.row]
-        let isZkpIncluded = zkpIncludedStates[vc.id] ?? false
         
         let vcSchemaId = vc.credentialSchema.id
         

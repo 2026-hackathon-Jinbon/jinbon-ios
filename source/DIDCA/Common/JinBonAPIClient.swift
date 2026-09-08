@@ -175,7 +175,7 @@ class JinBonAPIClient {
     func logout() async {
         if let refreshToken = Properties.getRefreshToken() {
             let body = ["refreshToken": refreshToken]
-            try? await request(
+            _ = try? await request(
                 path: "/api/auth/logout",
                 method: "POST",
                 body: body,

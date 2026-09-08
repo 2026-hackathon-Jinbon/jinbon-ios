@@ -29,6 +29,13 @@ class SplashViewController: UIViewController {
     }
     
     private func checkWalletLock() {
+        guard Properties.isLoggedIn() else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                self.navigateToNextViewController()
+            }
+            return
+        }
+
         // switch screens when wallet type is Lock
         do {
             if try WalletAPI.shared.isLock() {

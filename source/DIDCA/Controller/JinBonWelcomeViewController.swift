@@ -157,13 +157,38 @@ final class JinBonWelcomeViewController: UIViewController {
         (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?
             .changeRootVC(JinBonTabBarController(), animated: true)
     }
+
+    private func unlockWalletAndSwitchToMain() {
+        guard (try? WalletAPI.shared.isLock()) == true else {
+            switchToMain()
+            return
+        }
+
+        let pinVC = Storyboard.pin.instance
+            .instantiateViewController(withIdentifier: ViewControllerID.pincode.rawValue) as! PincodeViewController
+        pinVC.modalPresentationStyle = .fullScreen
+        pinVC.setRequestType(type: .authenticate(isLock: true))
+        pinVC.confirmButtonCompleteClosure = { [weak self] _ in
+            self?.switchToMain()
+        }
+        pinVC.cancelButtonCompleteClosure = { [weak self] in
+            guard let self else { return }
+            JinBonAPIClient.shared.clearLocalSession()
+            PopupUtils.showAlertPopup(
+                title: "Notification",
+                content: "PIN authentication is required to use this Wallet.",
+                VC: self
+            )
+        }
+        present(pinVC, animated: false)
+    }
 }
 
 extension JinBonWelcomeViewController: AuthWebViewDelegate {
     func authDidComplete(tokenData: AuthTokenData) {
         switch WalletAccountValidator.validate(accountDid: tokenData.did) {
         case .matches:
-            switchToMain()
+            unlockWalletAndSwitchToMain()
         case .noWallet:
             guard let rebindToken = tokenData.didRebindToken else {
                 JinBonAPIClient.shared.clearLocalSession()
