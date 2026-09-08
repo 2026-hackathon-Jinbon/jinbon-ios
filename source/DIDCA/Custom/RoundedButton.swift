@@ -17,9 +17,56 @@
  */
     
 import UIKit
+import ObjectiveC.runtime
+
+enum ButtonPressFeedback {
+    static func install() {
+        let originalSelector = NSSelectorFromString("setHighlighted:")
+        let feedbackSelector = #selector(UIButton.jinBonSetHighlighted(_:))
+
+        guard
+            let originalMethod = class_getInstanceMethod(UIButton.self, originalSelector),
+            let feedbackMethod = class_getInstanceMethod(UIButton.self, feedbackSelector)
+        else { return }
+
+        method_exchangeImplementations(originalMethod, feedbackMethod)
+    }
+}
+
+private extension UIButton {
+    @objc func jinBonSetHighlighted(_ highlighted: Bool) {
+        let wasHighlighted = isHighlighted
+        jinBonSetHighlighted(highlighted)
+
+        guard wasHighlighted != highlighted else { return }
+
+        if highlighted {
+            layer.removeAllAnimations()
+            transform = UIAccessibility.isReduceMotionEnabled
+                ? .identity
+                : CGAffineTransform(scaleX: 0.92, y: 0.92)
+            alpha = 0.55
+            return
+        }
+
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        UIView.animate(
+            withDuration: UIAccessibility.isReduceMotionEnabled ? 0 : 0.18,
+            delay: 0,
+            usingSpringWithDamping: 0.7,
+            initialSpringVelocity: 0.4,
+            options: [.allowUserInteraction, .beginFromCurrentState]
+        ) {
+            self.transform = .identity
+            self.alpha = self.isEnabled ? 1 : 0.55
+        }
+    }
+}
+
+class PressFeedbackButton: UIButton {}
 
 @IBDesignable
-class RoundedButton : UIButton
+class RoundedButton : PressFeedbackButton
 {
     static let defaultRadius: CGFloat = 14
     
@@ -38,25 +85,6 @@ class RoundedButton : UIButton
         didSet {
             layer.borderColor = borderColor.cgColor
         }
-    }
-
-    override var isHighlighted: Bool {
-        didSet {
-            UIView.animate(
-                withDuration: 0.14,
-                delay: 0,
-                options: [.allowUserInteraction, .beginFromCurrentState]
-            ) {
-                self.transform = self.isHighlighted
-                    ? CGAffineTransform(scaleX: 0.98, y: 0.98)
-                    : .identity
-                self.alpha = self.isHighlighted ? 0.9 : (self.isEnabled ? 1 : 0.55)
-            }
-        }
-    }
-
-    override var isEnabled: Bool {
-        didSet { alpha = isEnabled ? 1 : 0.55 }
     }
 
     override func awakeFromNib() {

@@ -49,11 +49,12 @@ class JinBonAPIClient {
         )
     }
 
-    func completeVideoVc(videoId: Int, vcId: String, offerId: String) async throws {
+    func completeVideoVc(videoId: Int, vcId: String, offerId: String,
+                         credential: String) async throws {
         _ = try await request(
             path: "/api/videos/\(videoId)/vc/complete",
             method: "POST",
-            body: ["vcId": vcId, "offerId": offerId],
+            body: ["vcId": vcId, "offerId": offerId, "credential": credential],
             authenticated: true,
             responseType: String.self
         )

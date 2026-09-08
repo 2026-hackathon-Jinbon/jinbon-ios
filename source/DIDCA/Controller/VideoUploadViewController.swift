@@ -17,6 +17,7 @@
 import UIKit
 import PhotosUI
 import AVFoundation
+import DIDWalletSDK
 
 class VideoUploadViewController: UIViewController {
 
@@ -31,7 +32,7 @@ class VideoUploadViewController: UIViewController {
     private let fileNameLabel = UILabel()
     private let titleField = UITextField()
     private let titleContainer = UIView()
-    private let uploadButton = UIButton(type: .system)
+    private let uploadButton = PressFeedbackButton(type: .system)
     private let resultView = UIView()
     private let resultTitleLabel = UILabel()
     private let resultMessageLabel = UILabel()
@@ -509,13 +510,16 @@ class VideoUploadViewController: UIViewController {
         let presenter = navigationController?.topViewController ?? self
         ActivityUtil.show(vc: presenter) {
             let vcId = try await IssueVcProtocol.shared.process(passcode: passcode)
+            let credential = try WalletAPI.shared.getCredentials(
+                hWalletToken: IssueVcProtocol.shared.getWalletToken(), ids: [vcId]).first!
+            let credentialJson = try credential.toJson()
             self.issuedVcId = vcId
             Properties.setPendingVideoVc(
                 PendingVideoVcData(vcId: vcId, offerId: offerId),
                 videoId: videoId
             )
             try await JinBonAPIClient.shared.completeVideoVc(
-                videoId: videoId, vcId: vcId, offerId: offerId)
+                videoId: videoId, vcId: vcId, offerId: offerId, credential: credentialJson)
             Properties.clearPendingVideoVc(videoId: videoId)
         } completeClosure: { [weak self] in
             guard let self else { return }
@@ -535,8 +539,13 @@ class VideoUploadViewController: UIViewController {
     private func reconnectIssuedVc(videoId: Int, pending: PendingVideoVcData) {
         let presenter = navigationController?.topViewController ?? self
         ActivityUtil.show(vc: presenter) {
+            let walletToken = try await SDKUtils.createWalletToken(
+                purpose: WalletTokenPurposeEnum.LIST_VC, userId: Properties.getUserId()!)
+            let credential = try WalletAPI.shared.getCredentials(
+                hWalletToken: walletToken, ids: [pending.vcId]).first!
             try await JinBonAPIClient.shared.completeVideoVc(
-                videoId: videoId, vcId: pending.vcId, offerId: pending.offerId)
+                videoId: videoId, vcId: pending.vcId, offerId: pending.offerId,
+                credential: try credential.toJson())
             Properties.clearPendingVideoVc(videoId: videoId)
             self.issuedVcId = pending.vcId
         } completeClosure: { [weak self] in
@@ -634,7 +643,7 @@ private final class VideoRegistrationCompletionViewController: UIViewController 
     var onIssue: (() -> Void)?
 
     private let data: VideoRegisterData
-    private let issueButton = UIButton(type: .system)
+    private let issueButton = PressFeedbackButton(type: .system)
     private let completionIcon = UIImageView()
     private let completionIconBackground = UIView()
     private let headingLabel = UILabel()
@@ -645,7 +654,7 @@ private final class VideoRegistrationCompletionViewController: UIViewController 
     private let certificateStepIcon = UIImageView()
     private let certificateStepTitle = UILabel()
     private let certificateStepDetail = UILabel()
-    private let laterButton = UIButton(type: .system)
+    private let laterButton = PressFeedbackButton(type: .system)
     private var isIssued = false
 
     init(data: VideoRegisterData) {

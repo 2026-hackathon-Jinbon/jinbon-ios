@@ -8,7 +8,7 @@ final class JinBonCertificateViewController: UIViewController {
     private let stateIcon = UIImageView()
     private let stateTitle = UILabel()
     private let stateDetail = UILabel()
-    private let retryButton = UIButton(type: .system)
+    private let retryButton = PressFeedbackButton(type: .system)
     private var credentials: [VerifiableCredential] = []
 
     override func viewDidLoad() {

@@ -120,7 +120,7 @@ final class JinBonSettingsViewController: UIViewController {
         card.layer.cornerRadius = 18
         card.layer.masksToBounds = true
         for (index, item) in items.enumerated() {
-            let button = UIButton(type: .system)
+            let button = PressFeedbackButton(type: .system)
             button.accessibilityIdentifier = "settings.menu.\(item.1)"
             button.contentHorizontalAlignment = .fill
             button.addTarget(self, action: item.3, for: .touchUpInside)
@@ -436,7 +436,7 @@ private final class OpenSourceLicensesViewController: UIViewController {
     }
 
     private func makeDocumentCard(title: String, detail: String, selector: Selector) -> UIView {
-        let button = UIButton(type: .system)
+        let button = PressFeedbackButton(type: .system)
         button.backgroundColor = .white
         button.layer.cornerRadius = 16
         button.contentHorizontalAlignment = .fill

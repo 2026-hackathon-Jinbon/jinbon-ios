@@ -25,7 +25,7 @@ class VideoListViewController: UIViewController {
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let emptyLabel = UILabel()
     private let stateIcon = UIImageView()
-    private let retryButton = UIButton(type: .system)
+    private let retryButton = PressFeedbackButton(type: .system)
     private let loadingIndicator = UIActivityIndicatorView(style: .medium)
     private let loginPromptView = UIView()
 
@@ -191,7 +191,7 @@ class VideoListViewController: UIViewController {
     }
 
     private func makeActionButton(title: String, action: Selector) -> UIButton {
-        let btn = UIButton(type: .system)
+        let btn = PressFeedbackButton(type: .system)
         btn.setTitle(title, for: .normal)
         btn.titleLabel?.font = .jinBonFont(ofSize: 14, weight: .semibold)
         btn.layer.cornerRadius = 8
@@ -707,7 +707,7 @@ final class VideoRegistrationDetailViewController: UIViewController {
         }
 
         if video.active != false {
-            let deactivateButton = UIButton(type: .system)
+            let deactivateButton = PressFeedbackButton(type: .system)
             deactivateButton.setTitle("영상 등록 비활성화", for: .normal)
             deactivateButton.setTitleColor(ColorPalette.danger, for: .normal)
             deactivateButton.titleLabel?.font = .jinBonFont(ofSize: 15, weight: .semibold)
@@ -820,7 +820,7 @@ final class VideoRegistrationDetailViewController: UIViewController {
         row.layoutMargins = UIEdgeInsets(top: 13, left: 0, bottom: 13, right: 0)
 
         if copyable, value != "-" {
-            let copyButton = UIButton(type: .system)
+            let copyButton = PressFeedbackButton(type: .system)
             copyButton.setImage(UIImage(systemName: "doc.on.doc"), for: .normal)
             copyButton.tintColor = ColorPalette.primary
             copyButton.accessibilityLabel = "\(label) 복사"
@@ -842,7 +842,7 @@ final class VideoRegistrationDetailViewController: UIViewController {
         configuration.baseBackgroundColor = ColorPalette.primary
         configuration.baseForegroundColor = .white
         configuration.cornerStyle = .large
-        let button = UIButton(configuration: configuration)
+        let button = PressFeedbackButton(configuration: configuration)
         button.titleLabel?.font = .jinBonFont(ofSize: 16, weight: .bold)
         button.heightAnchor.constraint(equalToConstant: 54).isActive = true
         configureInteractionFeedback(
@@ -866,7 +866,7 @@ final class VideoRegistrationDetailViewController: UIViewController {
         configuration.background.cornerRadius = 16
         configuration.background.strokeColor = ColorPalette.primary
         configuration.background.strokeWidth = 1
-        let button = UIButton(configuration: configuration)
+        let button = PressFeedbackButton(configuration: configuration)
         button.titleLabel?.font = .jinBonFont(ofSize: 16, weight: .semibold)
         button.heightAnchor.constraint(equalToConstant: 50).isActive = true
         configureInteractionFeedback(

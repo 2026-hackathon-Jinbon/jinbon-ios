@@ -43,7 +43,7 @@ class StepViewController: UIViewController {
     private let modernDetailLabel = UILabel()
     private let modernStepLabel = UILabel()
     private let modernIconView = UIImageView()
-    private let modernActionButton = UIButton(type: .system)
+    private let modernActionButton = PressFeedbackButton(type: .system)
     
     public func setStepType(stepType: StepTypeEnum) {
         self.stepType = stepType

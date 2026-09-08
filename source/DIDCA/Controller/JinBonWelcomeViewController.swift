@@ -50,7 +50,7 @@ final class JinBonWelcomeViewController: UIViewController {
                                buttonTitle: "로그인", primary: false,
                                action: #selector(loginTapped))
 
-        let verify = UIButton(type: .system)
+        let verify = PressFeedbackButton(type: .system)
         verify.setTitle("로그인 없이 영상 검증하기  →", for: .normal)
         verify.accessibilityIdentifier = "welcome.verify"
         verify.setTitleColor(ColorPalette.primary, for: .normal)
@@ -101,7 +101,7 @@ final class JinBonWelcomeViewController: UIViewController {
         detailLabel.textColor = ColorPalette.secondaryText
         detailLabel.numberOfLines = 0
 
-        let button = UIButton(type: .system)
+        let button = PressFeedbackButton(type: .system)
         button.setTitle(buttonTitle, for: .normal)
         button.accessibilityIdentifier = primary ? "welcome.signup" : "welcome.login"
         button.titleLabel?.font = .jinBonFont(ofSize: 16, weight: .bold)
@@ -158,9 +158,10 @@ final class JinBonWelcomeViewController: UIViewController {
             .changeRootVC(JinBonTabBarController(), animated: true)
     }
 
-    private func unlockWalletAndSwitchToMain() {
-        guard (try? WalletAPI.shared.isLock()) == true else {
-            switchToMain()
+    private func unlockWalletIfNeeded(completion: @escaping () -> Void) {
+        guard WalletAPI.shared.isExistWallet(),
+              (try? WalletAPI.shared.isLock()) == true else {
+            completion()
             return
         }
 
@@ -168,8 +169,8 @@ final class JinBonWelcomeViewController: UIViewController {
             .instantiateViewController(withIdentifier: ViewControllerID.pincode.rawValue) as! PincodeViewController
         pinVC.modalPresentationStyle = .fullScreen
         pinVC.setRequestType(type: .authenticate(isLock: true))
-        pinVC.confirmButtonCompleteClosure = { [weak self] _ in
-            self?.switchToMain()
+        pinVC.confirmButtonCompleteClosure = { _ in
+            completion()
         }
         pinVC.cancelButtonCompleteClosure = { [weak self] in
             guard let self else { return }
@@ -182,13 +183,11 @@ final class JinBonWelcomeViewController: UIViewController {
         }
         present(pinVC, animated: false)
     }
-}
 
-extension JinBonWelcomeViewController: AuthWebViewDelegate {
-    func authDidComplete(tokenData: AuthTokenData) {
+    private func continueLogin(with tokenData: AuthTokenData) {
         switch WalletAccountValidator.validate(accountDid: tokenData.did) {
         case .matches:
-            unlockWalletAndSwitchToMain()
+            switchToMain()
         case .noWallet:
             guard let rebindToken = tokenData.didRebindToken else {
                 JinBonAPIClient.shared.clearLocalSession()
@@ -204,6 +203,14 @@ extension JinBonWelcomeViewController: AuthWebViewDelegate {
                 return
             }
             confirmWalletRebind(rebindToken: rebindToken)
+        }
+    }
+}
+
+extension JinBonWelcomeViewController: AuthWebViewDelegate {
+    func authDidComplete(tokenData: AuthTokenData) {
+        unlockWalletIfNeeded { [weak self] in
+            self?.continueLogin(with: tokenData)
         }
     }
     func authDidCancel() {}

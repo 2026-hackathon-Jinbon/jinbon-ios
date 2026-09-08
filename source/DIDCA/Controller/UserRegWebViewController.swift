@@ -95,7 +95,7 @@ class UserRegWebViewController: UIViewController {
         let header = UIView()
         header.translatesAutoresizingMaskIntoConstraints = false
 
-        let close = UIButton(type: .system)
+        let close = PressFeedbackButton(type: .system)
         var config = UIButton.Configuration.plain()
         config.image = UIImage(systemName: "xmark")
         config.baseForegroundColor = ColorPalette.ink

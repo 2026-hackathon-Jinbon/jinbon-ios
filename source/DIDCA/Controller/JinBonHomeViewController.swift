@@ -130,7 +130,7 @@ final class JinBonHomeViewController: UIViewController {
         body.textColor = UIColor.white.withAlphaComponent(0.9)
         body.setJinBonText("영상 디지털 지문을 블록체인에 기록하고 등록 보증서를 발급받아요.")
 
-        let button = UIButton(type: .system)
+        let button = PressFeedbackButton(type: .system)
         var config = UIButton.Configuration.filled()
         config.title = "영상 등록하기"
         config.image = UIImage(systemName: "arrow.up.circle.fill")
@@ -269,7 +269,7 @@ final class JinBonHomeViewController: UIViewController {
         label.font = .jinBonFont(ofSize: 14)
         label.textColor = ColorPalette.secondaryText
         label.setJinBonText("최근 등록을 불러오지 못했습니다\n\(message)", lineSpacing: 4)
-        let retry = UIButton(type: .system)
+        let retry = PressFeedbackButton(type: .system)
         retry.setTitle("다시 시도", for: .normal)
         retry.titleLabel?.font = .jinBonFont(ofSize: 14, weight: .bold)
         retry.addTarget(self, action: #selector(refreshPulled), for: .touchUpInside)
