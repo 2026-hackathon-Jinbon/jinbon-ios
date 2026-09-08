@@ -28,7 +28,7 @@ class VideoVerifyViewController: UIViewController {
     private let contentStack = UIStackView()
     private let thumbnailView = UIImageView()
     private let fileNameLabel = UILabel()
-    private let verifyButton = UIButton(type: .system)
+    private let verifyButton = PressFeedbackButton(type: .system)
     private let resultCard = UIView()
 
     private var selectedVideoURL: URL?
@@ -250,7 +250,7 @@ class VideoVerifyViewController: UIViewController {
         resultCard.isHidden = false
         resultCard.subviews.forEach { $0.removeFromSuperview() }
 
-        let presentation = resultPresentation(for: data.effectiveVerdict)
+        let presentation = resultPresentation(for: data.effectiveDisplayStatus)
         resultCard.backgroundColor = ColorPalette.card
         resultCard.layer.borderWidth = 1
         resultCard.layer.borderColor = presentation.color.withAlphaComponent(0.28).cgColor
@@ -288,19 +288,7 @@ class VideoVerifyViewController: UIViewController {
         headerStack.addArrangedSubview(titleLabel)
         stack.addArrangedSubview(headerStack)
 
-        // 상세 정보
-        let details: [(String, String)] = [
-            ("영상 디지털 지문", contentMatchText(for: data.effectiveVerdict)),
-            ("블록체인 등록", data.blockchainVerified ? "확인됨" : "확인되지 않음"),
-            ("진본 VC 보증서", certificateText(for: data)),
-            ("등록 정보 결속", data.vcClaimsBound ? "일치" : "확인되지 않음")
-        ]
-
-        for (label, value) in details {
-            let row = makeDetailRow(label: label, value: value)
-            stack.addArrangedSubview(row)
-        }
-
+        // 메시지 (서버에서 내려주는 상세 설명)
         if let message = data.message, !message.isEmpty {
             stack.addArrangedSubview(makeCallout(
                 text: message,
@@ -313,12 +301,6 @@ class VideoVerifyViewController: UIViewController {
         if let registeredAt = data.registeredAt {
             let row = makeDetailRow(label: "등록일", value: String(registeredAt.prefix(10)))
             stack.addArrangedSubview(row)
-        }
-
-        if let distance = data.similarityDistance,
-           data.effectiveVerdict == .similarMatch {
-            stack.addArrangedSubview(makeDetailRow(
-                label: "유사도 거리", value: String(format: "%.1f", distance)))
         }
 
         if let notice = data.notice, !notice.isEmpty {
@@ -347,44 +329,16 @@ class VideoVerifyViewController: UIViewController {
     }
 
     private func resultPresentation(
-        for verdict: VideoVerificationVerdict
+        for status: DisplayStatus
     ) -> (title: String, symbol: String, color: UIColor) {
-        switch verdict {
-        case .exactMatch:
-            return ("등록 영상과 정확히 일치합니다", "checkmark.seal.fill", .systemGreen)
-        case .sameContent:
-            return ("등록된 영상과 내용이 일치합니다", "checkmark.circle.fill", ColorPalette.primary)
-        case .similarMatch:
-            return ("등록 영상과 유사합니다", "equal.circle.fill", .systemBlue)
-        case .registeredButRevoked:
-            return ("비활성화된 등록 영상입니다", "exclamationmark.shield.fill", .systemOrange)
-        case .certificateMissing:
-            return ("등록 기록만 확인됐습니다", "exclamationmark.shield.fill", .systemOrange)
-        case .certificateInvalid:
-            return ("등록은 확인됐지만 보증서가 유효하지 않습니다", "xmark.shield.fill", .systemOrange)
-        case .notRegistered:
-            return ("등록 기록을 찾지 못했습니다", "questionmark.circle.fill", .systemGray)
-        case .verificationUnavailable:
-            return ("현재 검증할 수 없습니다", "exclamationmark.triangle.fill", .systemOrange)
+        switch status {
+        case .authenticated:
+            return ("진본 인증", "checkmark.seal.fill", .systemGreen)
+        case .notAuthenticated:
+            return ("미인증", "xmark.circle.fill", .systemGray)
+        case .unavailable:
+            return ("확인 중", "arrow.clockwise.circle.fill", .systemOrange)
         }
-    }
-
-    private func contentMatchText(for verdict: VideoVerificationVerdict) -> String {
-        switch verdict {
-        case .exactMatch: return "정확히 일치"
-        case .sameContent: return "동일 콘텐츠"
-        case .similarMatch: return "유사 콘텐츠"
-        case .registeredButRevoked, .certificateMissing, .certificateInvalid: return "등록 영상과 일치"
-        case .notRegistered: return "등록 기록 없음"
-        case .verificationUnavailable: return "확인 불가"
-        }
-    }
-
-    private func certificateText(for data: VideoVerifyData) -> String {
-        if data.vcVerified { return "유효" }
-        if data.effectiveVerdict == .certificateMissing { return "미발급" }
-        if data.effectiveVerdict == .certificateInvalid { return "유효하지 않음" }
-        return data.videoId == nil ? "해당 없음" : "미발급 또는 미확인"
     }
 
     private func makeCallout(

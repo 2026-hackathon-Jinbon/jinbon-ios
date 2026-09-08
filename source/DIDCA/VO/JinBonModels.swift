@@ -102,6 +102,19 @@ public struct PendingVideoVcData: Codable, Equatable {
 
 // MARK: - 영상 검증 응답
 
+/// 클라이언트 표시용 검증 상태 (3종)
+enum DisplayStatus: String, Codable {
+    case authenticated = "AUTHENTICATED"
+    case notAuthenticated = "NOT_AUTHENTICATED"
+    case unavailable = "UNAVAILABLE"
+
+    init(from decoder: Decoder) throws {
+        let value = try decoder.singleValueContainer().decode(String.self)
+        self = DisplayStatus(rawValue: value) ?? .unavailable
+    }
+}
+
+/// 내부 판정값 (7종, 로그·디버깅용)
 enum VideoVerificationVerdict: String, Codable, CaseIterable {
     case exactMatch = "EXACT_MATCH"
     case sameContent = "SAME_CONTENT"
@@ -121,10 +134,22 @@ enum VideoVerificationVerdict: String, Codable, CaseIterable {
         var container = encoder.singleValueContainer()
         try container.encode(rawValue)
     }
+
+    var displayStatus: DisplayStatus {
+        switch self {
+        case .exactMatch, .sameContent, .similarMatch:
+            return .authenticated
+        case .notRegistered, .registeredButRevoked, .certificateMissing, .certificateInvalid:
+            return .notAuthenticated
+        case .verificationUnavailable:
+            return .unavailable
+        }
+    }
 }
 
 struct VideoVerifyData: Codable {
     let verdict: VideoVerificationVerdict?
+    let displayStatus: DisplayStatus?
     let similarityDistance: Double?
     let authentic: Bool
     let videoId: Int?
@@ -136,6 +161,13 @@ struct VideoVerifyData: Codable {
     let active: Bool
     let message: String?
     let notice: String?
+
+    /// 서버의 displayStatus를 우선 사용하고, 없으면 verdict에서 계산.
+    var effectiveDisplayStatus: DisplayStatus {
+        if let displayStatus { return displayStatus }
+        if let verdict { return verdict.displayStatus }
+        return authentic ? .authenticated : .notAuthenticated
+    }
 
     /// verdict 도입 전 백엔드 응답도 안전하게 표시하기 위한 호환 판정.
     var effectiveVerdict: VideoVerificationVerdict {
