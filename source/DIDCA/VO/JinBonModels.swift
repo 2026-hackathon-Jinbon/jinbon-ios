@@ -102,9 +102,11 @@ public struct PendingVideoVcData: Codable, Equatable {
 
 // MARK: - 영상 검증 응답
 
-/// 클라이언트 표시용 검증 상태 (3종)
+/// 클라이언트 표시용 검증 상태
 enum DisplayStatus: String, Codable {
     case authenticated = "AUTHENTICATED"
+    case contentSimilar = "CONTENT_SIMILAR"
+    case partialSimilar = "PARTIAL_SIMILAR"
     case notAuthenticated = "NOT_AUTHENTICATED"
     case unavailable = "UNAVAILABLE"
 
@@ -114,11 +116,12 @@ enum DisplayStatus: String, Codable {
     }
 }
 
-/// 내부 판정값 (7종, 로그·디버깅용)
+/// 내부 판정값 (로그·디버깅용)
 enum VideoVerificationVerdict: String, Codable, CaseIterable {
     case exactMatch = "EXACT_MATCH"
     case sameContent = "SAME_CONTENT"
     case similarMatch = "SIMILAR_MATCH"
+    case partialMatch = "PARTIAL_MATCH"
     case registeredButRevoked = "REGISTERED_BUT_REVOKED"
     case certificateMissing = "CERTIFICATE_MISSING"
     case certificateInvalid = "CERTIFICATE_INVALID"
@@ -137,8 +140,12 @@ enum VideoVerificationVerdict: String, Codable, CaseIterable {
 
     var displayStatus: DisplayStatus {
         switch self {
-        case .exactMatch, .sameContent, .similarMatch:
+        case .exactMatch:
             return .authenticated
+        case .sameContent, .similarMatch:
+            return .contentSimilar
+        case .partialMatch:
+            return .partialSimilar
         case .notRegistered, .registeredButRevoked, .certificateMissing, .certificateInvalid:
             return .notAuthenticated
         case .verificationUnavailable:

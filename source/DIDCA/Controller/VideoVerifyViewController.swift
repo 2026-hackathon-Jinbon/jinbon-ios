@@ -298,6 +298,13 @@ class VideoVerifyViewController: UIViewController {
             ))
         }
 
+        if data.videoId != nil {
+            stack.addArrangedSubview(makeDetailRow(
+                label: "등록 증거",
+                value: data.blockchainVerified && data.vcVerified && data.vcClaimsBound
+                    ? "블록체인·보증서 확인됨" : "검증 미완료"))
+        }
+
         if let registeredAt = data.registeredAt {
             let row = makeDetailRow(label: "등록일", value: String(registeredAt.prefix(10)))
             stack.addArrangedSubview(row)
@@ -333,7 +340,11 @@ class VideoVerifyViewController: UIViewController {
     ) -> (title: String, symbol: String, color: UIColor) {
         switch status {
         case .authenticated:
-            return ("진본 인증", "checkmark.seal.fill", .systemGreen)
+            return ("등록 원본과 일치", "checkmark.seal.fill", .systemGreen)
+        case .contentSimilar:
+            return ("등록 영상과 유사", "square.on.square", .systemOrange)
+        case .partialSimilar:
+            return ("부분 유사 · 원본 일치 확인 불가", "exclamationmark.circle", .systemOrange)
         case .notAuthenticated:
             return ("미인증", "xmark.circle.fill", .systemGray)
         case .unavailable:
