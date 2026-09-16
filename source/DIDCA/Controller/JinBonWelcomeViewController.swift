@@ -229,10 +229,42 @@ extension JinBonWelcomeViewController: AuthWebViewDelegate {
             message: "이 기기에 이미 디지털 신원이 있습니다. 본인의 Wallet이 맞을 때만 새 진본 계정에 연결해주세요.",
             preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        alert.addAction(UIAlertAction(title: "기존 Wallet 폐기", style: .destructive) { [weak self] _ in
+            self?.confirmDiscardExistingWallet()
+        })
         alert.addAction(UIAlertAction(title: "내 Wallet 연결", style: .default) { [weak self] _ in
             self?.connectExistingDid()
         })
         present(alert, animated: true)
+    }
+
+    /// 기기에 남아 있는 Wallet을 지우고 새로 만든다.
+    /// 키체인에 저장되는 값이라 앱을 지워도 남기 때문에, 이 경로로만 초기화할 수 있다.
+    private func confirmDiscardExistingWallet() {
+        let alert = UIAlertController(
+            title: "정말 폐기할까요?",
+            message: "이 기기의 디지털 신원과 보유한 증명서가 모두 삭제되며 되돌릴 수 없습니다. 삭제 후 새 신원을 발급받습니다.",
+            preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        alert.addAction(UIAlertAction(title: "폐기하고 새로 만들기", style: .destructive) { [weak self] _ in
+            self?.discardExistingWallet()
+        })
+        present(alert, animated: true)
+    }
+
+    private func discardExistingWallet() {
+        Task { @MainActor in
+            do {
+                try WalletAPI.shared.deleteWallet(deleteAll: true)
+                // Splash와 동일하게 빈 Wallet을 다시 만들어야 이후 DID 등록이 진행된다.
+                _ = try await WalletAPI.shared.createWallet(tasURL: URLs.TAS_URL,
+                                                           walletURL: URLs.WALLET_URL)
+                showDidRegistration()
+            } catch {
+                let (_, message) = ErrorHandler.handle(error)
+                showRecoveryError(message)
+            }
+        }
     }
 
     private func connectExistingDid() {
