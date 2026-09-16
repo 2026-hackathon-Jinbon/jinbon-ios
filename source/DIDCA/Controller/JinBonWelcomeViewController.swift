@@ -216,7 +216,7 @@ extension JinBonWelcomeViewController: AuthWebViewDelegate {
     func authDidCancel() {}
 
     func signupIdentityDidComplete(data: SignupIdentityData) {
-        if WalletAPI.shared.isExistWallet() {
+        if WalletAccountValidator.hasHolderDid() {
             confirmExistingDidConnection()
         } else {
             showDidRegistration()

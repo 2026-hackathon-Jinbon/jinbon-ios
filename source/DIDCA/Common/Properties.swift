@@ -27,6 +27,14 @@ enum WalletAccountValidation {
 }
 
 enum WalletAccountValidator {
+    static func hasHolderDid() -> Bool {
+        guard WalletAPI.shared.isExistWallet(),
+              let document = try? WalletAPI.shared.getDidDocument(type: .HolderDidDocumnet) else {
+            return false
+        }
+        return !document.id.isEmpty
+    }
+
     static func validate(accountDid: String?) -> WalletAccountValidation {
         guard WalletAPI.shared.isExistWallet() else { return .noWallet }
         guard let accountDid, !accountDid.isEmpty else { return .accountDidMissing }
