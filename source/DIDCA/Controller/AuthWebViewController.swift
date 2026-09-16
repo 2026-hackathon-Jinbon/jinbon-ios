@@ -132,6 +132,7 @@ extension AuthWebViewController: WKScriptMessageHandler {
         do {
             if mode == .signup {
                 let signupData = try JSONDecoder().decode(SignupIdentityData.self, from: data)
+                JinBonAPIClient.shared.clearLocalSession()
                 Properties.setSignupToken(signupData.signupToken)
                 DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
@@ -141,7 +142,8 @@ extension AuthWebViewController: WKScriptMessageHandler {
                 }
             } else {
                 let tokenData = try JSONDecoder().decode(AuthTokenData.self, from: data)
-                JinBonAPIClient.shared.saveSession(tokenData)
+                // Wallet과 계정 DID를 확인한 뒤 delegate에서 세션을 저장한다.
+                JinBonAPIClient.shared.clearLocalSession()
                 DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
                     self.dismiss(animated: true) { [weak self] in

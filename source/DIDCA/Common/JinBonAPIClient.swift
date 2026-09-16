@@ -20,13 +20,16 @@ class JinBonAPIClient {
 
     static let shared = JinBonAPIClient()
     private let baseURL = URLs.JINBON_URL
-    private let session = URLSession.shared
+    private let session: URLSession
+    @MainActor private var refreshTask: Task<AuthTokenData, Error>?
     private let decoder: JSONDecoder = {
         let d = JSONDecoder()
         return d
     }()
 
-    private init() {}
+    init(session: URLSession = .shared) {
+        self.session = session
+    }
 
     // MARK: - 내 영상 목록
 
@@ -81,15 +84,11 @@ class JinBonAPIClient {
         )
     }
 
-    func completeSignup(signupToken: String, did: String) async throws -> AuthTokenData {
+    func completeSignup(signupToken: String, did: String) async throws {
         let body = ["signupToken": signupToken, "did": did]
-        guard let data = try await request(path: "/api/signup/did/complete", method: "POST",
+        _ = try await request(path: "/api/signup/did/complete", method: "POST",
                                            body: body, authenticated: false,
-                                           responseType: AuthTokenData.self) else {
-            throw JinBonError.serverError("회원가입 완료 처리에 실패했습니다.")
-        }
-        saveSession(data)
-        return data
+                                           responseType: String.self)
     }
 
     func rebindDid(didRebindToken: String, did: String) async throws -> AuthTokenData {
@@ -118,6 +117,7 @@ class JinBonAPIClient {
         Properties.setMemberId(data.memberId)
         Properties.setMemberName(data.name)
         Properties.setMemberRole(data.role)
+        Properties.setAccountDid(data.did)
     }
 
     // MARK: - 영상 등록 (multipart)
@@ -148,7 +148,16 @@ class JinBonAPIClient {
 
     // MARK: - 토큰 갱신
 
+    @MainActor
     func refreshToken() async throws -> AuthTokenData {
+        if let refreshTask { return try await refreshTask.value }
+        let task = Task { try await performTokenRefresh() }
+        refreshTask = task
+        defer { refreshTask = nil }
+        return try await task.value
+    }
+
+    private func performTokenRefresh() async throws -> AuthTokenData {
         guard let refreshToken = Properties.getRefreshToken() else {
             throw JinBonError.notAuthenticated
         }
@@ -166,8 +175,16 @@ class JinBonAPIClient {
             throw JinBonError.serverError("Token refresh failed")
         }
 
-        Properties.setAccessToken(tokenData.accessToken)
-        Properties.setRefreshToken(tokenData.refreshToken)
+        // 갱신 중 로그아웃하거나 다른 계정으로 로그인했다면 이전 세션을 복원하지 않는다.
+        guard Properties.getRefreshToken() == refreshToken else {
+            throw JinBonError.notAuthenticated
+        }
+
+        guard case .matches = WalletAccountValidator.validate(accountDid: tokenData.did) else {
+            clearLocalSession()
+            throw JinBonError.notAuthenticated
+        }
+        saveSession(tokenData)
         return tokenData
     }
 
@@ -189,7 +206,6 @@ class JinBonAPIClient {
 
     func clearLocalSession() {
         Properties.clearAuth()
-        Properties.clearDidRebindToken()
     }
 
     // MARK: - Private
@@ -225,17 +241,20 @@ class JinBonAPIClient {
         }
         if let http = response as? HTTPURLResponse,
            http.statusCode == 401, authenticated, !isRetry {
-            do {
-                _ = try await refreshToken()
-                return try await self.request(
-                    path: path, method: method, body: body,
-                    authenticated: true, responseType: responseType,
-                    isRetry: true
-                )
-            } catch {
-                Properties.clearAuth()
-                throw JinBonError.notAuthenticated
-            }
+            _ = try await refreshToken()
+            return try await self.request(
+                path: path, method: method, body: body,
+                authenticated: true, responseType: responseType,
+                isRetry: true
+            )
+        }
+        if let http = response as? HTTPURLResponse, http.statusCode == 401,
+           authenticated || path == "/api/auth/refresh" {
+            clearLocalSession()
+        }
+        if path.hasSuffix("/vc/holder"),
+           let payload = try? decoder.decode(APIErrorPayload.self, from: data), payload.code == "D005" {
+            throw JinBonError.serverError("이 영상은 이전 디지털 신원으로 등록되었습니다. 보증서 발급에는 등록 당시의 Wallet이 필요합니다. 새 DID 연결로 기존 보증서가 복구되지는 않습니다.")
         }
         try checkHTTPResponse(response, data: data)
 
@@ -283,15 +302,13 @@ class JinBonAPIClient {
         }
         if let http = response as? HTTPURLResponse,
            http.statusCode == 401, authenticated, !isRetry {
-            do {
-                _ = try await refreshToken()
-                return try await uploadMultipart(
-                    path: path, fileURL: fileURL, title: title,
-                    authenticated: true, isRetry: true)
-            } catch {
-                Properties.clearAuth()
-                throw JinBonError.notAuthenticated
-            }
+            _ = try await refreshToken()
+            return try await uploadMultipart(
+                path: path, fileURL: fileURL, title: title,
+                authenticated: true, isRetry: true)
+        }
+        if let http = response as? HTTPURLResponse, http.statusCode == 401, authenticated {
+            clearLocalSession()
         }
         try checkHTTPResponse(response, data: data)
         return data
@@ -336,6 +353,9 @@ class JinBonAPIClient {
             throw JinBonError.invalidResponse
         }
         guard !(200..<300).contains(http.statusCode) else { return }
+        if http.statusCode == 401 {
+            throw JinBonError.notAuthenticated
+        }
 
         if let payload = try? decoder.decode(APIErrorPayload.self, from: data),
            let message = payload.message, !message.isEmpty {

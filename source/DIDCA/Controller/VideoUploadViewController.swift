@@ -417,6 +417,10 @@ class VideoUploadViewController: UIViewController {
             showAlert("영상 등록은 로그인이 필요합니다. 내 진본 탭에서 로그인해주세요.")
             return
         }
+        guard case .matches = WalletAccountValidator.validate(accountDid: Properties.getAccountDid()) else {
+            showAlert("계정과 Wallet의 신원이 다릅니다. 다시 로그인해 주세요.")
+            return
+        }
         guard Properties.getMemberRole() == "ISSUER" else {
             showAlert("공인 등록 권한이 있는 계정만 영상을 등록할 수 있습니다.")
             return
@@ -542,7 +546,11 @@ class VideoUploadViewController: UIViewController {
             let walletToken = try await SDKUtils.createWalletToken(
                 purpose: WalletTokenPurposeEnum.LIST_VC, userId: Properties.getUserId()!)
             let credential = try WalletAPI.shared.getCredentials(
-                hWalletToken: walletToken, ids: [pending.vcId]).first!
+                hWalletToken: walletToken, ids: [pending.vcId]).first
+            guard let credential else {
+                Properties.clearPendingVideoVc(videoId: videoId)
+                throw JinBonError.serverError("이 Wallet에 이전 발급 보증서가 없습니다. 앱을 재설치했다면 이전 Wallet의 보증서는 자동 복구되지 않습니다.")
+            }
             try await JinBonAPIClient.shared.completeVideoVc(
                 videoId: videoId, vcId: pending.vcId, offerId: pending.offerId,
                 credential: try credential.toJson())

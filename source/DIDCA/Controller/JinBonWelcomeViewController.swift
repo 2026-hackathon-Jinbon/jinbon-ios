@@ -3,6 +3,15 @@ import DIDWalletSDK
 
 final class JinBonWelcomeViewController: UIViewController {
     private var isRebinding = false
+    var initialAuthMode: AuthWebViewController.Mode?
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if let mode = initialAuthMode {
+            initialAuthMode = nil
+            presentAuth(mode)
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -188,6 +197,8 @@ final class JinBonWelcomeViewController: UIViewController {
     private func continueLogin(with tokenData: AuthTokenData) {
         switch WalletAccountValidator.validate(accountDid: tokenData.did) {
         case .matches:
+            JinBonAPIClient.shared.saveSession(tokenData)
+            Properties.setRegDidDocCompleted(status: true)
             switchToMain()
         case .noWallet:
             guard let rebindToken = tokenData.didRebindToken else {
@@ -217,10 +228,13 @@ extension JinBonWelcomeViewController: AuthWebViewDelegate {
     func authDidCancel() {}
 
     func signupIdentityDidComplete(data: SignupIdentityData) {
-        if WalletAccountValidator.hasHolderDid() {
-            confirmExistingDidConnection()
-        } else {
-            showDidRegistration()
+        unlockWalletIfNeeded { [weak self] in
+            guard let self else { return }
+            if WalletAccountValidator.hasHolderDid() {
+                self.confirmExistingDidConnection()
+            } else {
+                self.showDidRegistration()
+            }
         }
     }
 
@@ -284,10 +298,12 @@ extension JinBonWelcomeViewController: AuthWebViewDelegate {
                 return
             }
             do {
-                _ = try await JinBonAPIClient.shared.completeSignup(signupToken: signupToken, did: didDoc.id)
+                try await JinBonAPIClient.shared.completeSignup(signupToken: signupToken, did: didDoc.id)
                 Properties.setRegDidDocCompleted(status: true)
                 Properties.clearSignupToken()
-                switchToMain()
+                let alert = UIAlertController(title: "회원가입 완료", message: "회원가입이 완료되었습니다. 로그인해 주세요.", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "확인", style: .default))
+                present(alert, animated: true)
             } catch {
                 showRecoveryError(error.localizedDescription)
             }
@@ -304,12 +320,14 @@ extension JinBonWelcomeViewController: AuthWebViewDelegate {
 
     private func showDidRecovery() {
         let alert = UIAlertController(
-            title: "디지털 신원을 다시 연결할까요?",
-            message: "이 기기에 DID가 없습니다. 새 DID를 만든 뒤 기존 진본 계정에 안전하게 연결합니다.",
+            title: "새 디지털 신원을 연결할까요?",
+            message: "이 기기에 기존 Wallet이 없습니다. 새 신원을 연결하면 기존 계정의 DID가 변경됩니다. 기존 영상의 등록 기록은 유지되지만, 이전 Wallet의 보증서는 복구되지 않으며 기존 영상의 보증서 발급에는 이전 Wallet이 필요합니다.",
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "나중에", style: .cancel))
-        alert.addAction(UIAlertAction(title: "다시 연결", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel) { _ in
+            JinBonAPIClient.shared.clearLocalSession()
+        })
+        alert.addAction(UIAlertAction(title: "새 신원 연결", style: .default) { [weak self] _ in
             self?.showDidRegistration()
         })
         present(alert, animated: true)
@@ -321,7 +339,7 @@ extension JinBonWelcomeViewController: AuthWebViewDelegate {
         popup.modalPresentationStyle = .overCurrentContext
         popup.configure(
             title: "디지털 신원 다시 연결",
-            message: "계정에 저장된 정보와 현재 기기의 디지털 신원이 달라요. 본인의 Wallet이 맞다면 다시 연결해 주세요.",
+            message: "계정과 이 기기의 DID가 다릅니다. 연결하면 계정의 DID가 변경됩니다. 기존 보증서는 이 Wallet으로 이전되지 않으며, 기존 영상의 보증서 발급에는 이전 Wallet이 필요합니다. 본인의 Wallet인지 확인해 주세요.",
             cancelTitle: "취소",
             confirmTitle: "다시 연결"
         )

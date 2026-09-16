@@ -18,6 +18,206 @@
 import XCTest
 @testable import DIDCA
 
+final class AuthFlowRegressionTests: XCTestCase {
+    private let tokenKeys = ["jinbon_access_token", "jinbon_refresh_token", "jinbon_signup_token", "jinbon_did_rebind_token"]
+    private let defaultsKeys = ["jinbon_member_id", "jinbon_member_name", "jinbon_member_role", "jinbon_account_did", "reg_diddoc_completed", "jinbon_signup_token", "jinbon_did_rebind_token"]
+    private var savedTokens: [String: String] = [:]
+    private var savedDefaults: [String: Any] = [:]
+    private var session: URLSession!
+    private var api: JinBonAPIClient!
+
+    override func setUp() {
+        super.setUp()
+        for key in tokenKeys { savedTokens[key] = KeychainHelper.load(key: key) }
+        for key in defaultsKeys { savedDefaults[key] = UserDefaults.standard.object(forKey: key) }
+        Properties.clearAuth()
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [AuthMockURLProtocol.self]
+        session = URLSession(configuration: configuration)
+        api = JinBonAPIClient(session: session)
+    }
+
+    override func tearDown() {
+        session.invalidateAndCancel()
+        AuthMockURLProtocol.handler = nil
+        for key in tokenKeys {
+            KeychainHelper.delete(key: key)
+            if let value = savedTokens[key] { KeychainHelper.save(key: key, value: value) }
+        }
+        for key in defaultsKeys {
+            UserDefaults.standard.removeObject(forKey: key)
+            if let value = savedDefaults[key] { UserDefaults.standard.set(value, forKey: key) }
+        }
+        super.tearDown()
+    }
+
+    func testSignupAcceptsNullDataWithoutCreatingLoginSession() async throws {
+        AuthMockURLProtocol.handler = { request in
+            XCTAssertEqual(request.url?.path, "/api/signup/did/complete")
+            XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertNil(request.value(forHTTPHeaderField: "Authorization"))
+            return (200, Data(#"{"status":200,"data":null}"#.utf8))
+        }
+        try await api.completeSignup(signupToken: "signup", did: "did:omn:new")
+        XCTAssertFalse(Properties.isLoggedIn())
+    }
+
+    func testSignupRejectsServerFailure() async {
+        AuthMockURLProtocol.handler = { _ in
+            (409, Data(#"{"status":409,"message":"already registered"}"#.utf8))
+        }
+        do {
+            try await api.completeSignup(signupToken: "signup", did: "did:omn:new")
+            XCTFail("A failed signup must not be treated as complete")
+        } catch {
+            XCTAssertEqual(error.localizedDescription, "already registered")
+        }
+        XCTAssertFalse(Properties.isLoggedIn())
+    }
+
+    func testRebindReplacesStaleSignupToken() {
+        Properties.setSignupToken("stale-signup")
+        Properties.setDidRebindToken("new-rebind")
+        XCTAssertNil(Properties.getSignupToken())
+        XCTAssertEqual(Properties.getDidRebindToken(), "new-rebind")
+    }
+
+    func testSignupReplacesStaleRebindToken() {
+        Properties.setDidRebindToken("stale-rebind")
+        Properties.setSignupToken("new-signup")
+        XCTAssertNil(Properties.getDidRebindToken())
+        XCTAssertEqual(Properties.getSignupToken(), "new-signup")
+    }
+
+    func testClearSessionRemovesPendingIdentityAndCompletionState() {
+        Properties.setAccessToken("access")
+        Properties.setRefreshToken("refresh")
+        Properties.setSignupToken("signup")
+        Properties.setAccountDid("did:omn:old")
+        Properties.setRegDidDocCompleted(status: true)
+        api.clearLocalSession()
+        XCTAssertFalse(Properties.isLoggedIn())
+        XCTAssertNil(Properties.getRefreshToken())
+        XCTAssertNil(Properties.getSignupToken())
+        XCTAssertNil(Properties.getDidRebindToken())
+        XCTAssertNil(Properties.getAccountDid())
+        XCTAssertEqual(Properties.getRegDidDocCompleted(), false)
+    }
+
+    func testRefreshTransportFailurePreservesSession() async {
+        Properties.setAccessToken("access")
+        Properties.setRefreshToken("refresh")
+        AuthMockURLProtocol.handler = { _ in throw URLError(.notConnectedToInternet) }
+        do {
+            _ = try await api.refreshToken()
+            XCTFail("Offline refresh must fail")
+        } catch {
+            guard case JinBonError.networkUnavailable = error else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+        }
+        XCTAssertEqual(Properties.getAccessToken(), "access")
+        XCTAssertEqual(Properties.getRefreshToken(), "refresh")
+    }
+
+    func testExpiredRefreshClearsSession() async {
+        Properties.setAccessToken("access")
+        Properties.setRefreshToken("refresh")
+        AuthMockURLProtocol.handler = { _ in
+            (401, Data(#"{"status":401,"message":"expired"}"#.utf8))
+        }
+        do {
+            _ = try await api.refreshToken()
+            XCTFail("Expired refresh must fail")
+        } catch {
+            guard case JinBonError.notAuthenticated = error else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+        }
+        XCTAssertFalse(Properties.isLoggedIn())
+    }
+
+    func testUnauthorizedRequestDoesNotLogoutWhenRefreshIsOffline() async {
+        Properties.setAccessToken("access")
+        Properties.setRefreshToken("refresh")
+        AuthMockURLProtocol.handler = { request in
+            if request.url?.path == "/api/auth/refresh" {
+                throw URLError(.notConnectedToInternet)
+            }
+            return (401, Data(#"{"status":401}"#.utf8))
+        }
+        do {
+            _ = try await api.getMyVideos()
+            XCTFail("The request must fail while offline")
+        } catch {
+            guard case JinBonError.networkUnavailable = error else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+        }
+        XCTAssertEqual(Properties.getAccessToken(), "access")
+        XCTAssertEqual(Properties.getRefreshToken(), "refresh")
+    }
+
+    func testWalletMismatchCannotRefreshIntoAuthenticatedSession() async {
+        Properties.setAccessToken("access")
+        Properties.setRefreshToken("refresh")
+        AuthMockURLProtocol.handler = { _ in
+            (200, Data(#"{"status":200,"data":{"accessToken":"new-access","refreshToken":"new-refresh","memberId":1,"name":"test","role":"ISSUER","status":"ACTIVE","did":null}}"#.utf8))
+        }
+        do {
+            _ = try await api.refreshToken()
+            XCTFail("Missing account DID must not enter the app")
+        } catch {
+            guard case JinBonError.notAuthenticated = error else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+        }
+        XCTAssertFalse(Properties.isLoggedIn())
+    }
+
+    func testOldWalletPendingCredentialIsNotReusedAfterRebind() {
+        Properties.setMemberId(-987654)
+        defer { Properties.clearPendingVideoVc(videoId: -1) }
+        Properties.setAccountDid("did:omn:old")
+        Properties.setPendingVideoVc(PendingVideoVcData(vcId: "vc", offerId: "offer"), videoId: -1)
+        XCTAssertNotNil(Properties.getPendingVideoVc(videoId: -1))
+        Properties.setAccountDid("did:omn:new")
+        XCTAssertNil(Properties.getPendingVideoVc(videoId: -1))
+    }
+
+    func testOldVideoHolderMismatchHasRecoveryExplanation() async {
+        AuthMockURLProtocol.handler = { _ in
+            (400, Data(#"{"status":400,"code":"D005","message":"VC offer does not match this video."}"#.utf8))
+        }
+        do {
+            try await api.syncVideoVcHolder(videoId: 1)
+            XCTFail("Old Holder DID must be rejected before issuance")
+        } catch {
+            XCTAssertTrue(error.localizedDescription.contains("이전 디지털 신원"))
+        }
+    }
+}
+
+private final class AuthMockURLProtocol: URLProtocol {
+    static var handler: ((URLRequest) throws -> (Int, Data))?
+
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        do {
+            let (status, data) = try Self.handler!(request)
+            let response = HTTPURLResponse(url: request.url!, statusCode: status,
+                                           httpVersion: nil, headerFields: ["Content-Type": "application/json"])!
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: data)
+            client?.urlProtocolDidFinishLoading(self)
+        } catch {
+            client?.urlProtocol(self, didFailWithError: error)
+        }
+    }
+    override func stopLoading() {}
+}
+
 final class PendingVideoVcDataTests: XCTestCase {
 
     func testPendingContextRoundTripPreservesOffer() throws {

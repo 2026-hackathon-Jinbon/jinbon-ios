@@ -113,16 +113,18 @@ class IssueVcProtocol : CommonProtocol {
         try beginIssuance()
         do {
             self.reset()
+            guard case .matches = WalletAccountValidator.validate(accountDid: Properties.getAccountDid()) else {
+                throw JinBonError.serverError("계정과 Wallet의 신원이 다릅니다. 다시 로그인해 주세요.")
+            }
+            if let videoId {
+                // 이전 DID로 등록한 영상은 TAS 발급 트랜잭션을 시작하기 전에 확인한다.
+                try await JinBonAPIClient.shared.syncVideoVcHolder(videoId: videoId)
+            }
             try await proposeIssueVc(vcPlanId: vcPlanId, issuer: issuer, offerId: offerId)
             let ecdh = try await super.requestEcdh(type: .HolderDidDocumnet)
             let attestedAppInfo: AttestedAppInfo = try await super.requestAttestedAppInfo()
             try await requestWalletTokenData(purpose: WalletTokenPurposeEnum.ISSUE_VC)
             try await requestCreateToken(attestedAppInfo: attestedAppInfo, ecdh: ecdh, purpose: WalletTokenPurposeEnum.ISSUE_VC)
-            if let videoId {
-                try await JinBonAPIClient.shared.syncVideoVcHolder(
-                    videoId: videoId
-                )
-            }
             try await requestIssueProfile()
         } catch {
             finishIssuance()

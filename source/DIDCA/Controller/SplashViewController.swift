@@ -44,24 +44,7 @@ class SplashViewController: UIViewController {
                 pinVC.modalPresentationStyle = .fullScreen
                 pinVC.setRequestType(type: .authenticate(isLock: true))
                 pinVC.confirmButtonCompleteClosure = { [self] passcode in
-
-                    if let vcOfferPayload {
-                        let issueProfileVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.issueProfile.rawValue) as! IssueProfileViewController
-                        issueProfileVC.setVcOffer(vcOfferPayload: vcOfferPayload)
-                        issueProfileVC.modalPresentationStyle = .fullScreen
-                                
-                        (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?.changeRootVC(issueProfileVC, animated: false)
-                    } else {
-                        
-                        // 유저등록 유무
-                        if Properties.isLoggedIn() && Properties.getSubmitCompleted() == true {
-                            let tabBarVC = JinBonTabBarController()
-                            (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?
-                                .changeRootVC(tabBarVC, animated: false)
-                        } else {
-                            self.navigateToNextViewController()
-                        }
-                    }
+                    self.navigateToNextViewController()
                 }
                 pinVC.cancelButtonCompleteClosure = { [weak self] in
                     guard let self else { return }
@@ -121,6 +104,9 @@ class SplashViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        // 단위 테스트 호스트가 실제 TAS에 Wallet을 생성하지 않도록 한다.
+        if NSClassFromString("XCTestCase") != nil { return }
 
         buildJinBonSplashUI()
         
@@ -198,57 +184,43 @@ class SplashViewController: UIViewController {
     }
     
     private func navigateToNextViewController() {
-    
-        if let vcOfferPayload {
-            let issueProfileVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.issueProfile.rawValue) as! IssueProfileViewController
-            issueProfileVC.setVcOffer(vcOfferPayload: vcOfferPayload)
-            issueProfileVC.modalPresentationStyle = .fullScreen
-
-            (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?.changeRootVC(issueProfileVC, animated: false)
-            return
-        }
-        
-        if !Properties.isLoggedIn() {
+        guard Properties.isLoggedIn() else {
             let welcome = JinBonWelcomeViewController()
             (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?
                 .changeRootVC(welcome, animated: true)
-        } else {
-            if Properties.getRegDidDocCompleted() == true {
-                let tabBarVC = JinBonTabBarController()
-                (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?
-                    .changeRootVC(tabBarVC, animated: false)
-            } else {
-                
-                Task { @MainActor in
-                    let stepVC = Storyboard.main.instance.instantiateViewController(
-                        withIdentifier: ViewControllerID.stepVC.rawValue
-                    ) as! StepViewController
+            return
+        }
 
-                    guard let userId = Properties.getUserId(), !userId.isEmpty else {
-                        stepVC.setStepType(stepType: .STEP_TYPE_1)
-                        stepVC.modalPresentationStyle = .fullScreen
-                        present(stepVC, animated: false)
-                        return
-                    }
-
-                    guard let isAnyKey = try? WalletAPI.shared.isAnyKeysSaved() else {
-                        let welcome = JinBonWelcomeViewController()
-                        (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?
-                            .changeRootVC(welcome, animated: true)
-                        return
-                    }
-                    
-                    if isAnyKey {
-                        
-                        try await RegUserProtocol.shared.preProcess()
-                        stepVC.setStepType(stepType: StepTypeEnum.STEP_TYPE_3)
-                        
-                    } else {
-                        stepVC.setStepType(stepType: StepTypeEnum.STEP_TYPE_2)
-                    }
-                    stepVC.modalPresentationStyle = .fullScreen
-                    DispatchQueue.main.async { self.present(stepVC, animated: false, completion: nil) }
+        Task { @MainActor in
+            do {
+                // 로컬 완료 플래그 대신 서버 계정과 현재 Holder DID를 대조한다.
+                _ = try await JinBonAPIClient.shared.refreshToken()
+                Properties.setRegDidDocCompleted(status: true)
+                let destination: UIViewController
+                if let vcOfferPayload {
+                    let issueProfileVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.issueProfile.rawValue) as! IssueProfileViewController
+                    issueProfileVC.setVcOffer(vcOfferPayload: vcOfferPayload)
+                    destination = issueProfileVC
+                } else {
+                    destination = JinBonTabBarController()
                 }
+                (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?
+                    .changeRootVC(destination, animated: false)
+            } catch {
+                if case JinBonError.notAuthenticated = error {
+                    JinBonAPIClient.shared.clearLocalSession()
+                    navigateToNextViewController()
+                    return
+                }
+                let alert = UIAlertController(title: "로그인 상태를 확인하지 못했습니다", message: error.localizedDescription, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "다시 시도", style: .default) { [weak self] _ in
+                    self?.navigateToNextViewController()
+                })
+                alert.addAction(UIAlertAction(title: "다시 로그인", style: .cancel) { [weak self] _ in
+                    JinBonAPIClient.shared.clearLocalSession()
+                    self?.navigateToNextViewController()
+                })
+                present(alert, animated: true)
             }
         }
     }

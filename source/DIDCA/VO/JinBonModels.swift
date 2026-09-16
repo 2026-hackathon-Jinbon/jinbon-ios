@@ -93,10 +93,12 @@ struct VideoRegisterData: Codable {
 public struct PendingVideoVcData: Codable, Equatable {
     public let vcId: String
     public let offerId: String
+    public let holderDid: String?
 
-    public init(vcId: String, offerId: String) {
+    public init(vcId: String, offerId: String, holderDid: String? = nil) {
         self.vcId = vcId
         self.offerId = offerId
+        self.holderDid = holderDid
     }
 }
 

@@ -40,6 +40,7 @@ class StepViewController: UIViewController {
     
     private var stepType: StepTypeEnum = StepTypeEnum.STEP_TYPE_1
     private var isFinishing = false
+    private var didRegistrationCompleted = false
     private let modernTitleLabel = UILabel()
     private let modernDetailLabel = UILabel()
     private let modernStepLabel = UILabel()
@@ -328,6 +329,10 @@ class StepViewController: UIViewController {
     }
     
     private func nextForStep3() {
+        if didRegistrationCompleted {
+            finishJinBonSignup()
+            return
+        }
         // PIN view
         let pinVC = Storyboard.pin.instance.instantiateViewController(withIdentifier: ViewControllerID.pincode.rawValue) as! PincodeViewController
         pinVC.modalPresentationStyle = .fullScreen
@@ -338,6 +343,7 @@ class StepViewController: UIViewController {
                 let signedDIDDoc = try WalletAPI.shared.createSignedDIDDoc(passcode: passcode)
                 // 사용자 등록 요청
                 try await RegUserProtocol.shared.process(signedDidDoc: signedDIDDoc)
+                self.didRegistrationCompleted = true
                 
                 let didDoc = try WalletAPI.shared.getDidDocument(type: DidDocumentType.HolderDidDocumnet)
                 print("holderDidDoc : \(try didDoc.toJson(isPretty: true))")
@@ -351,9 +357,8 @@ class StepViewController: UIViewController {
                 )
                 
                 let urlString = URLs.TAS_URL + "/tas/api/v1/update-push-token"
-                let _ : VoidResponse = try await CommunicationClient.sendRequest(urlString: urlString,
+                let _ : VoidResponse? = try? await CommunicationClient.sendRequest(urlString: urlString,
                                                                                  requestJsonable: requestJsonData)
-                Properties.setRegDidDocCompleted(status: true)
                 
             } completeClosure: {
                 self.finishJinBonSignup()
@@ -374,7 +379,8 @@ class StepViewController: UIViewController {
     private func finishJinBonSignup() {
         guard !isFinishing else { return }
         guard Properties.getSignupToken() != nil || Properties.getDidRebindToken() != nil else {
-            goMainView()
+            JinBonAPIClient.shared.clearLocalSession()
+            goBackToWelcome()
             return
         }
         isFinishing = true
@@ -384,13 +390,14 @@ class StepViewController: UIViewController {
                 let didDoc = try WalletAPI.shared.getDidDocument(type: DidDocumentType.HolderDidDocumnet)
                 let isSignup = Properties.getSignupToken() != nil
                 if let signupToken = Properties.getSignupToken() {
-                    _ = try await JinBonAPIClient.shared.completeSignup(signupToken: signupToken, did: didDoc.id)
+                    try await JinBonAPIClient.shared.completeSignup(signupToken: signupToken, did: didDoc.id)
                     Properties.clearSignupToken()
                     Properties.clearDidRebindToken()
                 } else if let rebindToken = Properties.getDidRebindToken() {
                     _ = try await JinBonAPIClient.shared.rebindDid(didRebindToken: rebindToken, did: didDoc.id)
                     Properties.clearDidRebindToken()
                 }
+                Properties.setRegDidDocCompleted(status: true)
                 await MainActor.run {
                     if isSignup {
                         self.showSignupComplete()
@@ -403,8 +410,15 @@ class StepViewController: UIViewController {
                     self.isFinishing = false
                     self.modernActionButton.isEnabled = true
                     let title = Properties.getDidRebindToken() == nil ? "회원가입 완료 실패" : "디지털 신원 재연결 실패"
-                    PopupUtils.showAlertPopup(title: title,
-                                              content: error.localizedDescription, VC: self)
+                    let alert = UIAlertController(title: title, message: error.localizedDescription, preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "다시 시도", style: .default) { [weak self] _ in
+                        self?.finishJinBonSignup()
+                    })
+                    alert.addAction(UIAlertAction(title: "시작 화면으로", style: .cancel) { [weak self] _ in
+                        JinBonAPIClient.shared.clearLocalSession()
+                        self?.goBackToWelcome()
+                    })
+                    self.present(alert, animated: true)
                 }
             }
         }
@@ -446,12 +460,14 @@ class StepViewController: UIViewController {
             } completeClosure: {
                 self.doNext()
             } failureCloseClosure: { title, message in
+                RegUserProtocol.shared.cancelRegistration()
                 PopupUtils.showAlertPopup(title: title,
                                           content: message,
                                           VC: self)
             }
         }
         pinVC.cancelButtonCompleteClosure = {
+            RegUserProtocol.shared.cancelRegistration()
             PopupUtils.showAlertPopup(title: "Notification", content: "canceled by user", VC: self)
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -533,13 +549,4 @@ extension StepViewController
         }
     }
     
-    func goMainView()
-    {
-        let submitVC = Storyboard.main.instance.instantiateViewController(withIdentifier: ViewControllerID.main.rawValue) as! MainViewController
-        submitVC.modalPresentationStyle = .fullScreen
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.present(submitVC, animated: false)
-        }
-    }
 }

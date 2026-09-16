@@ -206,20 +206,18 @@ class VideoListViewController: UIViewController {
     // MARK: - Actions
 
     @objc private func signupTapped() {
-        let authVC = AuthWebViewController()
-        authVC.mode = .signup
-        authVC.delegate = self
-        let nav = UINavigationController(rootViewController: authVC)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
+        showAuthentication(.signup)
     }
 
     @objc private func loginTapped() {
-        let authVC = AuthWebViewController()
-        authVC.delegate = self
-        let nav = UINavigationController(rootViewController: authVC)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
+        showAuthentication(.login)
+    }
+
+    private func showAuthentication(_ mode: AuthWebViewController.Mode) {
+        let welcome = JinBonWelcomeViewController()
+        welcome.initialAuthMode = mode
+        (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?
+            .changeRootVC(welcome, animated: true)
     }
 
     @objc private func uploadTapped() {
@@ -535,112 +533,6 @@ extension VideoListViewController: UITableViewDelegate, UITableViewDataSource {
                 }
             }
         }
-    }
-}
-
-// MARK: - AuthWebViewDelegate
-
-extension VideoListViewController: AuthWebViewDelegate {
-    func authDidComplete(tokenData: AuthTokenData) {
-        switch WalletAccountValidator.validate(accountDid: tokenData.did) {
-        case .matches:
-            updateUI()
-        case .noWallet, .accountDidMissing, .mismatch:
-            JinBonAPIClient.shared.clearLocalSession()
-            showSignupError("로그인 계정과 이 기기의 Wallet DID를 확인할 수 없거나 서로 다릅니다. 시작 화면에서 디지털 신원을 다시 연결해주세요.")
-        }
-    }
-
-    func authDidCancel() {}
-
-    func signupIdentityDidComplete(data: SignupIdentityData) {
-        if WalletAPI.shared.isExistWallet() {
-            let popup = Storyboard.popup.instance
-                .instantiateViewController(withIdentifier: ViewControllerID.twoButtonDialog.rawValue) as! TwoButtonDialogViewController
-            popup.modalPresentationStyle = .overCurrentContext
-            popup.configure(
-                title: "기존 Wallet을 연결할까요?",
-                message: "본인의 Wallet이 맞을 때만 새 진본 계정에 연결해주세요.",
-                cancelTitle: "연결 안 함",
-                confirmTitle: "내 Wallet 연결"
-            )
-            popup.cancelButtonCompleteClosure = { [weak self] in
-                self?.confirmDiscardExistingWallet()
-            }
-            popup.confirmButtonCompleteClosure = { [weak self] in
-                self?.completeSignupWithExistingWallet()
-            }
-            present(popup, animated: false)
-        } else {
-            showDidRegistration()
-        }
-    }
-
-    /// 기기에 남아 있는 Wallet을 지우고 새로 만든다.
-    /// 키체인에 저장되는 값이라 앱을 지워도 남기 때문에, 이 경로로만 초기화할 수 있다.
-    private func confirmDiscardExistingWallet() {
-        let popup = Storyboard.popup.instance
-            .instantiateViewController(withIdentifier: ViewControllerID.twoButtonDialog.rawValue) as! TwoButtonDialogViewController
-        popup.modalPresentationStyle = .overCurrentContext
-        popup.configure(
-            title: "기존 Wallet을 폐기할까요?",
-            message: "이 기기의 디지털 신원과 보유한 증명서가 모두 삭제되며 되돌릴 수 없습니다. 삭제 후 새 신원을 발급받습니다.",
-            cancelTitle: "취소",
-            confirmTitle: "폐기하고 새로 만들기"
-        )
-        popup.confirmButtonCompleteClosure = { [weak self] in
-            self?.discardExistingWallet()
-        }
-        present(popup, animated: false)
-    }
-
-    private func discardExistingWallet() {
-        Task { @MainActor in
-            do {
-                try WalletAPI.shared.deleteWallet(deleteAll: true)
-                // Splash와 동일하게 빈 Wallet을 다시 만들어야 이후 DID 등록이 진행된다.
-                _ = try await WalletAPI.shared.createWallet(tasURL: URLs.TAS_URL,
-                                                           walletURL: URLs.WALLET_URL)
-                showDidRegistration()
-            } catch {
-                let (_, message) = ErrorHandler.handle(error)
-                showSignupError(message)
-            }
-        }
-    }
-
-    private func completeSignupWithExistingWallet() {
-        Task { @MainActor in
-            guard let signupToken = Properties.getSignupToken(),
-                  let didDoc = try? WalletAPI.shared.getDidDocument(type: .HolderDidDocumnet) else {
-                showSignupError("기존 Wallet 정보를 확인할 수 없습니다.")
-                return
-            }
-            do {
-                _ = try await JinBonAPIClient.shared.completeSignup(signupToken: signupToken, did: didDoc.id)
-                Properties.setRegDidDocCompleted(status: true)
-                Properties.clearSignupToken()
-                updateUI()
-            } catch {
-                showSignupError(error.localizedDescription)
-            }
-        }
-    }
-
-    private func showDidRegistration() {
-        let step = Storyboard.main.instance
-            .instantiateViewController(withIdentifier: ViewControllerID.stepVC.rawValue) as! StepViewController
-        step.setStepType(stepType: Properties.getUserId() == nil ? .STEP_TYPE_1 : .STEP_TYPE_2)
-        step.modalPresentationStyle = .fullScreen
-        present(step, animated: true)
-    }
-
-    private func showSignupError(_ message: String) {
-        PopupUtils.showAlertPopup(
-            title: "회원가입 연결 실패",
-            content: message,
-            VC: self
-        )
     }
 }
 

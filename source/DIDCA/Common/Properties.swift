@@ -236,14 +236,26 @@ public class Properties {
         return getAccessToken() != nil
     }
 
+    public static func setAccountDid(_ did: String?) {
+        UserDefaults.standard.set(did, forKey: "jinbon_account_did")
+    }
+
+    public static func getAccountDid() -> String? {
+        UserDefaults.standard.string(forKey: "jinbon_account_did")
+    }
+
     public static func clearAuth() {
         KeychainHelper.delete(key: "jinbon_access_token")
         KeychainHelper.delete(key: "jinbon_refresh_token")
-        let defaultsKeys = ["jinbon_member_id", "jinbon_member_name", "jinbon_member_role"]
+        let defaultsKeys = ["jinbon_member_id", "jinbon_member_name", "jinbon_member_role", "jinbon_account_did"]
         defaultsKeys.forEach { UserDefaults.standard.removeObject(forKey: $0) }
+        clearSignupToken()
+        clearDidRebindToken()
+        setRegDidDocCompleted(status: false)
     }
 
     public static func setSignupToken(_ token: String) {
+        clearDidRebindToken()
         KeychainHelper.save(key: "jinbon_signup_token", value: token)
         UserDefaults.standard.removeObject(forKey: "jinbon_signup_token")
     }
@@ -261,6 +273,7 @@ public class Properties {
     }
 
     public static func setDidRebindToken(_ token: String) {
+        clearSignupToken()
         KeychainHelper.save(key: "jinbon_did_rebind_token", value: token)
         UserDefaults.standard.removeObject(forKey: "jinbon_did_rebind_token")
     }
@@ -279,6 +292,8 @@ public class Properties {
 
     public static func setPendingVideoVc(_ pending: PendingVideoVcData, videoId: Int) {
         guard let memberId = getMemberId() else { return }
+        let pending = PendingVideoVcData(vcId: pending.vcId, offerId: pending.offerId,
+                                         holderDid: getAccountDid())
         guard
             let data = try? JSONEncoder().encode(pending),
             let value = String(data: data, encoding: .utf8)
@@ -293,6 +308,10 @@ public class Properties {
             let data = value.data(using: .utf8),
             let pending = try? JSONDecoder().decode(PendingVideoVcData.self, from: data)
         else { return nil }
+        guard pending.holderDid == nil || pending.holderDid == getAccountDid() else {
+            clearPendingVideoVc(videoId: videoId)
+            return nil
+        }
         return pending
     }
 
