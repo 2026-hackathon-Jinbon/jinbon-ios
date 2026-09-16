@@ -88,6 +88,9 @@ class RegUserProtocol: CommonProtocol {
     public func preProcess() async throws {
         try beginOperation()
         do {
+            // 싱글턴이라 이전 등록의 txId가 남는다. 완료된 txId로 다시 요청하면
+            // TAS가 SSRVTRA16001(transaction is not valid)로 거절하므로 먼저 비운다.
+            self.reset()
             try await proposeRegisterUser()
             let accEcdh = try await super.requestEcdh(type: .DeviceDidDocument)
             let attestedAppInfo: AttestedAppInfo = try await super.requestAttestedAppInfo()
