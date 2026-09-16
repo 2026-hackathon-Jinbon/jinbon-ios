@@ -21,13 +21,13 @@ struct URLs {
 
     // 개발 환경 기본값 — xcconfig 연결 시 Info.plist 값이 우선 적용됨
     private static let defaults: [String: String] = [
-        "TAS_URL":      "http://192.168.219.101:8090",
-        "VERIFIER_URL": "http://192.168.219.101:8092",
-        "CAS_URL":      "http://192.168.219.101:8094",
-        "WALLET_URL":   "http://192.168.219.101:8095",
-        "API_URL":      "http://192.168.219.101:8093",
-        "DEMO_URL":     "http://192.168.219.101:8099",
-        "JINBON_URL":   "http://192.168.219.101:8070",
+        "TAS_URL":      "http://3.34.244.155:8090",
+        "VERIFIER_URL": "http://3.34.244.155:8092",
+        "CAS_URL":      "http://3.34.244.155:8094",
+        "WALLET_URL":   "http://3.34.244.155:8095",
+        "API_URL":      "http://3.34.244.155:8093",
+        "DEMO_URL":     "http://3.34.244.155:8099",
+        "JINBON_URL":   "https://3.34.244.155.sslip.io",
     ]
 
     private static func resolve(_ key: String) -> String {
