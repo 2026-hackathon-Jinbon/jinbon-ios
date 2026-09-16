@@ -2,6 +2,7 @@ import UIKit
 import DIDWalletSDK
 
 final class JinBonWelcomeViewController: UIViewController {
+    private var isRebinding = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -334,9 +335,12 @@ extension JinBonWelcomeViewController: AuthWebViewDelegate {
     }
 
     private func rebindCurrentWallet(using rebindToken: String) {
+        guard !isRebinding else { return }
+        isRebinding = true
         Task { @MainActor in
             guard let didDoc = try? WalletAPI.shared.getDidDocument(type: .HolderDidDocumnet),
                   !didDoc.id.isEmpty else {
+                isRebinding = false
                 JinBonAPIClient.shared.clearLocalSession()
                 showRecoveryError("현재 Wallet의 디지털 신원을 확인할 수 없습니다.")
                 return
@@ -350,6 +354,7 @@ extension JinBonWelcomeViewController: AuthWebViewDelegate {
                 Properties.clearDidRebindToken()
                 switchToMain()
             } catch {
+                isRebinding = false
                 JinBonAPIClient.shared.clearLocalSession()
                 showRecoveryError(error.localizedDescription)
             }

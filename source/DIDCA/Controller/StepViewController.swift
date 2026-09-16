@@ -39,6 +39,7 @@ class StepViewController: UIViewController {
     @IBOutlet weak var lineImg2: UIButton!
     
     private var stepType: StepTypeEnum = StepTypeEnum.STEP_TYPE_1
+    private var isFinishing = false
     private let modernTitleLabel = UILabel()
     private let modernDetailLabel = UILabel()
     private let modernStepLabel = UILabel()
@@ -283,16 +284,43 @@ class StepViewController: UIViewController {
     
     private func nextForStep2()
     {
-        
-        ActivityUtil.show(vc: self){
-            try await RegUserProtocol.shared.preProcess()
-        } completeClosure: {
-            self.registerPin()
-        } failureCloseClosure: { title, message in
-            PopupUtils.showAlertPopup(title: title,
-                                      content: message,
-                                      VC: self)
+        // 키체인에 이전 월렛이 잠금 상태로 남아 있을 수 있으므로 먼저 해제
+        unlockWalletIfNeeded { [weak self] in
+            guard let self else { return }
+            ActivityUtil.show(vc: self){
+                try await RegUserProtocol.shared.preProcess()
+            } completeClosure: {
+                self.registerPin()
+            } failureCloseClosure: { title, message in
+                PopupUtils.showAlertPopup(title: title,
+                                          content: message,
+                                          VC: self)
+            }
         }
+    }
+
+    private func unlockWalletIfNeeded(completion: @escaping () -> Void) {
+        guard WalletAPI.shared.isExistWallet(),
+              (try? WalletAPI.shared.isLock()) == true else {
+            completion()
+            return
+        }
+        let pinVC = Storyboard.pin.instance
+            .instantiateViewController(withIdentifier: ViewControllerID.pincode.rawValue) as! PincodeViewController
+        pinVC.modalPresentationStyle = .fullScreen
+        pinVC.setRequestType(type: .authenticate(isLock: true))
+        pinVC.confirmButtonCompleteClosure = { _ in
+            completion()
+        }
+        pinVC.cancelButtonCompleteClosure = { [weak self] in
+            guard let self else { return }
+            PopupUtils.showAlertPopup(
+                title: "Notification",
+                content: "PIN authentication is required to use this Wallet.",
+                VC: self
+            )
+        }
+        present(pinVC, animated: false)
     }
     
     struct VoidResponse : Jsonable {
@@ -344,29 +372,59 @@ class StepViewController: UIViewController {
     }
 
     private func finishJinBonSignup() {
+        guard !isFinishing else { return }
         guard Properties.getSignupToken() != nil || Properties.getDidRebindToken() != nil else {
             goMainView()
             return
         }
+        isFinishing = true
+        modernActionButton.isEnabled = false
         Task {
             do {
                 let didDoc = try WalletAPI.shared.getDidDocument(type: DidDocumentType.HolderDidDocumnet)
-                if let rebindToken = Properties.getDidRebindToken() {
-                    _ = try await JinBonAPIClient.shared.rebindDid(didRebindToken: rebindToken, did: didDoc.id)
-                    Properties.clearDidRebindToken()
-                } else if let signupToken = Properties.getSignupToken() {
+                let isSignup = Properties.getSignupToken() != nil
+                if let signupToken = Properties.getSignupToken() {
                     _ = try await JinBonAPIClient.shared.completeSignup(signupToken: signupToken, did: didDoc.id)
                     Properties.clearSignupToken()
+                    Properties.clearDidRebindToken()
+                } else if let rebindToken = Properties.getDidRebindToken() {
+                    _ = try await JinBonAPIClient.shared.rebindDid(didRebindToken: rebindToken, did: didDoc.id)
+                    Properties.clearDidRebindToken()
                 }
-                await MainActor.run { self.goJinBonMain() }
+                await MainActor.run {
+                    if isSignup {
+                        self.showSignupComplete()
+                    } else {
+                        self.goJinBonMain()
+                    }
+                }
             } catch {
                 await MainActor.run {
+                    self.isFinishing = false
+                    self.modernActionButton.isEnabled = true
                     let title = Properties.getDidRebindToken() == nil ? "회원가입 완료 실패" : "디지털 신원 재연결 실패"
                     PopupUtils.showAlertPopup(title: title,
                                               content: error.localizedDescription, VC: self)
                 }
             }
         }
+    }
+
+    private func showSignupComplete() {
+        let alert = UIAlertController(
+            title: "회원가입 완료",
+            message: "회원가입이 완료되었습니다. 로그인해 주세요.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "로그인하기", style: .default) { [weak self] _ in
+            self?.goBackToWelcome()
+        })
+        present(alert, animated: true)
+    }
+
+    private func goBackToWelcome() {
+        let welcome = JinBonWelcomeViewController()
+        (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?.changeRootVC(welcome, animated: true)
     }
 
     private func goJinBonMain() {

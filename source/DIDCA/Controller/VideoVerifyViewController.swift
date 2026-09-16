@@ -298,6 +298,10 @@ class VideoVerifyViewController: UIViewController {
             ))
         }
 
+        if let registrantName = data.registrantName, !registrantName.isEmpty {
+            stack.addArrangedSubview(makeDetailRow(label: "등록자", value: registrantName))
+        }
+
         if data.videoId != nil {
             stack.addArrangedSubview(makeDetailRow(
                 label: "등록 증거",
@@ -340,11 +344,10 @@ class VideoVerifyViewController: UIViewController {
     ) -> (title: String, symbol: String, color: UIColor) {
         switch status {
         case .authenticated:
-            return ("등록 원본과 일치", "checkmark.seal.fill", .systemGreen)
-        case .contentSimilar:
-            return ("등록 영상과 유사", "square.on.square", .systemOrange)
-        case .partialSimilar:
-            return ("부분 유사 · 원본 일치 확인 불가", "exclamationmark.circle", .systemOrange)
+            return ("진본", "checkmark.seal.fill", .systemGreen)
+        case .contentSimilar, .partialSimilar:
+            // 구버전 서버 호환 — 현재 서버는 내려주지 않음
+            return ("미인증", "xmark.circle.fill", .systemGray)
         case .notAuthenticated:
             return ("미인증", "xmark.circle.fill", .systemGray)
         case .unavailable:

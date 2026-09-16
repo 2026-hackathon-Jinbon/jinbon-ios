@@ -96,6 +96,8 @@ class SplashViewController: UIViewController {
         do
         {
             if WalletAPI.shared.isExistWallet() == false {
+                // 재설치 시 Keychain에 이전 세션 토큰이 남아있으므로 정리
+                JinBonAPIClient.shared.clearLocalSession()
                 let created = try await WalletAPI.shared.createWallet(tasURL: URLs.TAS_URL, walletURL: URLs.WALLET_URL)
                 print("createWallet: \(created)")
                 return created && WalletAPI.shared.isExistWallet()

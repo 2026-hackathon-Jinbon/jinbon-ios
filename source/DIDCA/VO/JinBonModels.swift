@@ -105,6 +105,7 @@ public struct PendingVideoVcData: Codable, Equatable {
 /// 클라이언트 표시용 검증 상태
 enum DisplayStatus: String, Codable {
     case authenticated = "AUTHENTICATED"
+    /// 구버전 서버 호환용 — 현재 서버는 내려주지 않음 (진본 / 미인증 / 확인 중 3종)
     case contentSimilar = "CONTENT_SIMILAR"
     case partialSimilar = "PARTIAL_SIMILAR"
     case notAuthenticated = "NOT_AUTHENTICATED"
@@ -140,13 +141,9 @@ enum VideoVerificationVerdict: String, Codable, CaseIterable {
 
     var displayStatus: DisplayStatus {
         switch self {
-        case .exactMatch:
+        case .exactMatch, .sameContent, .similarMatch:
             return .authenticated
-        case .sameContent, .similarMatch:
-            return .contentSimilar
-        case .partialMatch:
-            return .partialSimilar
-        case .notRegistered, .registeredButRevoked, .certificateMissing, .certificateInvalid:
+        case .partialMatch, .notRegistered, .registeredButRevoked, .certificateMissing, .certificateInvalid:
             return .notAuthenticated
         case .verificationUnavailable:
             return .unavailable
@@ -162,6 +159,8 @@ struct VideoVerifyData: Codable {
     let videoId: Int?
     let issuerDid: String?
     let registeredAt: String?
+    /// 등록자 표시명 (기관명 등). 서버 구버전이면 nil
+    let registrantName: String?
     let blockchainVerified: Bool
     let vcVerified: Bool
     let vcClaimsBound: Bool
