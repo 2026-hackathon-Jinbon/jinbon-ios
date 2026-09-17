@@ -49,10 +49,10 @@ final class JinBonWelcomeViewController: UIViewController {
         subtitle.numberOfLines = 0
         subtitle.font = .jinBonFont(ofSize: 16, weight: .regular)
         subtitle.textColor = ColorPalette.secondaryText
-        subtitle.setJinBonText("영상의 원본 여부를 안전하게 증명하세요.", lineSpacing: 5)
+        subtitle.setJinBonText("모바일 신분증 기반 공인 영상 진본 증명 플랫폼.\n발표 영상의 확인 기준을 남기세요.", lineSpacing: 5)
 
         let signup = actionCard(icon: "person.badge.plus", title: "처음 이용하시나요?",
-                                detail: "디지털 신원을 만들고 진본을 시작해요",
+                                detail: "모바일 신분증으로 본인확인하고 공인 등록자로 시작해요",
                                 buttonTitle: "회원가입", primary: true,
                                 action: #selector(signupTapped))
         let login = actionCard(icon: "person.crop.circle.badge.checkmark", title: "이미 가입하셨나요?",

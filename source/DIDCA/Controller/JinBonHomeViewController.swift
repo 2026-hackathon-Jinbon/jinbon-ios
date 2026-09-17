@@ -80,7 +80,7 @@ final class JinBonHomeViewController: UIViewController {
         detail.numberOfLines = 0
         detail.font = .jinBonFont(ofSize: 15)
         detail.textColor = ColorPalette.secondaryText
-        detail.setJinBonText("영상의 온체인 등록과 VC 보증서를 관리하세요.")
+        detail.setJinBonText("발표 영상을 등록하고 등록 기록과 보증서를 관리하세요.")
 
         let stack = UIStackView(arrangedSubviews: [eyebrow, title, detail])
         stack.axis = .vertical
@@ -101,7 +101,7 @@ final class JinBonHomeViewController: UIViewController {
 
         let role = Properties.getMemberRole() ?? "GUEST"
         let subtitle = UILabel()
-        subtitle.text = role == "ISSUER" ? "공인 등록자 · 영상 등록 가능" : "\(role) · 등록 권한 확인 필요"
+        subtitle.text = role == "ISSUER" ? "공인 등록자 · 본인확인 완료" : "\(role) · 등록 권한 확인 필요"
         subtitle.font = .jinBonFont(ofSize: 14, weight: .medium)
         subtitle.textColor = UIColor.white.withAlphaComponent(0.86)
 
@@ -317,7 +317,7 @@ final class JinBonHomeViewController: UIViewController {
 
     @objc private func registerTapped() {
         guard Properties.isLoggedIn() else { showMessage("로그인이 필요합니다", "회원가입 또는 로그인 후 영상을 등록할 수 있습니다."); return }
-        guard Properties.getMemberRole() == "ISSUER" else { showMessage("등록 권한이 없습니다", "공인 등록자 승인이 완료된 계정만 영상을 등록할 수 있습니다."); return }
+        guard Properties.getMemberRole() == "ISSUER" else { showMessage("등록 권한이 없습니다", "모바일 신분증으로 본인확인과 가입을 완료한 계정만 영상을 등록할 수 있습니다."); return }
         let upload = VideoUploadViewController()
         let nav = UINavigationController(rootViewController: upload)
         nav.modalPresentationStyle = .fullScreen

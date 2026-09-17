@@ -647,9 +647,11 @@ class VideoUploadViewController: UIViewController {
     }
 
     private func showAlert(_ message: String) {
-        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
+        PopupUtils.showAlertPopup(
+            title: "등록 보증서 발급 완료",
+            content: message,
+            VC: navigationController?.topViewController ?? self
+        )
     }
 
     private func scrollToTitleInput() {
