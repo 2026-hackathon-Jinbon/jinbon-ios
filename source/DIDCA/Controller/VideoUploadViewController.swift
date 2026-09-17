@@ -514,8 +514,13 @@ class VideoUploadViewController: UIViewController {
         let presenter = navigationController?.topViewController ?? self
         ActivityUtil.show(vc: presenter) {
             let vcId = try await IssueVcProtocol.shared.process(passcode: passcode)
+            // 발급에 수 초가 걸려 발급 시작 때 만든 walletToken은 이미 만료돼 있다
+            // (SDK는 validUntil을 여유 없이 발급 시각으로 잡고 now >= validUntil이면 거부한다).
+            // 조회 직전에 새로 발급해야 "Failed to verify token"으로 실패하지 않는다.
+            let listToken = try await SDKUtils.createWalletToken(
+                purpose: .LIST_VC, userId: Properties.getUserId()!)
             let credential = try WalletAPI.shared.getCredentials(
-                hWalletToken: IssueVcProtocol.shared.getWalletToken(), ids: [vcId]).first!
+                hWalletToken: listToken, ids: [vcId]).first!
             let credentialJson = try credential.toJson()
             self.issuedVcId = vcId
             Properties.setPendingVideoVc(
