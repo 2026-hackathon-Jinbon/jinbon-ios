@@ -527,8 +527,18 @@ class VideoUploadViewController: UIViewController {
                 PendingVideoVcData(vcId: vcId, offerId: offerId),
                 videoId: videoId
             )
-            try await JinBonAPIClient.shared.completeVideoVc(
-                videoId: videoId, vcId: vcId, offerId: offerId, credential: credentialJson)
+            do {
+                try await JinBonAPIClient.shared.completeVideoVc(
+                    videoId: videoId, vcId: vcId, offerId: offerId, credential: credentialJson)
+            } catch JinBonError.vcOfferMismatch {
+                // 발급 도중 서버의 Offer가 갱신된 경우. 최신 Offer로 한 번 더 연결한다.
+                let refreshed = try await JinBonAPIClient.shared.prepareVideoVc(videoId: videoId)
+                guard let currentOfferId = refreshed.vcOfferId else {
+                    throw JinBonError.serverError("이 영상의 보증서 발급 정보를 다시 받아오지 못했습니다. 발급 버튼에서 다시 시도해주세요.")
+                }
+                try await JinBonAPIClient.shared.completeVideoVc(
+                    videoId: videoId, vcId: vcId, offerId: currentOfferId, credential: credentialJson)
+            }
             Properties.clearPendingVideoVc(videoId: videoId)
         } completeClosure: { [weak self] in
             guard let self else { return }
@@ -556,9 +566,23 @@ class VideoUploadViewController: UIViewController {
                 Properties.clearPendingVideoVc(videoId: videoId)
                 throw JinBonError.serverError("이 Wallet에 이전 발급 보증서가 없습니다. 앱을 재설치했다면 이전 Wallet의 보증서는 자동 복구되지 않습니다.")
             }
-            try await JinBonAPIClient.shared.completeVideoVc(
-                videoId: videoId, vcId: pending.vcId, offerId: pending.offerId,
-                credential: try credential.toJson())
+            let credentialJson = try credential.toJson()
+            do {
+                try await JinBonAPIClient.shared.completeVideoVc(
+                    videoId: videoId, vcId: pending.vcId, offerId: pending.offerId,
+                    credential: credentialJson)
+            } catch JinBonError.vcOfferMismatch {
+                // 캐시된 Offer가 서버의 현재 발급 문맥과 다르다. prepare로 최신 Offer를
+                // 받아 한 번 더 연결한다 (이미 발급된 VC라 재발급은 필요 없다).
+                let refreshed = try await JinBonAPIClient.shared.prepareVideoVc(videoId: videoId)
+                guard let offerId = refreshed.vcOfferId else {
+                    Properties.clearPendingVideoVc(videoId: videoId)
+                    throw JinBonError.serverError("이 영상의 보증서 발급 정보를 다시 받아오지 못했습니다. 발급 버튼에서 다시 시도해주세요.")
+                }
+                try await JinBonAPIClient.shared.completeVideoVc(
+                    videoId: videoId, vcId: pending.vcId, offerId: offerId,
+                    credential: credentialJson)
+            }
             Properties.clearPendingVideoVc(videoId: videoId)
             self.issuedVcId = pending.vcId
         } completeClosure: { [weak self] in

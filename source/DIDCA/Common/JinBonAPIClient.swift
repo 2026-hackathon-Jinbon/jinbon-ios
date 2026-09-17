@@ -256,6 +256,12 @@ class JinBonAPIClient {
            let payload = try? decoder.decode(APIErrorPayload.self, from: data), payload.code == "D005" {
             throw JinBonError.serverError("이 영상은 이전 디지털 신원으로 등록되었습니다. 보증서 발급에는 등록 당시의 Wallet이 필요합니다. 새 DID 연결로 기존 보증서가 복구되지는 않습니다.")
         }
+        // 로컬에 캐시된 Offer가 서버의 현재 발급 문맥과 어긋난 경우. 호출부가
+        // prepare로 Offer를 다시 받아 재시도할 수 있도록 구분되는 오류로 던진다.
+        if path.hasSuffix("/vc/complete"),
+           let payload = try? decoder.decode(APIErrorPayload.self, from: data), payload.code == "D005" {
+            throw JinBonError.vcOfferMismatch
+        }
         try checkHTTPResponse(response, data: data)
 
         let result = try decoder.decode(JinBonResponse<T>.self, from: data)
@@ -401,10 +407,14 @@ enum JinBonError: LocalizedError {
     case timedOut
     case invalidRequest
     case invalidResponse
+    /// 기기에 캐시된 Offer가 서버의 현재 발급 문맥과 다름 (백엔드 D005)
+    case vcOfferMismatch
 
     var errorDescription: String? {
         switch self {
         case .serverError(let msg): return msg
+        case .vcOfferMismatch:
+            return "이 영상의 보증서 발급 정보가 갱신되었습니다. 다시 시도해주세요."
         case .httpError(let code):
             switch code {
             case 400: return "요청 정보를 확인해주세요."
